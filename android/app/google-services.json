@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "84880662449",
+    "project_id": "goodie-8814a",
+    "storage_bucket": "goodie-8814a.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:84880662449:android:54a2fdcdbab8c28e872790",
+        "android_client_info": {
+          "package_name": "com.example.goodie"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "84880662449-p9jkk2n7galqfkckn3h1gij59ui9l56s.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.goodie",
+            "certificate_hash": "1fc60f869b06ce4344138fa897d39c8e4153c79e"
+          }
+        },
+        {
+          "client_id": "84880662449-goaeunalra7u8333l7b2r6315o30shnb.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC6Wnb5RKN3PibIk3vkIyW35yL3yoGvY5Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "84880662449-goaeunalra7u8333l7b2r6315o30shnb.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
