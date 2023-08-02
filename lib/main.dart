@@ -5,6 +5,7 @@ import 'package:goodie/pages/login.dart';
 import 'package:provider/provider.dart';
 
 import 'bloc/auth.dart';
+import 'pages/list.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -46,7 +47,7 @@ class _HomeWithBottomNavigationState extends State<HomeWithBottomNavigation> {
 
   final List<Widget> _pages = [
     HomePage(),
-    const ListScreen(),
+    const ListPage(),
     const PostScreen(),
     const BookmarksScreen(),
     const ProfileScreen(),
