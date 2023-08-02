@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:goodie/pages/home.dart';
 import 'package:goodie/pages/login.dart';
 import 'package:provider/provider.dart';
 
@@ -44,7 +45,7 @@ class _HomeWithBottomNavigationState extends State<HomeWithBottomNavigation> {
   int _selectedIndex = 0;
 
   final List<Widget> _pages = [
-    const HomeScreen(),
+    HomePage(),
     const ListScreen(),
     const PostScreen(),
     const BookmarksScreen(),
