@@ -1,18 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:goodie/bloc/restaurants.dart';
 import 'package:goodie/pages/home.dart';
 import 'package:goodie/pages/login.dart';
 import 'package:provider/provider.dart';
 
 import 'bloc/auth.dart';
-import 'pages/list.dart';
+import 'pages/restaurants/list.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+  final restaurantProvider = RestaurantProvider(); // Create instance
+  await restaurantProvider.fetchRestaurants(); // Fetch restaurants
+
   runApp(
-    ChangeNotifierProvider(
-      create: (context) => AuthProvider(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => AuthProvider()),
+        ChangeNotifierProvider.value(
+            value: restaurantProvider), // Provide the instance
+      ],
       child: const MainApp(),
     ),
   );
@@ -26,7 +34,7 @@ class MainApp extends StatelessWidget {
     final authProvider = Provider.of<AuthProvider>(context);
 
     return MaterialApp(
-      home: authProvider.user != null
+      home: authProvider.firebaseUser != null
           ? const HomeWithBottomNavigation()
           : const LoginPage(),
     );
@@ -56,7 +64,10 @@ class _HomeWithBottomNavigationState extends State<HomeWithBottomNavigation> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _pages[_selectedIndex],
+      body: IndexedStack(
+        index: _selectedIndex,
+        children: _pages,
+      ),
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         backgroundColor: Colors.white,

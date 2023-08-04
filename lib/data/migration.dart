@@ -1,51 +1,6 @@
+import 'package:goodie/model/restaurant.dart';
 import 'package:supabase/supabase.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
-class Dish {
-  final String restaurantId;
-  final String name;
-  final String? description;
-  final num price;
-  final String? imgUrl;
-  final bool popular;
-
-  Dish(
-      {required this.restaurantId,
-      required this.name,
-      required this.description,
-      required this.price,
-      required this.imgUrl,
-      required this.popular});
-}
-
-class Restaurant {
-  final String id;
-  final String name;
-  final String? address;
-  final String? description;
-  final num? rating;
-  final int? priceLevel;
-  final String? coverImg;
-  final String? openingHours;
-  final String? homepage;
-  final String? phone;
-  final List<Dish> dishes;
-  final Set<String> categories;
-
-  Restaurant(
-      {required this.id,
-      required this.name,
-      required this.address,
-      required this.description,
-      required this.rating,
-      required this.priceLevel,
-      required this.coverImg,
-      required this.openingHours,
-      required this.homepage,
-      required this.phone,
-      required this.dishes,
-      required this.categories});
-}
 
 class DataMigration {
   final SupabaseClient supabaseClient;
@@ -112,6 +67,7 @@ class DataMigration {
         phone: restaurantData['phone'],
         dishes: dishes, // Add dishes here...
         categories: categories, // Add categories here...
+        reviews: [],
       );
 
       restaurants.add(restaurant);

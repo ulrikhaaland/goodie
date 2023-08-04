@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_auth/firebase_auth.dart' as firebase;
+import 'package:goodie/model/user.dart';
 
 class AuthProvider with ChangeNotifier {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final firebase.FirebaseAuth _auth = firebase.FirebaseAuth.instance;
 
-  User? get user => _auth.currentUser;
+  firebase.User? get firebaseUser => _auth.currentUser;
+
+  User? user;
 
   String? verificationId;
 
@@ -12,11 +15,11 @@ class AuthProvider with ChangeNotifier {
   Future<void> verifyPhoneNumber(String phoneNumber) async {
     await _auth.verifyPhoneNumber(
       phoneNumber: phoneNumber,
-      verificationCompleted: (PhoneAuthCredential credential) async {
+      verificationCompleted: (firebase.PhoneAuthCredential credential) async {
         await _auth.signInWithCredential(credential);
         notifyListeners();
       },
-      verificationFailed: (FirebaseAuthException e) {
+      verificationFailed: (firebase.FirebaseAuthException e) {
         // Handle error
       },
       codeSent: (String verificationId, int? resendToken) {
@@ -32,9 +35,10 @@ class AuthProvider with ChangeNotifier {
 
   // Trigger sign in with a verification code
   Future<void> signInWithVerificationCode(String smsCode) async {
-    final credential = PhoneAuthProvider.credential(
+    final credential = firebase.PhoneAuthProvider.credential(
         verificationId: verificationId!, smsCode: smsCode);
     await _auth.signInWithCredential(credential);
+    user = User(firebaseUser: _auth.currentUser!, reviews: [], favorites: []);
     notifyListeners();
   }
 
