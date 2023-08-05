@@ -6,18 +6,30 @@ import 'package:goodie/pages/login.dart';
 import 'package:provider/provider.dart';
 
 import 'bloc/auth.dart';
-import 'pages/restaurants/list.dart';
+import 'pages/restaurants/shops/shop_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+  final authProvider = AuthProvider(); // Create instance
   final restaurantProvider = RestaurantProvider(); // Create instance
-  await restaurantProvider.fetchRestaurants(); // Fetch restaurants
+
+  // Move restaurant fetching to a method that can be called on auth changes.
+  void fetchRestaurants() async {
+    if (authProvider.firebaseUser != null) {
+      await restaurantProvider.fetchRestaurants(); // Fetch restaurants
+    }
+  }
+
+  authProvider
+      .addListener(fetchRestaurants); // Fetch restaurants when user logs in.
+  fetchRestaurants(); // Also fetch restaurants when the app starts.
 
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (context) => AuthProvider()),
+        ChangeNotifierProvider.value(
+            value: authProvider), // Provide the instance
         ChangeNotifierProvider.value(
             value: restaurantProvider), // Provide the instance
       ],
