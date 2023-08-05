@@ -42,6 +42,7 @@ class _ListPageState extends State<ListPage>
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.pink[300],

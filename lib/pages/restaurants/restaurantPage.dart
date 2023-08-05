@@ -1,13 +1,37 @@
 // ignore: file_names
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../../bloc/restaurants.dart';
 import '../../model/restaurant.dart';
+import 'dish_list_view.dart';
 
-class RestaurantPage extends StatelessWidget {
+class RestaurantPage extends StatefulWidget {
   final Restaurant restaurant;
 
   const RestaurantPage({super.key, required this.restaurant});
+
+  @override
+  State<RestaurantPage> createState() => _RestaurantPageState();
+}
+
+class _RestaurantPageState extends State<RestaurantPage> {
+  int _currentIndex = 0;
+  late Future<void> _fetchDishesFuture;
+
+  void _handleIndexChanged(int i) {
+    setState(() {
+      _currentIndex = i;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchDishesFuture = Provider.of<RestaurantProvider>(context, listen: false)
+        .fetchDishesAndPrecacheImages(widget.restaurant.id, context);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +55,7 @@ class RestaurantPage extends StatelessWidget {
                     height: MediaQuery.of(context).size.height / 3,
                     width: double.infinity,
                     child: CachedNetworkImage(
-                      imageUrl: restaurant.coverImg ?? '',
+                      imageUrl: widget.restaurant.coverImg ?? '',
                       placeholder: (context, url) => const Center(
                         child: CircularProgressIndicator(
                           strokeWidth: 2.0,
@@ -42,22 +66,41 @@ class RestaurantPage extends StatelessWidget {
                       fit: BoxFit.cover,
                     ),
                   ),
-                  const TabBar(
+                  TabBar(
                     labelColor: Colors.black,
                     unselectedLabelColor: Colors.black54,
                     indicatorColor: Colors.pink,
-                    indicatorPadding: EdgeInsets.symmetric(horizontal: 8.0),
-                    tabs: [
+                    indicatorPadding:
+                        const EdgeInsets.symmetric(horizontal: 8.0),
+                    onTap: _handleIndexChanged,
+                    tabs: const [
                       Tab(text: 'Restaurant'),
                       Tab(text: 'Dishes'),
                       Tab(text: 'Reviews'),
                     ],
                   ),
                   Expanded(
-                    child: TabBarView(
+                    child: IndexedStack(
+                      index: _currentIndex,
                       children: [
                         _buildRestaurantDetails(),
-                        const Text('Dishes content goes here.'),
+                        // Second tab view: Dishes
+                        FutureBuilder(
+                          future: _fetchDishesFuture,
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState ==
+                                ConnectionState.waiting) {
+                              return const Center(
+                                  child: CircularProgressIndicator());
+                            } else if (snapshot.hasError) {
+                              return const Center(
+                                  child: Text('Error loading dishes'));
+                            } else {
+                              return DishListView(
+                                  dishes: widget.restaurant.dishes);
+                            }
+                          },
+                        ),
                         const Text('Reviews content goes here.'),
                       ],
                     ),
@@ -84,7 +127,7 @@ class RestaurantPage extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  restaurant.name,
+                  widget.restaurant.name,
                   style: const TextStyle(
                       fontSize: 24, fontWeight: FontWeight.bold),
                 ),
@@ -98,7 +141,7 @@ class RestaurantPage extends StatelessWidget {
             ],
           ),
           Text(
-            restaurant.description ?? '',
+            widget.restaurant.description ?? '',
             style: const TextStyle(fontSize: 16),
           ),
           // You can continue adding more widgets here as needed

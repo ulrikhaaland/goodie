@@ -86,7 +86,8 @@ class RestaurantProvider with ChangeNotifier {
     }
   }
 
-  Future<void> fetchDishesForRestaurant(String restaurantId) async {
+  Future<void> fetchDishesAndPrecacheImages(
+      String restaurantId, BuildContext context) async {
     final dishesCollection = FirebaseFirestore.instance
         .collection('restaurants')
         .doc(restaurantId)
@@ -95,15 +96,42 @@ class RestaurantProvider with ChangeNotifier {
     final dishSnapshot = await dishesCollection.get();
 
     List<Dish> dishes = dishSnapshot.docs.map((dishDoc) {
+      // Check the type and existence of each field before accessing it
+      String name = dishDoc['name'] is String ? dishDoc['name'] : '';
+      name = name.replaceAll('*', '').trim();
+      String description =
+          dishDoc['description'] is String ? dishDoc['description'] : '';
+      num price = dishDoc['price'] is num ? dishDoc['price'] : 0;
+      String imgUrl = dishDoc['img_url'] is String ? dishDoc['img_url'] : '';
+      bool popular = dishDoc['popular'] is bool ? dishDoc['popular'] : false;
+
       return Dish(
         restaurantId: restaurantId,
-        name: dishDoc['name'],
-        description: dishDoc['description'],
-        price: dishDoc['price'],
-        imgUrl: dishDoc['imgUrl'],
-        popular: dishDoc['popular'],
+        name: name,
+        description: description,
+        price: price,
+        imgUrl: imgUrl,
+        popular: popular,
       );
     }).toList();
+
+    // Sort the dishes based on popularity and price
+    dishes.sort((a, b) {
+      if (a.popular == b.popular) {
+        return b.price.compareTo(
+            a.price); // If popularity is equal, sort by price from high to low
+      } else {
+        return (b.popular ? 1 : 0) - (a.popular ? 1 : 0); // Sort by popularity
+      }
+    });
+
+    // Precache the images
+    for (var dish in dishes
+        .where(
+            (element) => element.imgUrl != null && element.imgUrl!.isNotEmpty)
+        .take(8)) {
+      await precacheImage(NetworkImage(dish.imgUrl ?? ''), context);
+    }
 
     // Update the restaurant's dishes
     int restaurantIndex = _restaurants.indexWhere((r) => r.id == restaurantId);
