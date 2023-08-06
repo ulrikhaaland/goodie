@@ -1,16 +1,17 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
-import '../../../bloc/restaurants.dart';
 import '../../../model/restaurant.dart';
-import '../restaurantPage.dart';
+import '../restaurant_page.dart';
 
 class RestaurantListView extends StatefulWidget {
   final TextEditingController searchController;
+  final List<Restaurant> restaurants;
+
   const RestaurantListView({
     Key? key,
     required this.searchController,
+    required this.restaurants,
   }) : super(key: key);
 
   @override
@@ -27,6 +28,8 @@ class _RestaurantListViewState extends State<RestaurantListView>
   @override
   void initState() {
     super.initState();
+    _filteredRestaurants =
+        widget.restaurants; // initialize with the passed restaurants
     widget.searchController.addListener(_onSearchChanged);
   }
 
@@ -38,60 +41,51 @@ class _RestaurantListViewState extends State<RestaurantListView>
 
   void _onSearchChanged() {
     setState(() {
-      _filteredRestaurants = context
-          .read<RestaurantProvider>()
-          .restaurants
-          .where((restaurant) =>
-              widget.searchController.text.trim().isEmpty ||
-              restaurant.name
-                  .toLowerCase()
-                  .contains(widget.searchController.text.trim().toLowerCase()))
-          .toList();
+      if (widget.searchController.text.trim().isEmpty) {
+        _filteredRestaurants = widget.restaurants;
+      } else {
+        _filteredRestaurants = widget.restaurants
+            .where((restaurant) => restaurant.name
+                .toLowerCase()
+                .contains(widget.searchController.text.trim().toLowerCase()))
+            .toList();
+      }
     });
   }
 
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return Consumer<RestaurantProvider>(
-      builder: (context, restaurantProvider, child) {
-        // If the search controller has text, use the filtered list, otherwise use all restaurants
-        final restaurants = widget.searchController.text.isNotEmpty
-            ? _filteredRestaurants
-            : restaurantProvider.restaurants;
 
-        return Padding(
-          padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
-          child: ListView.builder(
-            cacheExtent: 500,
-            itemCount: restaurants.length,
-            itemBuilder: (context, index) {
-              final restaurant = restaurants[index];
+    return Padding(
+      padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
+      child: ListView.builder(
+        cacheExtent: 500,
+        itemCount: _filteredRestaurants.length,
+        itemBuilder: (context, index) {
+          final restaurant = _filteredRestaurants[index];
 
-              // Pre-cache the restaurant cover image
-              precacheImage(NetworkImage(restaurant.coverImg ?? ''), context);
+          // Pre-cache the restaurant cover image
+          precacheImage(NetworkImage(restaurant.coverImg ?? ''), context);
 
-              // If approaching the end of the list, load more
-              if (index == restaurants.length - 10) {
-                restaurantProvider.fetchMoreRestaurants();
-              }
+          // Here, we removed the logic to fetch more restaurants since it was
+          // based on the total restaurants list from the provider.
+          // If you still want to handle pagination, consider modifying this logic
+          // based on _filteredRestaurants.
 
-              return InkWell(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          RestaurantPage(restaurant: restaurant),
-                    ),
-                  );
-                },
-                child: _buildRestaurantListItem(context, restaurant),
+          return InkWell(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => RestaurantPage(restaurant: restaurant),
+                ),
               );
             },
-          ),
-        );
-      },
+            child: _buildRestaurantListItem(context, restaurant),
+          );
+        },
+      ),
     );
   }
 

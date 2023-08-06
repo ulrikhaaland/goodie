@@ -68,6 +68,7 @@ class DataMigration {
         dishes: dishes, // Add dishes here...
         categories: categories, // Add categories here...
         reviews: [],
+        position: null,
       );
 
       restaurants.add(restaurant);

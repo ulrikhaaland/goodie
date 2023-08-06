@@ -1,3 +1,5 @@
+import 'package:latlong2/latlong.dart';
+
 class Dish {
   final String restaurantId;
   final String name;
@@ -29,6 +31,7 @@ class Restaurant {
   List<Dish> dishes;
   final Set<String> categories;
   List<RestaurantReview> reviews;
+  final LatLng? position;
 
   Restaurant(
       {required this.id,
@@ -43,7 +46,8 @@ class Restaurant {
       required this.phone,
       required this.dishes,
       required this.categories,
-      required this.reviews});
+      required this.reviews,
+      required this.position});
 }
 
 class RestaurantReview {

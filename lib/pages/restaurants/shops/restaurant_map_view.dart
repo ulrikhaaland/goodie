@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 
+import '../../../model/restaurant.dart';
+
 class RestaurantMapView extends StatefulWidget {
   final TextEditingController searchController;
+  final List<Restaurant> restaurants;
 
   const RestaurantMapView({
     Key? key,
     required this.searchController,
+    required this.restaurants,
   }) : super(key: key);
 
   @override

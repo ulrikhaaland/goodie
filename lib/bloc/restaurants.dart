@@ -7,6 +7,9 @@ class RestaurantProvider with ChangeNotifier {
 
   List<Restaurant> get restaurants => _restaurants;
 
+  DocumentSnapshot?
+      _lastRestaurantDocument; // Tracks the last document in the current list
+
   Future<void> fetchRestaurants() async {
     _restaurants = []; // Reset the restaurants list
 
@@ -30,6 +33,7 @@ class RestaurantProvider with ChangeNotifier {
         dishes: [], // No dishes are fetched
         categories: Set.from(restaurantDoc['categories']),
         reviews: [],
+        position: null,
       );
 
       _restaurants.add(restaurant);
@@ -37,14 +41,10 @@ class RestaurantProvider with ChangeNotifier {
 
     _lastRestaurantDocument = restaurantSnapshot
         .docs.last; // Save the last document for the next fetch
-
     notifyListeners(); // Notify listeners to refresh UI
   }
 
-  DocumentSnapshot?
-      _lastRestaurantDocument; // Tracks the last document in the current list
-
-  Future<void> fetchMoreRestaurants() async {
+  Future<void> fetchMoreRestaurants(int limit) async {
     if (_lastRestaurantDocument == null) {
       return fetchRestaurants(); // If no previous document, start from the beginning
     }
@@ -55,7 +55,7 @@ class RestaurantProvider with ChangeNotifier {
     // Start the query after the last document retrieved in the previous fetch
     final restaurantSnapshot = await restaurantCollection
         .startAfterDocument(_lastRestaurantDocument!)
-        .limit(50)
+        .limit(limit)
         .get();
 
     if (restaurantSnapshot.docs.isNotEmpty) {
@@ -77,6 +77,7 @@ class RestaurantProvider with ChangeNotifier {
           dishes: [], // No dishes are fetched
           categories: Set.from(restaurantDoc['categories']),
           reviews: [],
+          position: null,
         );
 
         _restaurants.add(restaurant);

@@ -6,6 +6,8 @@ import 'package:goodie/pages/login.dart';
 import 'package:provider/provider.dart';
 
 import 'bloc/auth.dart';
+import 'bloc/filter.dart';
+import 'bloc/location.dart';
 import 'pages/restaurants/shops/shop_page.dart';
 
 void main() async {
@@ -13,11 +15,16 @@ void main() async {
   await Firebase.initializeApp();
   final authProvider = AuthProvider(); // Create instance
   final restaurantProvider = RestaurantProvider(); // Create instance
+  final filterProvider = FilterProvider();
+  final locationProvider = LocationProvider();
 
   // Move restaurant fetching to a method that can be called on auth changes.
   void fetchRestaurants() async {
     if (authProvider.firebaseUser != null) {
       await restaurantProvider.fetchRestaurants(); // Fetch restaurants
+      restaurantProvider.fetchMoreRestaurants(500).then((value) =>
+          filterProvider
+              .countCategoryAppearances(restaurantProvider.restaurants));
     }
   }
 
@@ -32,6 +39,12 @@ void main() async {
             value: authProvider), // Provide the instance
         ChangeNotifierProvider.value(
             value: restaurantProvider), // Provide the instance
+        ChangeNotifierProvider.value(
+          value: filterProvider,
+        ),
+        ChangeNotifierProvider.value(
+          value: locationProvider,
+        )
       ],
       child: const MainApp(),
     ),
@@ -92,13 +105,13 @@ class _HomeWithBottomNavigationState extends State<HomeWithBottomNavigation> {
           });
         },
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.list), label: 'List'),
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Hjem'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.list), label: 'Restauranter'),
           BottomNavigationBarItem(icon: Icon(Icons.post_add), label: 'Post'),
+          BottomNavigationBarItem(icon: Icon(Icons.bookmarks), label: 'Lagret'),
           BottomNavigationBarItem(
-              icon: Icon(Icons.bookmarks), label: 'Bookmarks'),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.account_circle), label: 'Profile'),
+              icon: Icon(Icons.account_circle), label: 'Profil'),
         ],
       ),
     );
