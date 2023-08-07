@@ -90,7 +90,7 @@ class _DishListViewState extends State<DishListView>
                           Text(dish.description ?? "",
                               style: const TextStyle(fontSize: 14.0)),
                           const SizedBox(height: 4.0),
-                          Text('\$${dish.price.toStringAsFixed(2)}',
+                          Text('kr ${dish.price.toStringAsFixed(2)}',
                               style: const TextStyle(
                                   fontSize: 14.0, fontWeight: FontWeight.bold)),
                         ],

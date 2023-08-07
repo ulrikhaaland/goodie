@@ -131,6 +131,7 @@ class RestaurantProvider with ChangeNotifier {
         .where(
             (element) => element.imgUrl != null && element.imgUrl!.isNotEmpty)
         .take(8)) {
+      // ignore: use_build_context_synchronously
       await precacheImage(NetworkImage(dish.imgUrl ?? ''), context);
     }
 

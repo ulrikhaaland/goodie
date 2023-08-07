@@ -9,7 +9,7 @@ enum FilterCriteria { anbefalt, distanse, vurdering, pris }
 class RestaurantFilter {
   final Set<String> categories;
   final String? name;
-  FilterCriteria? criteria;
+  FilterCriteria criteria;
   final num?
       ratingThreshold; // e.g. if you want to show restaurants above 4.5 rating
   bool isActive;
@@ -17,7 +17,7 @@ class RestaurantFilter {
   RestaurantFilter({
     required this.categories,
     this.name,
-    this.criteria,
+    this.criteria = FilterCriteria.anbefalt,
     this.ratingThreshold,
     this.isActive = false,
   });
@@ -27,7 +27,7 @@ class FilterProvider with ChangeNotifier {
   RestaurantFilter _filter = RestaurantFilter(
     categories: {},
     name: null,
-    criteria: null,
+    criteria: FilterCriteria.anbefalt,
     ratingThreshold: null,
     isActive: false,
   );
@@ -77,7 +77,7 @@ class FilterProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  set criteria(FilterCriteria? newCriteria) {
+  set criteria(FilterCriteria newCriteria) {
     _filter = RestaurantFilter(
       categories: _filter.categories,
       name: _filter.name,
@@ -110,7 +110,10 @@ class FilterProvider with ChangeNotifier {
     LatLng userLatLng = userLocation != null
         ? LatLng(userLocation.latitude!, userLocation.longitude!)
         : LatLng(0, 0); // Default values, or you could handle this differently
-
+    if (_filter.categories.isEmpty &&
+        _filter.criteria == FilterCriteria.anbefalt) {
+      return restaurants;
+    }
     return restaurants.where((restaurant) {
       bool matchesFilter = true;
 
@@ -134,11 +137,12 @@ class FilterProvider with ChangeNotifier {
       return matchesFilter;
     }).toList()
       ..sort((a, b) {
-        final distance = Distance();
+        const distance = Distance();
 
         switch (_filter.criteria) {
           case FilterCriteria.anbefalt:
-            return (b.rating ?? 0).compareTo(a.rating ?? 0);
+            return 1;
+          // return (b.rating ?? 0).compareTo(a.rating ?? 0);
           case FilterCriteria.distanse:
             // Only calculate distances if userLocation is not null
             if (userLocation != null) {
@@ -155,7 +159,6 @@ class FilterProvider with ChangeNotifier {
             return (b.rating ?? 0).compareTo(a.rating ?? 0);
           case FilterCriteria.pris:
             return (a.priceLevel ?? 0).compareTo(b.priceLevel ?? 0);
-          case null:
           default:
             return 0; // No specific sorting or unhandled criteria
         }

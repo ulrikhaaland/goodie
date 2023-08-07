@@ -14,6 +14,7 @@ class ListPage extends StatefulWidget {
   const ListPage({super.key});
 
   @override
+  // ignore: library_private_types_in_public_api
   _ListPageState createState() => _ListPageState();
 }
 
@@ -63,8 +64,10 @@ class _ListPageState extends State<ListPage>
         Provider.of<RestaurantProvider>(context, listen: false).restaurants;
 
     if (_searchController.text.trim().isEmpty) {
+      _filterProvider.name = null;
       _filteredRestaurants = allRestaurants;
     } else {
+      _filterProvider.name = _searchController.text.trim();
       _filteredRestaurants = allRestaurants
           .where((restaurant) => restaurant.name
               .toLowerCase()
@@ -80,7 +83,9 @@ class _ListPageState extends State<ListPage>
         Provider.of<RestaurantProvider>(context, listen: false).restaurants;
 
     if (_searchController.text.trim().isEmpty &&
-        !_filterProvider.filter.isActive) {
+        (!_filter.isActive ||
+            (_filter.categories.isEmpty &&
+                _filter.criteria == FilterCriteria.anbefalt))) {
       _filteredRestaurants = restaurants;
     } else {
       _filteredRestaurants =
@@ -121,7 +126,11 @@ class _ListPageState extends State<ListPage>
         actions: [
           IconButton(
             icon: Icon(Icons.filter_list,
-                color: _filter.isActive ? Colors.blueAccent : Colors.black),
+                color: _filter.isActive &&
+                        (_filter.categories.isNotEmpty ||
+                            _filter.criteria != FilterCriteria.anbefalt)
+                    ? Colors.blueAccent
+                    : Colors.black),
             onPressed: () {
               _showFilterOptions(context);
             },

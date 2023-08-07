@@ -25,140 +25,175 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
   Widget build(BuildContext context) {
     return Consumer<FilterProvider>(
       builder: (context, filterProvider, child) {
-        return Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment:
-                CrossAxisAlignment.start, // To left-align titles
-            children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[400],
-                    borderRadius: BorderRadius.circular(2.0),
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment:
+                  CrossAxisAlignment.start, // To left-align titles
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[400],
+                      borderRadius: BorderRadius.circular(2.0),
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Container(), // Placeholder for alignment purposes
-                  CircleAvatar(
-                    backgroundColor:
-                        Colors.grey[300], // You can adjust this color as needed
-                    radius: 20, // Adjust radius for size of the circle
-                    child: IconButton(
-                      iconSize: 24,
-                      icon: const Icon(Icons.close,
-                          color: Colors
-                              .black), // Adjust color to contrast with background
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                  ),
-                ],
-              ),
-              const Text(
-                "Valg",
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              const Divider(),
-              const SizedBox(height: 16),
-              const Text(
-                "Kategori",
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-              ),
-              const SizedBox(height: 4),
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // First row
-                    Wrap(
-                      children:
-                          getCategoryForRow(1, filterProvider.uniqueCategories)
-                              .map((category) {
-                        return _buildCategoryChip(category, filterProvider,
-                            filterProvider.uniqueCategories.indexOf(category));
-                      }).toList(),
-                    ),
-
-// Second row
-                    Wrap(
-                      children:
-                          getCategoryForRow(2, filterProvider.uniqueCategories)
-                              .map((category) {
-                        return _buildCategoryChip(category, filterProvider,
-                            filterProvider.uniqueCategories.indexOf(category));
-                      }).toList(),
-                    ),
-
-// Third row
-                    Wrap(
-                      children:
-                          getCategoryForRow(3, filterProvider.uniqueCategories)
-                              .map((category) {
-                        return _buildCategoryChip(category, filterProvider,
-                            filterProvider.uniqueCategories.indexOf(category));
-                      }).toList(),
+                    Container(), // Placeholder for alignment purposes
+                    CircleAvatar(
+                      backgroundColor: Colors
+                          .grey[300], // You can adjust this color as needed
+                      radius: 20, // Adjust radius for size of the circle
+                      child: IconButton(
+                        iconSize: 24,
+                        icon: const Icon(Icons.close,
+                            color: Colors
+                                .black), // Adjust color to contrast with background
+                        onPressed: () => Navigator.pop(context),
+                      ),
                     ),
                   ],
                 ),
-              ),
-              const Divider(),
-              const SizedBox(height: 16),
-              const Text(
-                "Sorter på",
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-              ),
-              const SizedBox(height: 4),
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: FilterCriteria.values.map((criteria) {
-                    return _buildCriteriaChip(criteria, filterProvider);
-                  }).toList(),
+                const Text(
+                  "Valg",
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity, // Making the button full width
-                height: 50,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.circular(12.0), // Applying border radius
+                const Divider(),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      "Kategori",
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                    ),
+                    if (_localFilter.categories.isNotEmpty)
+                      InkWell(
+                        onTap: () {
+                          setState(() {
+                            _localFilter.categories.clear();
+                          });
+                        },
+                        child: const Padding(
+                          padding: EdgeInsets.only(left: 8.0),
+                          child: Text(
+                            'Nullstill',
+                            style: TextStyle(
+                              color: Colors.blue, // making it look clickable
+                            ),
+                          ),
+                        ),
+                      )
+                  ],
+                ),
+                const SizedBox(height: 16),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // First row
+                      Wrap(
+                        children: getCategoryForRow(
+                                1, filterProvider.uniqueCategories)
+                            .map((category) {
+                          return _buildCategoryChip(
+                              category,
+                              filterProvider,
+                              filterProvider.uniqueCategories
+                                  .indexOf(category));
+                        }).toList(),
+                      ),
+
+                      // Second row
+                      Wrap(
+                        children: getCategoryForRow(
+                                2, filterProvider.uniqueCategories)
+                            .map((category) {
+                          return _buildCategoryChip(
+                              category,
+                              filterProvider,
+                              filterProvider.uniqueCategories
+                                  .indexOf(category));
+                        }).toList(),
+                      ),
+
+                      // Third row
+                      Wrap(
+                        children: getCategoryForRow(
+                                3, filterProvider.uniqueCategories)
+                            .map((category) {
+                          return _buildCategoryChip(
+                              category,
+                              filterProvider,
+                              filterProvider.uniqueCategories
+                                  .indexOf(category));
+                        }).toList(),
+                      ),
+                    ],
+                  ),
+                ),
+                const Divider(),
+                const SizedBox(height: 16),
+                const Text(
+                  "Sorter på",
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                ),
+                const SizedBox(height: 16),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: FilterCriteria.values.map((criteria) {
+                      return _buildCriteriaChip(criteria, filterProvider);
+                    }).toList(),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity, // Making the button full width
+                  height: 50,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(
+                            12.0), // Applying border radius
+                      ),
+                    ),
+                    onPressed: () {
+                      if (_localFilter.categories.isNotEmpty) {
+                        filterProvider.categories = _localFilter.categories;
+                        filterProvider.criteria = _localFilter.criteria;
+                        filterProvider.name = _localFilter.name;
+                        filterProvider.ratingThreshold =
+                            _localFilter.ratingThreshold;
+                        filterProvider.active = true;
+
+                        Navigator.pop(context, _localFilter);
+                      } else {
+                        filterProvider.categories = _localFilter.categories;
+
+                        Navigator.pop(context);
+                      }
+                    },
+                    child: Text(
+                      (filterProvider.filter.categories.isNotEmpty ||
+                              _localFilter.criteria != FilterCriteria.anbefalt)
+                          ? "Bruk"
+                          : "Close",
                     ),
                   ),
-                  onPressed: () {
-                    if (_localFilter.categories.isNotEmpty ||
-                        _localFilter.criteria != null) {
-                      filterProvider.categories = _localFilter.categories;
-                      filterProvider.criteria = _localFilter.criteria;
-                      filterProvider.name = _localFilter.name;
-                      filterProvider.ratingThreshold =
-                          _localFilter.ratingThreshold;
-                      filterProvider.active = true;
-
-                      Navigator.pop(context, _localFilter);
-                    } else {
-                      Navigator.pop(context);
-                    }
-                  },
-                  child: Text(
-                    (filterProvider.filter.categories.isNotEmpty ||
-                            filterProvider.filter.criteria != null)
-                        ? "Bruk"
-                        : "Close",
-                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },
@@ -219,9 +254,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
       return text[0].toUpperCase() + text.substring(1);
     }
 
-    final selected = filterProvider.filter.criteria == null
-        ? criteria == FilterCriteria.anbefalt
-        : filterProvider.filter.criteria == criteria;
+    final selected = filterProvider.filter.criteria == criteria;
 
     return Padding(
       padding: const EdgeInsets.only(right: 8.0),
@@ -235,7 +268,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
         selected: selected,
         onSelected: (selected) {
           setState(() {
-            _localFilter.criteria = selected ? criteria : null;
+            _localFilter.criteria = criteria;
           });
         },
         selectedColor: Colors.blueAccent,

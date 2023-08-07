@@ -118,40 +118,6 @@ class _RestaurantPageState extends State<RestaurantPage> {
     );
   }
 
-  Widget _buildRestaurantDetails() {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Text(
-                  widget.restaurant.name,
-                  style: const TextStyle(
-                      fontSize: 24, fontWeight: FontWeight.bold),
-                ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.bookmark_outline), // Heart icon
-                onPressed: () {
-                  // Your logic for liking the restaurant
-                },
-              ),
-            ],
-          ),
-          Text(
-            widget.restaurant.description ?? '',
-            style: const TextStyle(fontSize: 16),
-          ),
-          // You can continue adding more widgets here as needed
-        ],
-      ),
-    );
-  }
-
   Widget _buildTopButtons(BuildContext context) {
     return SafeArea(
       child: Padding(

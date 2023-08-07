@@ -20,7 +20,7 @@ class AuthProvider with ChangeNotifier {
         notifyListeners();
       },
       verificationFailed: (firebase.FirebaseAuthException e) {
-        print(e);
+        throw e;
         // Handle error
       },
       codeSent: (String verificationId, int? resendToken) {

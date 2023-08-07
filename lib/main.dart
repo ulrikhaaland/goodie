@@ -79,7 +79,7 @@ class _HomeWithBottomNavigationState extends State<HomeWithBottomNavigation> {
   int _selectedIndex = 0;
 
   final List<Widget> _pages = [
-    HomePage(),
+    const HomePage(),
     const ListPage(),
     const PostScreen(),
     const BookmarksScreen(),

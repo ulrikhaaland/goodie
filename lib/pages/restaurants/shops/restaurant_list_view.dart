@@ -13,6 +13,7 @@ class RestaurantListView extends StatefulWidget {
   }) : super(key: key);
 
   @override
+  // ignore: library_private_types_in_public_api
   _RestaurantListViewState createState() => _RestaurantListViewState();
 }
 
@@ -95,7 +96,8 @@ class _RestaurantListViewState extends State<RestaurantListView>
               const SizedBox(height: 2), // Space between description and rating
               Row(
                 children: [
-                  Text('${restaurant.rating ?? 'N/A'} ★'),
+                  Text(
+                      '${restaurant.rating.toString().length == 1 ? "${restaurant.rating}.0" : restaurant.rating ?? 'N/A'} ★'),
                   const SizedBox(
                       width: 10), // Space between rating and price level
                   Text(getPriceLevelSigns(restaurant.priceLevel)),
