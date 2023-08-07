@@ -119,8 +119,9 @@ class FilterProvider with ChangeNotifier {
 
       // Category filter
       if (_filter.categories.isNotEmpty) {
-        matchesFilter &=
-            _filter.categories.intersection(restaurant.categories).isNotEmpty;
+        matchesFilter &= _filter.categories
+            .intersection(restaurant.categories.toSet())
+            .isNotEmpty;
       }
 
       // Name filter

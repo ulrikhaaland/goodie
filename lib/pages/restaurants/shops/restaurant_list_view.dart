@@ -101,6 +101,21 @@ class _RestaurantListViewState extends State<RestaurantListView>
                   const SizedBox(
                       width: 10), // Space between rating and price level
                   Text(getPriceLevelSigns(restaurant.priceLevel)),
+                  const Spacer(),
+                  ...restaurant.categories
+                      .take(2)
+                      .map((
+                        category,
+                      ) =>
+                          Text(
+                            category +
+                                (restaurant.categories.first == category
+                                    ? ", "
+                                    : ""),
+                            style: const TextStyle(
+                                fontSize: 12, color: Colors.blueAccent),
+                          ))
+                      .toList(),
                 ],
               ),
             ],

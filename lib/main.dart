@@ -22,9 +22,11 @@ void main() async {
   void fetchRestaurants() async {
     if (authProvider.firebaseUser != null) {
       await restaurantProvider.fetchRestaurants(); // Fetch restaurants
-      restaurantProvider.fetchMoreRestaurants(500).then((value) =>
-          filterProvider
-              .countCategoryAppearances(restaurantProvider.restaurants));
+      restaurantProvider.fetchMoreRestaurants(500).then((value) {
+        filterProvider.countCategoryAppearances(restaurantProvider.restaurants);
+        restaurantProvider
+            .sortRestaurantCategories(filterProvider.categoryCounts);
+      });
     }
   }
 

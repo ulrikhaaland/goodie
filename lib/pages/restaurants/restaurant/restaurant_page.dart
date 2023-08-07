@@ -38,7 +38,7 @@ class _RestaurantPageState extends State<RestaurantPage> {
   Widget build(BuildContext context) {
     return Theme(
       data: ThemeData(
-        primaryColor: Colors.pink[300],
+        primaryColor: Colors.blueAccent,
         tabBarTheme: const TabBarTheme(
           labelColor: Colors.white,
           unselectedLabelColor: Colors.white70,
@@ -52,25 +52,67 @@ class _RestaurantPageState extends State<RestaurantPage> {
               Column(
                 children: [
                   // Cover Image occupying 1/3 of the screen
-                  SizedBox(
-                    height: MediaQuery.of(context).size.height / 3,
-                    width: double.infinity,
-                    child: CachedNetworkImage(
-                      imageUrl: widget.restaurant.coverImg ?? '',
-                      placeholder: (context, url) => const Center(
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2.0,
+                  Stack(
+                    children: [
+                      SizedBox(
+                        height: MediaQuery.of(context).size.height / 3,
+                        width: double.infinity,
+                        child: CachedNetworkImage(
+                          imageUrl: widget.restaurant.coverImg ?? '',
+                          placeholder: (context, url) => const Center(
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.0,
+                            ),
+                          ),
+                          errorWidget: (context, url, error) =>
+                              const Icon(Icons.error),
+                          fit: BoxFit.cover,
                         ),
                       ),
-                      errorWidget: (context, url, error) =>
-                          const Icon(Icons.error),
-                      fit: BoxFit.cover,
-                    ),
+                      Positioned(
+                        bottom: 10,
+                        left: 10,
+                        child: Container(
+                          padding: const EdgeInsets.all(
+                              8.0), // Padding around the text
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.8),
+                            borderRadius: BorderRadius.circular(
+                                8.0), // Optional: to round the corners
+                          ),
+                          child: Text(
+                            widget.restaurant.categories.take(3).join(', '),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ),
+                      if (widget.restaurant.priceLevel != null)
+                        Positioned(
+                          bottom: 10,
+                          right: 10,
+                          child: Container(
+                            padding: const EdgeInsets.all(
+                                8.0), // Padding around the text
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.8),
+                              borderRadius: BorderRadius.circular(
+                                  8.0), // Optional: to round the corners
+                            ),
+                            child: Row(
+                              children: getPriceLevelSigns(
+                                  widget.restaurant.priceLevel!),
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                   TabBar(
                     labelColor: Colors.black,
                     unselectedLabelColor: Colors.black54,
-                    indicatorColor: Colors.pink,
+                    indicatorColor: Colors.blueAccent,
                     indicatorPadding:
                         const EdgeInsets.symmetric(horizontal: 8.0),
                     onTap: _handleIndexChanged,
@@ -161,5 +203,29 @@ class _RestaurantPageState extends State<RestaurantPage> {
         ),
       ),
     );
+  }
+
+  List<Widget> getPriceLevelSigns(int priceLevel) {
+    List<Widget> signs = [];
+    Color activeColor = Colors.white;
+    Color inactiveColor = Colors.white.withOpacity(0.5);
+
+    for (int i = 1; i <= 4; i++) {
+      signs.add(
+        Text(
+          '\$',
+          style: TextStyle(
+            color: i <= priceLevel ? activeColor : inactiveColor,
+            fontSize: 12, // Adjust as per your needs
+          ),
+        ),
+      );
+      if (i != 4) {
+        signs.add(
+            const SizedBox(width: 4)); // Add some spacing between dollar signs
+      }
+    }
+
+    return signs;
   }
 }

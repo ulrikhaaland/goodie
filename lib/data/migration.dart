@@ -45,7 +45,7 @@ class DataMigration {
           .eq('restaurant_id', restaurantId)
           .order('id');
 
-      final categories = <String>{};
+      final List<String> categories = [];
 
       for (final categoryData in categoriesResponse as List) {
         final String cat = categoryData['category'];

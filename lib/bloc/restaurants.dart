@@ -31,7 +31,7 @@ class RestaurantProvider with ChangeNotifier {
         homepage: restaurantDoc['homepage'],
         phone: restaurantDoc['phone'],
         dishes: [], // No dishes are fetched
-        categories: Set.from(restaurantDoc['categories']),
+        categories: List.from(restaurantDoc['categories']),
         reviews: [],
         position: null,
       );
@@ -75,7 +75,7 @@ class RestaurantProvider with ChangeNotifier {
           homepage: restaurantDoc['homepage'],
           phone: restaurantDoc['phone'],
           dishes: [], // No dishes are fetched
-          categories: Set.from(restaurantDoc['categories']),
+          categories: List.from(restaurantDoc['categories']),
           reviews: [],
           position: null,
         );
@@ -144,6 +144,13 @@ class RestaurantProvider with ChangeNotifier {
       notifyListeners(); // Notify listeners to refresh UI
     } else {
       // Handle error: Restaurant not found
+    }
+  }
+
+  void sortRestaurantCategories(Map<String, int> categoryCounts) {
+    for (final restaurant in restaurants) {
+      restaurant.categories.sort(
+          (a, b) => (categoryCounts[b] ?? 0).compareTo(categoryCounts[a] ?? 0));
     }
   }
 }

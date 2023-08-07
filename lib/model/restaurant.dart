@@ -29,7 +29,7 @@ class Restaurant {
   final String? homepage;
   final String? phone;
   List<Dish> dishes;
-  final Set<String> categories;
+  final List<String> categories;
   List<RestaurantReview> reviews;
   final LatLng? position;
 
