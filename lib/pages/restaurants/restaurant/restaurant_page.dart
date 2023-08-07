@@ -1,10 +1,11 @@
 // ignore: file_names
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:goodie/pages/restaurants/restaurant/restaurant_info.dart';
 import 'package:provider/provider.dart';
 
-import '../../bloc/restaurants.dart';
-import '../../model/restaurant.dart';
+import '../../../bloc/restaurants.dart';
+import '../../../model/restaurant.dart';
 import 'dish_list_view.dart';
 
 class RestaurantPage extends StatefulWidget {
@@ -74,16 +75,17 @@ class _RestaurantPageState extends State<RestaurantPage> {
                         const EdgeInsets.symmetric(horizontal: 8.0),
                     onTap: _handleIndexChanged,
                     tabs: const [
-                      Tab(text: 'Restaurant'),
-                      Tab(text: 'Dishes'),
-                      Tab(text: 'Reviews'),
+                      Tab(text: 'Info'),
+                      Tab(text: 'Retter'),
+                      Tab(text: 'Anmeldelser'),
                     ],
                   ),
                   Expanded(
                     child: IndexedStack(
                       index: _currentIndex,
                       children: [
-                        _buildRestaurantDetails(),
+                        // First tab view: Info
+                        RestaurantInfo(restaurant: widget.restaurant),
                         // Second tab view: Dishes
                         FutureBuilder(
                           future: _fetchDishesFuture,
@@ -133,7 +135,7 @@ class _RestaurantPageState extends State<RestaurantPage> {
                 ),
               ),
               IconButton(
-                icon: const Icon(Icons.favorite_border), // Heart icon
+                icon: const Icon(Icons.bookmark_outline), // Heart icon
                 onPressed: () {
                   // Your logic for liking the restaurant
                 },

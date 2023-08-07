@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:goodie/bloc/location.dart';
 import 'package:goodie/pages/restaurants/shops/restaurant_list_view.dart';
 import 'package:goodie/pages/restaurants/shops/restaurant_map_view.dart';
+import 'package:location/location.dart';
 import 'package:provider/provider.dart';
 
 import '../../../bloc/filter.dart';
@@ -18,9 +19,12 @@ class ListPage extends StatefulWidget {
 
 class _ListPageState extends State<ListPage>
     with AutomaticKeepAliveClientMixin {
-  bool isMapView = false; // to toggle between map and list view
+  bool isMapView = false;
   final TextEditingController _searchController = TextEditingController();
   List<Restaurant> _filteredRestaurants = [];
+  LocationData? userLocation;
+  late final FilterProvider _filterProvider;
+  RestaurantFilter get _filter => _filterProvider.filter;
 
   @override
   bool get wantKeepAlive => true;
@@ -28,7 +32,23 @@ class _ListPageState extends State<ListPage>
   @override
   void initState() {
     super.initState();
+
+    // Fetch all restaurants initially.
+    final restaurantProvider =
+        Provider.of<RestaurantProvider>(context, listen: false);
+
+    restaurantProvider.addListener(() {
+      setState(() {
+        _filteredRestaurants = restaurantProvider.restaurants;
+      });
+    });
+
+    userLocation ??=
+        Provider.of<LocationProvider>(context, listen: false).currentLocation;
+
     _searchController.addListener(_onSearchChanged);
+    _filterProvider = Provider.of<FilterProvider>(context, listen: false);
+    _filterProvider.addListener(_updateFilteredRestaurants);
   }
 
   @override
@@ -39,27 +59,39 @@ class _ListPageState extends State<ListPage>
   }
 
   void _onSearchChanged() {
-    final filterProvider = Provider.of<FilterProvider>(context, listen: false);
-    filterProvider.name = _searchController.text;
+    final allRestaurants =
+        Provider.of<RestaurantProvider>(context, listen: false).restaurants;
+
+    if (_searchController.text.trim().isEmpty) {
+      _filteredRestaurants = allRestaurants;
+    } else {
+      _filteredRestaurants = allRestaurants
+          .where((restaurant) => restaurant.name
+              .toLowerCase()
+              .contains(_searchController.text.trim().toLowerCase()))
+          .toList();
+    }
+    _updateFilteredRestaurants(searchFilteredRestaurants: _filteredRestaurants);
+  }
+
+  void _updateFilteredRestaurants(
+      {List<Restaurant>? searchFilteredRestaurants}) {
+    final restaurants = searchFilteredRestaurants ??
+        Provider.of<RestaurantProvider>(context, listen: false).restaurants;
+
+    if (_searchController.text.trim().isEmpty &&
+        !_filterProvider.filter.isActive) {
+      _filteredRestaurants = restaurants;
+    } else {
+      _filteredRestaurants =
+          _filterProvider.applyFilter(restaurants, userLocation);
+    }
+    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
     super.build(context);
-
-    super.build(context);
-
-    final allRestaurants = Provider.of<RestaurantProvider>(context).restaurants;
-    final filterProvider = context.watch<FilterProvider>();
-
-    final userLocation = Provider.of<LocationProvider>(context).currentLocation;
-
-    if (filterProvider.filter.isActive) {
-      _filteredRestaurants =
-          filterProvider.applyFilter(allRestaurants, userLocation);
-    } else {
-      _filteredRestaurants = allRestaurants;
-    }
 
     return Scaffold(
       appBar: AppBar(
@@ -71,7 +103,7 @@ class _ListPageState extends State<ListPage>
           ),
           onPressed: () {
             setState(() {
-              isMapView = !isMapView; // toggle map/list view
+              isMapView = !isMapView;
             });
           },
         ),
@@ -88,7 +120,8 @@ class _ListPageState extends State<ListPage>
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.filter_list, color: Colors.black),
+            icon: Icon(Icons.filter_list,
+                color: _filter.isActive ? Colors.blueAccent : Colors.black),
             onPressed: () {
               _showFilterOptions(context);
             },
@@ -96,20 +129,17 @@ class _ListPageState extends State<ListPage>
         ],
       ),
       body: isMapView
-          ? RestaurantMapView(
-              restaurants: _filteredRestaurants,
-              searchController: _searchController)
-          : RestaurantListView(
-              restaurants: _filteredRestaurants,
-              searchController: _searchController),
+          ? RestaurantMapView(restaurants: _filteredRestaurants)
+          : RestaurantListView(restaurants: _filteredRestaurants),
     );
   }
 
   void _showFilterOptions(BuildContext context) {
     showModalBottomSheet(
+      isScrollControlled: true,
       context: context,
       builder: (context) {
-        return FilterBottomSheet();
+        return const FilterBottomSheet();
       },
     );
   }

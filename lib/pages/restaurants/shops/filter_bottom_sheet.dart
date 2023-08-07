@@ -12,6 +12,15 @@ class FilterBottomSheet extends StatefulWidget {
 }
 
 class _FilterBottomSheetState extends State<FilterBottomSheet> {
+  late RestaurantFilter _localFilter;
+
+  @override
+  void initState() {
+    super.initState();
+    final filterProvider = Provider.of<FilterProvider>(context, listen: false);
+    _localFilter = filterProvider.filter;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<FilterProvider>(
@@ -20,123 +29,134 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
           padding: const EdgeInsets.all(16.0),
           child: Column(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment:
+                CrossAxisAlignment.start, // To left-align titles
             children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[400],
+                    borderRadius: BorderRadius.circular(2.0),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Icon(Icons.drag_handle), // Center drag handle
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () => Navigator.pop(context),
+                  Container(), // Placeholder for alignment purposes
+                  CircleAvatar(
+                    backgroundColor:
+                        Colors.grey[300], // You can adjust this color as needed
+                    radius: 20, // Adjust radius for size of the circle
+                    child: IconButton(
+                      iconSize: 24,
+                      icon: const Icon(Icons.close,
+                          color: Colors
+                              .black), // Adjust color to contrast with background
+                      onPressed: () => Navigator.pop(context),
+                    ),
                   ),
                 ],
               ),
               const Text(
                 "Valg",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
               const Divider(),
-              const Text("Kategori"),
-              SizedBox(
-                height: 170,
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Padding(
-                    padding: const EdgeInsets.only(
-                        right:
-                            8.0), // A bit of padding to ensure last item isn't flush against the edge
-                    child: Column(
-                      children: [
-                        // First row
-                        Wrap(
-                          children: filterProvider.uniqueCategories
-                              .getRange(
-                                  0,
-                                  (filterProvider.uniqueCategories.length / 3)
-                                      .ceil())
-                              .toList()
-                              .asMap()
-                              .entries
-                              .map((entry) {
-                            int idx = entry.key;
-                            String category = entry.value;
-                            return _buildCategoryChip(
-                                category, filterProvider, idx);
-                          }).toList(),
-                        ),
-
-                        // Second row
-                        Wrap(
-                          children: filterProvider.uniqueCategories
-                              .getRange(
-                                  (filterProvider.uniqueCategories.length / 3)
-                                      .ceil(),
-                                  ((filterProvider.uniqueCategories.length /
-                                              3) *
-                                          2)
-                                      .ceil())
-                              .toList()
-                              .asMap()
-                              .entries
-                              .map((entry) {
-                            int idx = entry.key;
-                            String category = entry.value;
-                            return _buildCategoryChip(
-                                category, filterProvider, idx);
-                          }).toList(),
-                        ),
-
-                        // Third row
-                        Wrap(
-                          children: filterProvider.uniqueCategories
-                              .getRange(
-                                  ((filterProvider.uniqueCategories.length /
-                                              3) *
-                                          2)
-                                      .ceil(),
-                                  filterProvider.uniqueCategories.length)
-                              .toList()
-                              .asMap()
-                              .entries
-                              .map((entry) {
-                            int idx = entry.key;
-                            String category = entry.value;
-                            return _buildCategoryChip(
-                                category, filterProvider, idx);
-                          }).toList(),
-                        ),
-                      ],
+              const SizedBox(height: 16),
+              const Text(
+                "Kategori",
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+              ),
+              const SizedBox(height: 4),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // First row
+                    Wrap(
+                      children:
+                          getCategoryForRow(1, filterProvider.uniqueCategories)
+                              .map((category) {
+                        return _buildCategoryChip(category, filterProvider,
+                            filterProvider.uniqueCategories.indexOf(category));
+                      }).toList(),
                     ),
-                  ),
+
+// Second row
+                    Wrap(
+                      children:
+                          getCategoryForRow(2, filterProvider.uniqueCategories)
+                              .map((category) {
+                        return _buildCategoryChip(category, filterProvider,
+                            filterProvider.uniqueCategories.indexOf(category));
+                      }).toList(),
+                    ),
+
+// Third row
+                    Wrap(
+                      children:
+                          getCategoryForRow(3, filterProvider.uniqueCategories)
+                              .map((category) {
+                        return _buildCategoryChip(category, filterProvider,
+                            filterProvider.uniqueCategories.indexOf(category));
+                      }).toList(),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(),
+              const SizedBox(height: 16),
+              const Text(
+                "Sorter på",
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+              ),
+              const SizedBox(height: 4),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: FilterCriteria.values.map((criteria) {
+                    return _buildCriteriaChip(criteria, filterProvider);
+                  }).toList(),
                 ),
               ),
               const SizedBox(height: 16),
-              const Text("Sorter på"),
-              Wrap(
-                children: FilterCriteria.values.map((criteria) {
-                  return ChoiceChip(
-                    label: Text(criteria.toString().split('.').last),
-                    selected: filterProvider.filter.criteria == criteria,
-                    onSelected: (selected) {
-                      setState(() {
-                        filterProvider.criteria = selected ? criteria : null;
-                      });
-                    },
-                  );
-                }).toList(),
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () {
-                  if (filterProvider.filter.isActive) {
-                    Navigator.pop(context, filterProvider.filter);
-                  } else {
-                    Navigator.pop(context);
-                  }
-                },
-                child: Text(filterProvider.filter.isActive
-                    ? "Activate Filter"
-                    : "Close"),
+              SizedBox(
+                width: double.infinity, // Making the button full width
+                height: 50,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius:
+                          BorderRadius.circular(12.0), // Applying border radius
+                    ),
+                  ),
+                  onPressed: () {
+                    if (_localFilter.categories.isNotEmpty ||
+                        _localFilter.criteria != null) {
+                      filterProvider.categories = _localFilter.categories;
+                      filterProvider.criteria = _localFilter.criteria;
+                      filterProvider.name = _localFilter.name;
+                      filterProvider.ratingThreshold =
+                          _localFilter.ratingThreshold;
+                      filterProvider.active = true;
+
+                      Navigator.pop(context, _localFilter);
+                    } else {
+                      Navigator.pop(context);
+                    }
+                  },
+                  child: Text(
+                    (filterProvider.filter.categories.isNotEmpty ||
+                            filterProvider.filter.criteria != null)
+                        ? "Bruk"
+                        : "Close",
+                  ),
+                ),
               ),
             ],
           ),
@@ -145,27 +165,83 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
     );
   }
 
+  List<String> getCategoryForRow(int rowNumber, List<String> uniqueCategories) {
+    List<String> result = [];
+    for (int i = rowNumber - 1; i < uniqueCategories.length; i += 3) {
+      result.add(uniqueCategories[i]);
+    }
+    return result;
+  }
+
   Widget _buildCategoryChip(
       String category, FilterProvider filterProvider, int index) {
     return Padding(
       padding: EdgeInsets.only(
-        left: (index == 0) ? 0 : 8.0, // No left padding if it's the first item
-        right: 8.0,
-        top: 8.0,
+        left: (index == 0) ? 0 : 4.0, // Increased gap for visual comfort
+        right: 4.0,
       ),
       child: ChoiceChip(
-        label: Text(category),
+        label: Text(
+          category,
+          style: TextStyle(
+            color: filterProvider.filter.categories.contains(category)
+                ? Colors.white
+                : Colors.black,
+          ),
+        ),
         selected: filterProvider.filter.categories.contains(category),
         onSelected: (selected) {
-          Set<String> categories = filterProvider.filter.categories.toSet();
-
-          if (selected) {
-            categories.add(category);
-          } else {
-            categories.remove(category);
-          }
-          filterProvider.categories = categories;
+          setState(() {
+            if (selected) {
+              _localFilter.categories.add(category);
+            } else {
+              _localFilter.categories.remove(category);
+            }
+          });
         },
+
+        selectedColor: Colors.blueAccent, // Vivid color to signify selection
+        backgroundColor:
+            Colors.grey[200], // Soft background for unselected state
+        elevation: filterProvider.filter.categories.contains(category)
+            ? 6.0
+            : 0, // Elevation only when selected
+      ),
+    );
+  }
+
+  Widget _buildCriteriaChip(
+      FilterCriteria criteria, FilterProvider filterProvider) {
+    String capitalizeFirstLetter(String text) {
+      if (text.isEmpty) {
+        return text;
+      }
+      return text[0].toUpperCase() + text.substring(1);
+    }
+
+    final selected = filterProvider.filter.criteria == null
+        ? criteria == FilterCriteria.anbefalt
+        : filterProvider.filter.criteria == criteria;
+
+    return Padding(
+      padding: const EdgeInsets.only(right: 8.0),
+      child: ChoiceChip(
+        label: Text(
+          capitalizeFirstLetter(criteria.toString().split('.').last),
+          style: TextStyle(
+            color: selected ? Colors.white : Colors.black,
+          ),
+        ),
+        selected: selected,
+        onSelected: (selected) {
+          setState(() {
+            _localFilter.criteria = selected ? criteria : null;
+          });
+        },
+        selectedColor: Colors.blueAccent,
+        backgroundColor: Colors.grey[200],
+        elevation: selected ? 6.0 : 0,
+        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 2.0),
       ),
     );
   }

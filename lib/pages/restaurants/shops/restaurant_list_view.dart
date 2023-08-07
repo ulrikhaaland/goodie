@@ -2,15 +2,13 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../../../model/restaurant.dart';
-import '../restaurant_page.dart';
+import '../restaurant/restaurant_page.dart';
 
 class RestaurantListView extends StatefulWidget {
-  final TextEditingController searchController;
   final List<Restaurant> restaurants;
 
   const RestaurantListView({
     Key? key,
-    required this.searchController,
     required this.restaurants,
   }) : super(key: key);
 
@@ -20,38 +18,8 @@ class RestaurantListView extends StatefulWidget {
 
 class _RestaurantListViewState extends State<RestaurantListView>
     with AutomaticKeepAliveClientMixin {
-  List<Restaurant> _filteredRestaurants = [];
-
   @override
   bool get wantKeepAlive => true;
-
-  @override
-  void initState() {
-    super.initState();
-    _filteredRestaurants =
-        widget.restaurants; // initialize with the passed restaurants
-    widget.searchController.addListener(_onSearchChanged);
-  }
-
-  @override
-  void dispose() {
-    widget.searchController.removeListener(_onSearchChanged);
-    super.dispose();
-  }
-
-  void _onSearchChanged() {
-    setState(() {
-      if (widget.searchController.text.trim().isEmpty) {
-        _filteredRestaurants = widget.restaurants;
-      } else {
-        _filteredRestaurants = widget.restaurants
-            .where((restaurant) => restaurant.name
-                .toLowerCase()
-                .contains(widget.searchController.text.trim().toLowerCase()))
-            .toList();
-      }
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -61,9 +29,9 @@ class _RestaurantListViewState extends State<RestaurantListView>
       padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
       child: ListView.builder(
         cacheExtent: 500,
-        itemCount: _filteredRestaurants.length,
+        itemCount: widget.restaurants.length,
         itemBuilder: (context, index) {
-          final restaurant = _filteredRestaurants[index];
+          final restaurant = widget.restaurants[index];
 
           // Pre-cache the restaurant cover image
           precacheImage(NetworkImage(restaurant.coverImg ?? ''), context);

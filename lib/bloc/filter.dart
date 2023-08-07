@@ -4,12 +4,12 @@ import 'package:location/location.dart';
 
 import '../model/restaurant.dart';
 
-enum FilterCriteria { recommended, distance, rating, price }
+enum FilterCriteria { anbefalt, distanse, vurdering, pris }
 
 class RestaurantFilter {
   final Set<String> categories;
   final String? name;
-  final FilterCriteria? criteria;
+  FilterCriteria? criteria;
   final num?
       ratingThreshold; // e.g. if you want to show restaurants above 4.5 rating
   bool isActive;
@@ -61,6 +61,7 @@ class FilterProvider with ChangeNotifier {
       name: _filter.name,
       criteria: _filter.criteria,
       ratingThreshold: _filter.ratingThreshold,
+      isActive: true,
     );
     notifyListeners();
   }
@@ -71,6 +72,7 @@ class FilterProvider with ChangeNotifier {
       name: newName,
       criteria: _filter.criteria,
       ratingThreshold: _filter.ratingThreshold,
+      isActive: true,
     );
     notifyListeners();
   }
@@ -81,6 +83,7 @@ class FilterProvider with ChangeNotifier {
       name: _filter.name,
       criteria: newCriteria,
       ratingThreshold: _filter.ratingThreshold,
+      isActive: true,
     );
     notifyListeners();
   }
@@ -91,6 +94,7 @@ class FilterProvider with ChangeNotifier {
       name: _filter.name,
       criteria: _filter.criteria,
       ratingThreshold: newRating,
+      isActive: true,
     );
     notifyListeners();
   }
@@ -110,7 +114,22 @@ class FilterProvider with ChangeNotifier {
     return restaurants.where((restaurant) {
       bool matchesFilter = true;
 
-      // ... [rest of the filtering logic]
+      // Category filter
+      if (_filter.categories.isNotEmpty) {
+        matchesFilter &=
+            _filter.categories.intersection(restaurant.categories).isNotEmpty;
+      }
+
+      // Name filter
+      if (_filter.name != null && _filter.name!.isNotEmpty) {
+        matchesFilter &=
+            restaurant.name.toLowerCase().contains(_filter.name!.toLowerCase());
+      }
+
+      // Rating threshold filter
+      if (_filter.ratingThreshold != null) {
+        matchesFilter &= (restaurant.rating ?? 0) >= _filter.ratingThreshold!;
+      }
 
       return matchesFilter;
     }).toList()
@@ -118,9 +137,9 @@ class FilterProvider with ChangeNotifier {
         final distance = Distance();
 
         switch (_filter.criteria) {
-          case FilterCriteria.recommended:
+          case FilterCriteria.anbefalt:
             return (b.rating ?? 0).compareTo(a.rating ?? 0);
-          case FilterCriteria.distance:
+          case FilterCriteria.distanse:
             // Only calculate distances if userLocation is not null
             if (userLocation != null) {
               double aDistance = a.position != null
@@ -132,9 +151,9 @@ class FilterProvider with ChangeNotifier {
               return aDistance.compareTo(bDistance);
             }
             return 0; // Return 0 if userLocation is null
-          case FilterCriteria.rating:
+          case FilterCriteria.vurdering:
             return (b.rating ?? 0).compareTo(a.rating ?? 0);
-          case FilterCriteria.price:
+          case FilterCriteria.pris:
             return (a.priceLevel ?? 0).compareTo(b.priceLevel ?? 0);
           case null:
           default:
