@@ -76,47 +76,58 @@ class _DishListViewState extends State<DishListView>
             itemCount: _filteredDishes.length,
             itemBuilder: (context, index) {
               final dish = _filteredDishes[index];
-              return ListTile(
-                title: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(dish.name,
-                              style: const TextStyle(
-                                  fontSize: 16.0, fontWeight: FontWeight.bold)),
-                          const SizedBox(height: 4.0),
-                          Text(dish.description ?? "",
-                              style: const TextStyle(fontSize: 14.0)),
-                          const SizedBox(height: 4.0),
-                          Text('kr ${dish.price.toStringAsFixed(2)}',
-                              style: const TextStyle(
-                                  fontSize: 14.0, fontWeight: FontWeight.bold)),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 8.0),
-                    dish.imgUrl != null && dish.imgUrl!.isNotEmpty
-                        ? ClipRRect(
-                            borderRadius: BorderRadius.circular(8.0),
-                            child: CachedNetworkImage(
-                              imageUrl: dish.imgUrl ?? '',
-                              placeholder: (context, url) => const Center(
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2.0,
+              return Column(
+                children: [
+                  ListTile(
+                    title: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(dish.name,
+                                  style: const TextStyle(
+                                      fontSize: 16.0,
+                                      fontWeight: FontWeight.bold)),
+                              const SizedBox(height: 16.0),
+                              Text(dish.description ?? "",
+                                  style: const TextStyle(fontSize: 14.0)),
+                              const SizedBox(height: 14.0),
+                              Text('kr ${dish.price.toStringAsFixed(2)}',
+                                  style: const TextStyle(
+                                      fontSize: 14.0,
+                                      fontWeight: FontWeight.bold)),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 8.0),
+                        dish.imgUrl != null && dish.imgUrl!.isNotEmpty
+                            ? ClipRRect(
+                                borderRadius: BorderRadius.circular(8.0),
+                                child: CachedNetworkImage(
+                                  imageUrl: dish.imgUrl ?? '',
+                                  placeholder: (context, url) => const Center(
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2.0,
+                                    ),
+                                  ),
+                                  errorWidget: (context, url, error) =>
+                                      const Icon(Icons.error),
+                                  width: 120, // Set the width
+                                  height: 100, // Set the height
+                                  fit: BoxFit.cover,
                                 ),
-                              ),
-                              errorWidget: (context, url, error) =>
-                                  const Icon(Icons.error),
-                              width: 100, // Set the width
-                              height: 80, // Set the height
-                              fit: BoxFit.cover,
-                            ),
-                          )
-                        : Container(), // Empty container when there's no image
-                  ],
-                ),
+                              )
+                            : Container(), // Empty container when there's no image
+                      ],
+                    ),
+                  ),
+                  const Divider(
+                    height: 1.0,
+                    indent: 16.0,
+                    endIndent: 16.0,
+                  ),
+                ],
               );
             },
           ),

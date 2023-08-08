@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:goodie/bloc/restaurants.dart';
 import 'package:goodie/pages/home.dart';
 import 'package:goodie/pages/login.dart';
+import 'package:goodie/pages/review/review_page.dart';
 import 'package:provider/provider.dart';
 
 import 'bloc/auth.dart';
@@ -83,7 +84,7 @@ class _HomeWithBottomNavigationState extends State<HomeWithBottomNavigation> {
   final List<Widget> _pages = [
     const HomePage(),
     const ListPage(),
-    const PostScreen(),
+    RestaurantReviewPage(),
     const BookmarksScreen(),
     const ProfileScreen(),
   ];
@@ -110,7 +111,7 @@ class _HomeWithBottomNavigationState extends State<HomeWithBottomNavigation> {
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Hjem'),
           BottomNavigationBarItem(
               icon: Icon(Icons.list), label: 'Restauranter'),
-          BottomNavigationBarItem(icon: Icon(Icons.post_add), label: 'Post'),
+          BottomNavigationBarItem(icon: Icon(Icons.post_add), label: 'Anmeld'),
           BottomNavigationBarItem(icon: Icon(Icons.bookmarks), label: 'Lagret'),
           BottomNavigationBarItem(
               icon: Icon(Icons.account_circle), label: 'Profil'),
@@ -122,32 +123,6 @@ class _HomeWithBottomNavigationState extends State<HomeWithBottomNavigation> {
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(
-        child: Text('Welcome to Home Page!'),
-      ),
-    );
-  }
-}
-
-class ListScreen extends StatelessWidget {
-  const ListScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(
-        child: Text('Welcome to Home Page!'),
-      ),
-    );
-  }
-}
-
-class PostScreen extends StatelessWidget {
-  const PostScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

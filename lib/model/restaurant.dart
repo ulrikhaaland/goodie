@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
 
 class Dish {
@@ -56,17 +57,56 @@ class RestaurantReview {
   final String userId;
   final String userName;
   final String? userImgUrl;
-  final String? review;
-  final num? rating;
+  final String? description; //
+  final num ratingFood; // 0-10
+  final num ratingService; // 0-10
   final DateTime timestamp;
+  final bool dineIn; // If not dine-in, then takeout
+  final List<Image>? images; // Images of the review
+  // Below are not for making a review, but for other users to interact with the review
+  final List<Comment>? comments; // Comments on the review
+  final List<Like>? likes; // Likes on the review
 
-  RestaurantReview(
+  RestaurantReview(this.images, this.ratingFood, this.ratingService,
+      this.comments, this.likes,
       {required this.id,
+      required this.dineIn,
       required this.restaurantId,
       required this.userId,
       required this.userName,
       required this.userImgUrl,
-      required this.review,
-      required this.rating,
+      required this.description,
+      required this.timestamp});
+}
+
+class Comment {
+  final String id;
+  final String userId;
+  final String userName;
+  final String? userImgUrl;
+  final String? description;
+  final DateTime timestamp;
+
+  Comment(
+      {required this.id,
+      required this.userId,
+      required this.userName,
+      required this.userImgUrl,
+      required this.description,
+      required this.timestamp});
+}
+
+class Like {
+  final String id;
+  final String userId;
+  final String userName;
+  final String? userImgUrl;
+  final DateTime timestamp;
+
+  Like(
+      {required this.id,
+      required this.userId,
+      required this.userName,
+      required this.userImgUrl,
       required this.timestamp});
 }
