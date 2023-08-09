@@ -57,7 +57,8 @@ class _RestaurantReviewReviewState extends State<RestaurantReviewReview> {
               if (widget.restaurant != null)
                 _buildRestaurantListItem(context, widget.restaurant!),
               _buildDineInOrTakeout(),
-              _buildRating("Mat", ratingFood, (value) {
+              const SizedBox(height: 20),
+              _buildRating("Smak", ratingFood, (value) {
                 setState(() {
                   ratingFood = value;
                 });
@@ -90,18 +91,15 @@ class _RestaurantReviewReviewState extends State<RestaurantReviewReview> {
                   });
                 }),
               const SizedBox(height: 20),
-              TextField(
-                decoration: const InputDecoration(labelText: "Description"),
-                maxLines: 5,
-                onChanged: (value) {
-                  description = value;
-                },
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () => _handleOnSubmit(),
-                child: const Text("Submit Review"),
-              ),
+              // TextField(
+              //   decoration: const InputDecoration(labelText: "Description"),
+              //   maxLines: 5,
+              //   onChanged: (value) {
+              //     description = value;
+              //   },
+              // ),
+              // const SizedBox(height: 20),
+              _buildSubmitButton(),
             ],
           ),
         ),
@@ -211,7 +209,7 @@ class _RestaurantReviewReviewState extends State<RestaurantReviewReview> {
           title: Text(
             restaurant.name,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontWeight: FontWeight.normal, fontSize: 14),
+            style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
           ),
           subtitle: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -258,7 +256,6 @@ class _RestaurantReviewReviewState extends State<RestaurantReviewReview> {
                 onPressed: () {
                   setState(() {
                     dineIn = true;
-                    ratingPackaging = null;
                   });
                 },
                 child: Text(
@@ -287,8 +284,6 @@ class _RestaurantReviewReviewState extends State<RestaurantReviewReview> {
                 onPressed: () {
                   setState(() {
                     dineIn = false;
-                    ratingAtmosphere = null;
-                    ratingCleanliness = null;
                   });
                 },
                 child: Text(
@@ -304,5 +299,96 @@ class _RestaurantReviewReviewState extends State<RestaurantReviewReview> {
         ),
       ],
     );
+  }
+
+  Widget _buildSubmitButton() {
+    bool canSubmit = _canSubmit();
+
+    return ElevatedButton(
+      style: ButtonStyle(
+        elevation: MaterialStateProperty.all(8.0), // Increased shadow depth
+        shape: MaterialStateProperty.all(
+          RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20), // Rounded corners
+          ),
+        ),
+        backgroundColor: MaterialStateProperty.resolveWith<Color>(
+          (Set<MaterialState> states) {
+            if (states.contains(MaterialState.disabled)) {
+              return Colors.grey.shade300; // Disabled color
+            }
+            return Theme.of(context)
+                .colorScheme
+                .secondary; // Use secondary color from colorScheme
+          },
+        ),
+        foregroundColor: MaterialStateProperty.resolveWith<Color>(
+          (Set<MaterialState> states) {
+            if (states.contains(MaterialState.disabled)) {
+              return Colors.grey.shade600; // Foreground when disabled
+            }
+            return Colors.white; // Regular foreground color
+          },
+        ),
+      ),
+      onPressed: canSubmit ? () => _handleOnSubmit() : null,
+      child: const Padding(
+        padding: EdgeInsets.symmetric(
+            vertical: 12.0, horizontal: 40.0), // More padding to increase size
+        child: Row(
+          mainAxisSize: MainAxisSize
+              .min, // To ensure the Row takes only as much space as required
+          children: [
+            Icon(Icons.check), // An icon for emphasis
+            SizedBox(width: 8.0), // Gap between icon and text
+            Text(
+              "Submit Review",
+              style: TextStyle(
+                fontSize: 18, // Slightly larger font size
+                fontWeight: FontWeight.bold, // Bold font weight
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  bool _canSubmit() {
+    if (dineIn) {
+      return ratingFood != null &&
+          ratingService != null &&
+          ratingPrice != null &&
+          ratingCleanliness != null &&
+          ratingAtmosphere != null;
+    } else {
+      return ratingFood != null &&
+          ratingPrice != null &&
+          ratingPackaging != null;
+    }
+  }
+
+  double? _computeOverallRating() {
+    if (dineIn) {
+      if (ratingFood != null &&
+          ratingService != null &&
+          ratingPrice != null &&
+          ratingCleanliness != null &&
+          ratingAtmosphere != null) {
+        return (ratingFood! +
+                ratingService! +
+                ratingPrice! +
+                ratingCleanliness! +
+                ratingAtmosphere!) /
+            5;
+      }
+    } else {
+      if (ratingFood != null &&
+          ratingPrice != null &&
+          ratingPackaging != null) {
+        return (ratingFood! + ratingPrice! + ratingPackaging!) / 3;
+      }
+    }
+    return null; // Return null if not all required ratings are provided
   }
 }
