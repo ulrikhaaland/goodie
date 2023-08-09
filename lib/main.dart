@@ -84,7 +84,7 @@ class _HomeWithBottomNavigationState extends State<HomeWithBottomNavigation> {
   final List<Widget> _pages = [
     const HomePage(),
     const ListPage(),
-    RestaurantReviewPage(),
+    const RestaurantReviewPage(),
     const BookmarksScreen(),
     const ProfileScreen(),
   ];

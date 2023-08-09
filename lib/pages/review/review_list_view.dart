@@ -1,37 +1,45 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../../model/restaurant.dart';
-import '../restaurants/restaurant/restaurant_page.dart';
+import '../../bloc/restaurants.dart';
 
-class RestaurantReviewListView extends StatefulWidget {
-  final List<Restaurant> restaurants;
-  final Function(Restaurant)? onSelectRestaurant;
+class ResturantReviewSelect extends StatefulWidget {
+  final Function(Restaurant) onSelectRestaurant;
 
-  const RestaurantReviewListView({
+  const ResturantReviewSelect({
     Key? key,
-    required this.restaurants,
-    this.onSelectRestaurant,
+    required this.onSelectRestaurant,
   }) : super(key: key);
 
   @override
   // ignore: library_private_types_in_public_api
-  _RestaurantReviewListViewState createState() =>
-      _RestaurantReviewListViewState();
+  _ResturantReviewSelectState createState() => _ResturantReviewSelectState();
 }
 
-class _RestaurantReviewListViewState extends State<RestaurantReviewListView>
+class _ResturantReviewSelectState extends State<ResturantReviewSelect>
     with AutomaticKeepAliveClientMixin {
   @override
   bool get wantKeepAlive => true;
   final TextEditingController _searchController = TextEditingController();
   List<Restaurant> _filteredRestaurants = [];
+  final FocusNode _searchFocusNode = FocusNode();
+  List<Restaurant> _allRestaurants = [];
 
   @override
   void initState() {
     super.initState();
 
-    _filteredRestaurants = widget.restaurants;
+    final restaurantProvider =
+        Provider.of<RestaurantProvider>(context, listen: false);
+
+    restaurantProvider.addListener(() {
+      setState(() {
+        _allRestaurants = restaurantProvider.restaurants;
+        _filteredRestaurants = _allRestaurants;
+      });
+    });
 
     _searchController.addListener(_onSearchChanged);
   }
@@ -45,9 +53,9 @@ class _RestaurantReviewListViewState extends State<RestaurantReviewListView>
 
   void _onSearchChanged() {
     if (_searchController.text.trim().isEmpty) {
-      _filteredRestaurants = widget.restaurants;
+      _filteredRestaurants = _allRestaurants;
     } else {
-      _filteredRestaurants = widget.restaurants
+      _filteredRestaurants = _allRestaurants
           .where((restaurant) => restaurant.name
               .toLowerCase()
               .contains(_searchController.text.trim().toLowerCase()))
@@ -60,43 +68,66 @@ class _RestaurantReviewListViewState extends State<RestaurantReviewListView>
   Widget build(BuildContext context) {
     super.build(context);
 
-    return Padding(
-      padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
-      child: Column(
-        children: [
-          // Only show the TextField in selectMode
-          Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: 'Search Restaurants...',
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12.0)),
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 24.0),
+
+            // IconButton(
+            //   padding: EdgeInsets.zero,
+            //   icon: const Icon(Icons.arrow_back, color: Colors.black, size: 24),
+            //   onPressed: () => Navigator.pop(context),
+            // ),
+            const Padding(
+              padding: EdgeInsets.only(left: 16.0),
+              child: Text(
+                'Hvilken restaurant vil du anmelde?',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
-          ),
-
-          Expanded(
-            child: ListView.builder(
-              cacheExtent: 500,
-              itemCount: _filteredRestaurants.length, // Use the filtered list
-              itemBuilder: (context, index) {
-                final restaurant = _filteredRestaurants[index];
-
-                precacheImage(NetworkImage(restaurant.coverImg ?? ''), context);
-                return InkWell(
-                  onTap: () {
-                    widget.onSelectRestaurant?.call(restaurant);
-                  },
-                  child: _buildRestaurantListItem(context, restaurant),
-                );
-              },
+            const SizedBox(height: 24.0),
+            Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              child: TextField(
+                autofocus: true,
+                focusNode: _searchFocusNode,
+                controller: _searchController,
+                decoration: InputDecoration(
+                  hintText: 'Søk',
+                  prefixIcon: const Icon(Icons.search),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12.0)),
+                ),
+              ),
             ),
-          ),
-        ],
+            Expanded(
+              child: ListView.builder(
+                cacheExtent: 500,
+                itemCount: _filteredRestaurants.length, // Use the filtered list
+                itemBuilder: (context, index) {
+                  final restaurant = _filteredRestaurants[index];
+
+                  precacheImage(
+                      NetworkImage(restaurant.coverImg ?? ''), context);
+                  return InkWell(
+                    onTap: () {
+                      widget.onSelectRestaurant.call(restaurant);
+                      _searchFocusNode.unfocus();
+                    },
+                    child: _buildRestaurantListItem(context, restaurant),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

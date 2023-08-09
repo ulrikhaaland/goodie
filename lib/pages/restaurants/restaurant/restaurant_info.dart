@@ -189,7 +189,7 @@ class _RestaurantInfoState extends State<RestaurantInfo> {
                 fontSize: 16,
               ),
             ),
-            const SizedBox(width: 6.0),
+            const SizedBox(width: 11.0),
             Text(
               getHourForDay(
                   widget.restaurant.openingHours ?? '', getCurrentDay()),
@@ -246,7 +246,7 @@ class _RestaurantInfoState extends State<RestaurantInfo> {
           children: [
             const SizedBox(width: 24.0 + 12.0), // space for icon and padding
             SizedBox(
-              width: 65.0, // Max width of the days
+              width: 70.0, // Max width of the days
               child: Text(
                 "$day:",
                 style: const TextStyle(
@@ -332,12 +332,12 @@ class _RestaurantInfoState extends State<RestaurantInfo> {
       return phoneNumber; // Return original if not of expected length
     }
 
-    return '${phoneNumber.substring(3, 5)} ${phoneNumber.substring(5, 7)} ${phoneNumber.substring(7, 9)} ${phoneNumber.substring(9, 11)}';
+    return '${phoneNumber.substring(0, 3)} ${phoneNumber.substring(3, 6)} ${phoneNumber.substring(6, 8)} ${phoneNumber.substring(8, 11)}';
   }
 
   String formatAddress(String address) {
-    // Use a regex to find the pattern (any number followed by exactly 4 digits at the end)
+    // Use a regex to find the pattern (any word character followed by exactly 4 digits at the end)
     return address.replaceAllMapped(
-        RegExp(r'(\d)(\d{4} \w+)$'), (Match m) => '${m[1]}, ${m[2]}');
+        RegExp(r'(\w)(\d{4} \w+)$'), (Match m) => '${m[1]}, ${m[2]}');
   }
 }
