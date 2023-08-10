@@ -76,6 +76,7 @@ class _RestaurantReviewPageState extends State<RestaurantReviewPage>
           ReviewPageButtons(
             isSubmit: _pageIndex == 3,
             canSubmit: _canSubmit,
+            rightButtonText: _pageIndex == 1 ? "Hopp over" : "Neste",
             onLeftPressed: () {
               _handleOnLeftPressed();
             },

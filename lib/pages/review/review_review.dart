@@ -68,69 +68,53 @@ class _RestaurantReviewReviewState extends State<RestaurantReviewReview> {
           ),
           child: SizedBox(
             height: MediaQuery.of(context).size.height - 136,
-            child: Stack(
+            child: Column(
               children: [
-                Column(
-                  children: [
-                    if (widget.restaurantListItem != null)
-                      widget.restaurantListItem!,
-                    _buildDineInOrTakeout(),
-                    const SizedBox(height: 20),
-                    _buildRating("Smak", ratingFood, (value) {
-                      setState(() {
-                        ratingFood = value;
-                      });
-                    }),
-                    _buildRating("Pris", ratingPrice, (value) {
-                      setState(() {
-                        ratingPrice = value;
-                      });
-                    }),
-                    if (dineIn) ...[
-                      _buildRating("Service", ratingService, (value) {
-                        setState(() {
-                          ratingService = value;
-                        });
-                      }),
-                      _buildRating("Atmosfære", ratingAtmosphere, (value) {
-                        setState(() {
-                          ratingAtmosphere = value;
-                        });
-                      }),
-                      _buildRating("Renhold", ratingCleanliness, (value) {
-                        setState(() {
-                          ratingCleanliness = value;
-                        });
-                      }),
-                    ] else
-                      _buildRating("Innpakning", ratingPackaging, (value) {
-                        setState(() {
-                          ratingPackaging = value;
-                        });
-                      }),
-                    const SizedBox(height: 20),
-                    // TextField(
-                    //   decoration: const InputDecoration(labelText: "Description"),
-                    //   maxLines: 5,
-                    //   onChanged: (value) {
-                    //     description = value;
-                    //   },
-                    // ),
-                    // const SizedBox(height: 20),
-                  ],
-                ),
-                Positioned(
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      _buildLeftButton(),
-                      _buildRightButton(),
-                    ],
-                  ),
-                ),
+                if (widget.restaurantListItem != null)
+                  widget.restaurantListItem!,
+                _buildDineInOrTakeout(),
+                const SizedBox(height: 20),
+                _buildRating("Smak", ratingFood, (value) {
+                  setState(() {
+                    ratingFood = value;
+                  });
+                }),
+                _buildRating("Pris", ratingPrice, (value) {
+                  setState(() {
+                    ratingPrice = value;
+                  });
+                }),
+                if (dineIn) ...[
+                  _buildRating("Service", ratingService, (value) {
+                    setState(() {
+                      ratingService = value;
+                    });
+                  }),
+                  _buildRating("Atmosfære", ratingAtmosphere, (value) {
+                    setState(() {
+                      ratingAtmosphere = value;
+                    });
+                  }),
+                  _buildRating("Renhold", ratingCleanliness, (value) {
+                    setState(() {
+                      ratingCleanliness = value;
+                    });
+                  }),
+                ] else
+                  _buildRating("Innpakning", ratingPackaging, (value) {
+                    setState(() {
+                      ratingPackaging = value;
+                    });
+                  }),
+                const SizedBox(height: 20),
+                // TextField(
+                //   decoration: const InputDecoration(labelText: "Description"),
+                //   maxLines: 5,
+                //   onChanged: (value) {
+                //     description = value;
+                //   },
+                // ),
+                // const SizedBox(height: 20),
               ],
             ),
           ),

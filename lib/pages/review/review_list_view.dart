@@ -96,7 +96,7 @@ class _ResturantReviewSelectState extends State<ResturantReviewSelect>
               padding:
                   const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
               child: TextField(
-                autofocus: true,
+                // autofocus: true,
                 focusNode: _searchFocusNode,
                 controller: _searchController,
                 decoration: InputDecoration(

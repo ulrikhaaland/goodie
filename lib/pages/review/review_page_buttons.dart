@@ -97,7 +97,7 @@ class _ReviewPageButtonsState extends State<ReviewPageButtons> {
               style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: Colors.black),
+                  color: Colors.white),
             ),
           ),
         ),
@@ -113,8 +113,16 @@ class _ReviewPageButtonsState extends State<ReviewPageButtons> {
           borderRadius: BorderRadius.circular(20),
         ),
       ),
-      backgroundColor: MaterialStateProperty.all(
-          Colors.white), // Adjusted this to make it consistent
+      backgroundColor: MaterialStateProperty.resolveWith<Color>(
+        (Set<MaterialState> states) {
+          if (states.contains(MaterialState.disabled)) {
+            return Colors.grey.shade300; // Disabled color
+          }
+          return Theme.of(context)
+              .colorScheme
+              .secondary; // Use secondary color from colorScheme
+        },
+      ),
     );
   }
 

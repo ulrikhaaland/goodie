@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:goodie/pages/review/review_photo_picker.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../model/restaurant.dart';
@@ -21,6 +22,14 @@ class RestaurantReviewImages extends StatefulWidget {
 
 class _RestaurantReviewImagesState extends State<RestaurantReviewImages> {
   final ImagePicker _picker = ImagePicker();
+  late List<File> _images;
+
+  @override
+  void initState() {
+    super.initState();
+    _images =
+        List.from(widget.images); // make a modifiable copy of widget.images
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -49,29 +58,43 @@ class _RestaurantReviewImagesState extends State<RestaurantReviewImages> {
                   mainAxisSpacing: 10,
                   crossAxisSpacing: 10,
                 ),
-                itemCount: 6, // Always show 6 items
+                itemCount: 1, // Always show 6 items
                 itemBuilder: (context, index) {
-                  if (index < widget.images.length) {
-                    return Image.file(widget.images[index], fit: BoxFit.cover);
+                  if (index < _images.length) {
+                    return ClipRRect(
+                      borderRadius: BorderRadius.circular(8.0),
+                      child: Image.file(_images[index], fit: BoxFit.cover),
+                    );
                   }
                   return GestureDetector(
-                    onTap: _pickImage,
+                    onTap: _pickImages,
                     child: Container(
                       decoration: BoxDecoration(
                         border: Border.all(color: Colors.grey[400]!),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: Icon(Icons.add, color: Colors.grey[400]),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Legg til bilder',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Colors.grey[400],
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Icon(Icons.add, color: Colors.grey[400]),
+                        ],
+                      ),
                     ),
                   );
                 },
               ),
             ),
-            ElevatedButton(
-              onPressed: _pickImage,
-              child: const Text("Add Image"),
-            ),
-            const SizedBox(height: 20),
             if (widget.images.isNotEmpty)
               ElevatedButton(
                 onPressed: () => Navigator.pop(context, widget.images),
@@ -85,15 +108,25 @@ class _RestaurantReviewImagesState extends State<RestaurantReviewImages> {
     );
   }
 
-  _pickImage() async {
-    if (widget.images.length < 6) {
-      // Ensure not more than 6 images are added
-      final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
-      if (pickedFile != null) {
-        setState(() {
-          widget.images.add(File(pickedFile.path));
-        });
-      }
+  _pickImages() async {
+    if (_images.length < 6) {
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        builder: (BuildContext context) {
+          return FractionallySizedBox(
+            heightFactor: 0.83, // This means 90% of screen height
+            child: RestaurantReviewPhotoPicker(
+              onImagesSelected: (selectedImages) {
+                setState(() {
+                  _images.addAll(selectedImages);
+                });
+              },
+              // you can pass other required parameters if any
+            ),
+          );
+        },
+      );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("You can select up to 6 images only!")));
