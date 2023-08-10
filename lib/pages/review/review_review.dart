@@ -1,5 +1,5 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:goodie/pages/review/review_progress_bar.dart';
 import 'package:provider/provider.dart';
 
 import '../../bloc/auth.dart';
@@ -9,11 +9,17 @@ import 'review_rating.dart';
 class RestaurantReviewReview extends StatefulWidget {
   final Restaurant? restaurant;
   final Function(RestaurantReview) onReviewRestaurant;
+  final Widget? restaurantListItem;
+  final Function() onBackPressed;
+  final Function(bool canSubmit) onCanSubmit;
 
   const RestaurantReviewReview({
     super.key,
     required this.restaurant,
     required this.onReviewRestaurant,
+    this.restaurantListItem,
+    required this.onBackPressed,
+    required this.onCanSubmit,
   });
 
   @override
@@ -29,6 +35,7 @@ class _RestaurantReviewReviewState extends State<RestaurantReviewReview> {
   double? ratingAtmosphere;
   bool dineIn = true;
   String? description;
+  bool _canSubmit = false;
 
   // This method was misspelled in the original snippet
   @override
@@ -38,6 +45,10 @@ class _RestaurantReviewReviewState extends State<RestaurantReviewReview> {
       ratingFood = null;
       ratingService = null;
       dineIn = true;
+      ratingPrice = null;
+      ratingCleanliness = null;
+      ratingPackaging = null;
+      ratingAtmosphere = null;
       description = null;
     }
   }
@@ -45,63 +56,165 @@ class _RestaurantReviewReviewState extends State<RestaurantReviewReview> {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
+      top: true,
+      bottom: false,
+      maintainBottomViewPadding: false,
       child: SingleChildScrollView(
         child: Padding(
-          padding: EdgeInsets.only(
-              top: 16,
-              left: 16,
-              right: 16,
-              bottom: MediaQuery.of(context).viewInsets.bottom),
-          child: Column(
-            children: [
-              if (widget.restaurant != null)
-                _buildRestaurantListItem(context, widget.restaurant!),
-              _buildDineInOrTakeout(),
-              const SizedBox(height: 20),
-              _buildRating("Smak", ratingFood, (value) {
-                setState(() {
-                  ratingFood = value;
-                });
-              }),
-              _buildRating("Pris", ratingPrice, (value) {
-                setState(() {
-                  ratingPrice = value;
-                });
-              }),
-              if (dineIn) ...[
-                _buildRating("Service", ratingService, (value) {
-                  setState(() {
-                    ratingService = value;
-                  });
-                }),
-                _buildRating("Atmosfære", ratingAtmosphere, (value) {
-                  setState(() {
-                    ratingAtmosphere = value;
-                  });
-                }),
-                _buildRating("Renhold", ratingCleanliness, (value) {
-                  setState(() {
-                    ratingCleanliness = value;
-                  });
-                }),
-              ] else
-                _buildRating("Innpakning", ratingPackaging, (value) {
-                  setState(() {
-                    ratingPackaging = value;
-                  });
-                }),
-              const SizedBox(height: 20),
-              // TextField(
-              //   decoration: const InputDecoration(labelText: "Description"),
-              //   maxLines: 5,
-              //   onChanged: (value) {
-              //     description = value;
-              //   },
-              // ),
-              // const SizedBox(height: 20),
-              _buildSubmitButton(),
-            ],
+          padding: const EdgeInsets.only(
+            top: 16,
+            left: 16,
+            right: 16,
           ),
+          child: SizedBox(
+            height: MediaQuery.of(context).size.height - 136,
+            child: Stack(
+              children: [
+                Column(
+                  children: [
+                    if (widget.restaurantListItem != null)
+                      widget.restaurantListItem!,
+                    _buildDineInOrTakeout(),
+                    const SizedBox(height: 20),
+                    _buildRating("Smak", ratingFood, (value) {
+                      setState(() {
+                        ratingFood = value;
+                      });
+                    }),
+                    _buildRating("Pris", ratingPrice, (value) {
+                      setState(() {
+                        ratingPrice = value;
+                      });
+                    }),
+                    if (dineIn) ...[
+                      _buildRating("Service", ratingService, (value) {
+                        setState(() {
+                          ratingService = value;
+                        });
+                      }),
+                      _buildRating("Atmosfære", ratingAtmosphere, (value) {
+                        setState(() {
+                          ratingAtmosphere = value;
+                        });
+                      }),
+                      _buildRating("Renhold", ratingCleanliness, (value) {
+                        setState(() {
+                          ratingCleanliness = value;
+                        });
+                      }),
+                    ] else
+                      _buildRating("Innpakning", ratingPackaging, (value) {
+                        setState(() {
+                          ratingPackaging = value;
+                        });
+                      }),
+                    const SizedBox(height: 20),
+                    // TextField(
+                    //   decoration: const InputDecoration(labelText: "Description"),
+                    //   maxLines: 5,
+                    //   onChanged: (value) {
+                    //     description = value;
+                    //   },
+                    // ),
+                    // const SizedBox(height: 20),
+                  ],
+                ),
+                Positioned(
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _buildLeftButton(),
+                      _buildRightButton(),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLeftButton() {
+    return ElevatedButton(
+      style: ButtonStyle(
+        elevation: MaterialStateProperty.all(8.0),
+        shape: MaterialStateProperty.all(
+          RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+        ),
+        backgroundColor: MaterialStateProperty.all(
+          Theme.of(context).colorScheme.secondary,
+        ),
+      ),
+      onPressed: () => widget.onBackPressed(),
+      child: const Padding(
+        padding: EdgeInsets.symmetric(
+            vertical: 12.0, horizontal: 12.0), // Adjusted padding
+        child: Text(
+          "Tilbake",
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRightButton() {
+    _setCanSubmit();
+
+    return ElevatedButton(
+      style: ButtonStyle(
+        elevation: MaterialStateProperty.all(8.0), // Increased shadow depth
+        shape: MaterialStateProperty.all(
+          RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20), // Rounded corners
+          ),
+        ),
+        backgroundColor: MaterialStateProperty.resolveWith<Color>(
+          (Set<MaterialState> states) {
+            if (states.contains(MaterialState.disabled)) {
+              return Colors.grey.shade300; // Disabled color
+            }
+            return Theme.of(context)
+                .colorScheme
+                .secondary; // Use secondary color from colorScheme
+          },
+        ),
+        foregroundColor: MaterialStateProperty.resolveWith<Color>(
+          (Set<MaterialState> states) {
+            if (states.contains(MaterialState.disabled)) {
+              return Colors.grey.shade600; // Foreground when disabled
+            }
+            return Colors.white; // Regular foreground color
+          },
+        ),
+      ),
+      onPressed: _canSubmit ? () => _handleOnSubmit() : null,
+      child: const Padding(
+        padding: EdgeInsets.symmetric(
+            vertical: 12.0, horizontal: 12.0), // Adjusted padding
+        child: Row(
+          mainAxisSize: MainAxisSize
+              .min, // To ensure the Row takes only as much space as required
+          children: [
+            Icon(Icons.check), // An icon for emphasis
+            SizedBox(width: 8.0), // Gap between icon and text
+            Text(
+              "Submit Review",
+              style: TextStyle(
+                fontSize: 18, // Slightly larger font size
+                fontWeight: FontWeight.bold, // Bold font weight
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -184,51 +297,6 @@ class _RestaurantReviewReviewState extends State<RestaurantReviewReview> {
     ));
   }
 
-  Widget _buildRestaurantListItem(BuildContext context, Restaurant restaurant) {
-    return Column(
-      children: [
-        ListTile(
-          contentPadding: EdgeInsets.zero,
-          leading: ClipRRect(
-            borderRadius: BorderRadius.circular(8.0),
-            child: CachedNetworkImage(
-              imageUrl: restaurant.coverImg ?? '',
-              placeholder: (context, url) => const SizedBox(
-                width: 50, // Set the width
-                height: 50, // Set the height
-                child: CircularProgressIndicator(
-                  strokeWidth: 2.0,
-                ),
-              ),
-              errorWidget: (context, url, error) => const Icon(Icons.error),
-              width: 50, // Set the width
-              height: 50, // Set the height
-              fit: BoxFit.cover,
-            ),
-          ),
-          title: Text(
-            restaurant.name,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
-          ),
-          subtitle: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 2),
-              Text(
-                restaurant.description ?? '',
-                style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 2), // Space between description and rating
-            ],
-          ),
-        ),
-        const Divider(),
-      ],
-    );
-  }
-
   Widget _buildDineInOrTakeout() {
     return Column(
       children: [
@@ -301,71 +369,24 @@ class _RestaurantReviewReviewState extends State<RestaurantReviewReview> {
     );
   }
 
-  Widget _buildSubmitButton() {
-    bool canSubmit = _canSubmit();
-
-    return ElevatedButton(
-      style: ButtonStyle(
-        elevation: MaterialStateProperty.all(8.0), // Increased shadow depth
-        shape: MaterialStateProperty.all(
-          RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20), // Rounded corners
-          ),
-        ),
-        backgroundColor: MaterialStateProperty.resolveWith<Color>(
-          (Set<MaterialState> states) {
-            if (states.contains(MaterialState.disabled)) {
-              return Colors.grey.shade300; // Disabled color
-            }
-            return Theme.of(context)
-                .colorScheme
-                .secondary; // Use secondary color from colorScheme
-          },
-        ),
-        foregroundColor: MaterialStateProperty.resolveWith<Color>(
-          (Set<MaterialState> states) {
-            if (states.contains(MaterialState.disabled)) {
-              return Colors.grey.shade600; // Foreground when disabled
-            }
-            return Colors.white; // Regular foreground color
-          },
-        ),
-      ),
-      onPressed: canSubmit ? () => _handleOnSubmit() : null,
-      child: const Padding(
-        padding: EdgeInsets.symmetric(
-            vertical: 12.0, horizontal: 40.0), // More padding to increase size
-        child: Row(
-          mainAxisSize: MainAxisSize
-              .min, // To ensure the Row takes only as much space as required
-          children: [
-            Icon(Icons.check), // An icon for emphasis
-            SizedBox(width: 8.0), // Gap between icon and text
-            Text(
-              "Submit Review",
-              style: TextStyle(
-                fontSize: 18, // Slightly larger font size
-                fontWeight: FontWeight.bold, // Bold font weight
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  bool _canSubmit() {
+  void _setCanSubmit() {
+    bool canSubmit;
     if (dineIn) {
-      return ratingFood != null &&
+      canSubmit = ratingFood != null &&
           ratingService != null &&
           ratingPrice != null &&
           ratingCleanliness != null &&
           ratingAtmosphere != null;
     } else {
-      return ratingFood != null &&
-          ratingPrice != null &&
-          ratingPackaging != null;
+      canSubmit =
+          ratingFood != null && ratingPrice != null && ratingPackaging != null;
     }
+
+    if (_canSubmit != canSubmit) widget.onCanSubmit(canSubmit);
+
+    if (canSubmit) _handleOnSubmit();
+
+    _canSubmit = canSubmit;
   }
 
   double? _computeOverallRating() {
