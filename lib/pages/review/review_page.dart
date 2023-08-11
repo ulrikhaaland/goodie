@@ -37,61 +37,74 @@ class _RestaurantReviewPageState extends State<RestaurantReviewPage>
   Widget build(BuildContext context) {
     super.build(context);
 
-    return Column(
-      children: [
-        Expanded(
-          child: PageView(
-            controller: _pageController,
-            physics:
-                const NeverScrollableScrollPhysics(), // so users can't swipe between them
-            children: [
-              ResturantReviewSelect(
-                onSelectRestaurant: (restaurant) {
-                  _onSelectRestaurant(restaurant);
-                },
-              ),
-              RestaurantReviewImages(
-                restaurant: _selectedRestaurant,
-                restaurantListItem: _buildRestaurantListItem(context),
-                images: images,
-              ),
-              RestaurantReviewReview(
-                  restaurant: _selectedRestaurant,
-                  restaurantListItem: _buildRestaurantListItem(context),
-                  onBackPressed: () => _pageController.previousPage(
-                      duration: const Duration(milliseconds: 400),
-                      curve: Curves.easeInOut),
-                  onCanSubmit: (canSubmit) {
-                    _handleOnCanSubmit(canSubmit);
-                  },
-                  onReviewRestaurant: (review) {
-                    _review = review;
-                  }),
-              // Add the Image review mode here as the third child.
-            ],
+    return SafeArea(
+      child: Column(
+        children: [
+          if (_selectedRestaurant != null && _pageIndex != 0)
+            _buildRestaurantListItem(context)!,
+          Expanded(
+            child: Column(
+              children: [
+                Expanded(
+                  child: PageView(
+                    key: const Key("pageview"),
+                    controller: _pageController,
+                    physics:
+                        const NeverScrollableScrollPhysics(), // so users can't swipe between them
+                    children: [
+                      ResturantReviewSelect(
+                        onSelectRestaurant: (restaurant) {
+                          _onSelectRestaurant(restaurant);
+                        },
+                      ),
+                      RestaurantReviewImages(
+                        key: Key(_selectedRestaurant?.id ?? "images"),
+                        restaurant: _selectedRestaurant,
+                        images: images,
+                      ),
+                      RestaurantReviewReview(
+                          key: Key(_selectedRestaurant?.id ?? "review"),
+                          restaurant: _selectedRestaurant,
+                          onBackPressed: () => _pageController.previousPage(
+                              duration: const Duration(milliseconds: 400),
+                              curve: Curves.easeInOut),
+                          onCanSubmit: (canSubmit) {
+                            _handleOnCanSubmit(canSubmit);
+                          },
+                          onReviewRestaurant: (review) {
+                            _review = review;
+                          }),
+                    ],
+                  ),
+                ),
+                if (_pageIndex != 0) ...[
+                  ReviewProgressBar(currentIndex: _pageIndex, totalPages: 4),
+                  ReviewPageButtons(
+                    isSubmit: _pageIndex == 3,
+                    canSubmit: _canSubmit,
+                    rightButtonText: _pageIndex == 1 ? "Hopp over" : "Neste",
+                    onLeftPressed: () {
+                      _handleOnLeftPressed();
+                    },
+                    onRightPressed: () {
+                      _handleOnRightPressed();
+                    },
+                  ),
+                ]
+              ],
+            ),
           ),
-        ),
-        if (_pageIndex != 0) ...[
-          ReviewProgressBar(currentIndex: _pageIndex, totalPages: 4),
-          ReviewPageButtons(
-            isSubmit: _pageIndex == 3,
-            canSubmit: _canSubmit,
-            rightButtonText: _pageIndex == 1 ? "Hopp over" : "Neste",
-            onLeftPressed: () {
-              _handleOnLeftPressed();
-            },
-            onRightPressed: () {
-              _handleOnRightPressed();
-            },
-          ),
-        ]
-      ],
+        ],
+      ),
     );
   }
 
   void _handleOnLeftPressed() {
     setState(() {
       _pageIndex = _pageIndex - 1;
+      if (_pageIndex == 0) {
+        _selectedRestaurant = null;
+      }
       _pageController.previousPage(
           duration: const Duration(milliseconds: 400), curve: Curves.easeInOut);
     });
@@ -131,47 +144,51 @@ class _RestaurantReviewPageState extends State<RestaurantReviewPage>
   Widget? _buildRestaurantListItem(BuildContext context) {
     if (_selectedRestaurant == null) return null;
 
-    return Column(
-      children: [
-        ListTile(
-          contentPadding: EdgeInsets.zero,
-          leading: ClipRRect(
-            borderRadius: BorderRadius.circular(8.0),
-            child: CachedNetworkImage(
-              imageUrl: _selectedRestaurant!.coverImg ?? '',
-              placeholder: (context, url) => const SizedBox(
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        children: [
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: ClipRRect(
+              borderRadius: BorderRadius.circular(8.0),
+              child: CachedNetworkImage(
+                imageUrl: _selectedRestaurant!.coverImg ?? '',
+                placeholder: (context, url) => const SizedBox(
+                  width: 50, // Set the width
+                  height: 50, // Set the height
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.0,
+                  ),
+                ),
+                errorWidget: (context, url, error) => const Icon(Icons.error),
                 width: 50, // Set the width
                 height: 50, // Set the height
-                child: CircularProgressIndicator(
-                  strokeWidth: 2.0,
-                ),
+                fit: BoxFit.cover,
               ),
-              errorWidget: (context, url, error) => const Icon(Icons.error),
-              width: 50, // Set the width
-              height: 50, // Set the height
-              fit: BoxFit.cover,
+            ),
+            title: Text(
+              _selectedRestaurant!.name,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
+            ),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 2),
+                Text(
+                  _selectedRestaurant!.description ?? '',
+                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(
+                    height: 2), // Space between description and rating
+              ],
             ),
           ),
-          title: Text(
-            _selectedRestaurant!.name,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
-          ),
-          subtitle: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 2),
-              Text(
-                _selectedRestaurant!.description ?? '',
-                style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 2), // Space between description and rating
-            ],
-          ),
-        ),
-        const Divider(),
-      ],
+          const Divider(),
+        ],
+      ),
     );
   }
 

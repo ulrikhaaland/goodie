@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:goodie/pages/review/review_progress_bar.dart';
 import 'package:provider/provider.dart';
 
 import '../../bloc/auth.dart';
@@ -9,7 +8,6 @@ import 'review_rating.dart';
 class RestaurantReviewReview extends StatefulWidget {
   final Restaurant? restaurant;
   final Function(RestaurantReview) onReviewRestaurant;
-  final Widget? restaurantListItem;
   final Function() onBackPressed;
   final Function(bool canSubmit) onCanSubmit;
 
@@ -17,7 +15,6 @@ class RestaurantReviewReview extends StatefulWidget {
     super.key,
     required this.restaurant,
     required this.onReviewRestaurant,
-    this.restaurantListItem,
     required this.onBackPressed,
     required this.onCanSubmit,
   });
@@ -55,68 +52,61 @@ class _RestaurantReviewReviewState extends State<RestaurantReviewReview> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      top: true,
-      bottom: false,
-      maintainBottomViewPadding: false,
-      child: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.only(
-            top: 16,
-            left: 16,
-            right: 16,
-          ),
-          child: SizedBox(
-            height: MediaQuery.of(context).size.height - 136,
-            child: Column(
-              children: [
-                if (widget.restaurantListItem != null)
-                  widget.restaurantListItem!,
-                _buildDineInOrTakeout(),
-                const SizedBox(height: 20),
-                _buildRating("Smak", ratingFood, (value) {
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.only(
+          top: 16,
+          left: 16,
+          right: 16,
+        ),
+        child: SizedBox(
+          height: MediaQuery.of(context).size.height - 136,
+          child: Column(
+            children: [
+              _buildDineInOrTakeout(),
+              const SizedBox(height: 20),
+              _buildRating("Smak", ratingFood, (value) {
+                setState(() {
+                  ratingFood = value;
+                });
+              }),
+              _buildRating("Pris", ratingPrice, (value) {
+                setState(() {
+                  ratingPrice = value;
+                });
+              }),
+              if (dineIn) ...[
+                _buildRating("Service", ratingService, (value) {
                   setState(() {
-                    ratingFood = value;
+                    ratingService = value;
                   });
                 }),
-                _buildRating("Pris", ratingPrice, (value) {
+                _buildRating("Atmosfære", ratingAtmosphere, (value) {
                   setState(() {
-                    ratingPrice = value;
+                    ratingAtmosphere = value;
                   });
                 }),
-                if (dineIn) ...[
-                  _buildRating("Service", ratingService, (value) {
-                    setState(() {
-                      ratingService = value;
-                    });
-                  }),
-                  _buildRating("Atmosfære", ratingAtmosphere, (value) {
-                    setState(() {
-                      ratingAtmosphere = value;
-                    });
-                  }),
-                  _buildRating("Renhold", ratingCleanliness, (value) {
-                    setState(() {
-                      ratingCleanliness = value;
-                    });
-                  }),
-                ] else
-                  _buildRating("Innpakning", ratingPackaging, (value) {
-                    setState(() {
-                      ratingPackaging = value;
-                    });
-                  }),
-                const SizedBox(height: 20),
-                // TextField(
-                //   decoration: const InputDecoration(labelText: "Description"),
-                //   maxLines: 5,
-                //   onChanged: (value) {
-                //     description = value;
-                //   },
-                // ),
-                // const SizedBox(height: 20),
-              ],
-            ),
+                _buildRating("Renhold", ratingCleanliness, (value) {
+                  setState(() {
+                    ratingCleanliness = value;
+                  });
+                }),
+              ] else
+                _buildRating("Innpakning", ratingPackaging, (value) {
+                  setState(() {
+                    ratingPackaging = value;
+                  });
+                }),
+              const SizedBox(height: 20),
+              // TextField(
+              //   decoration: const InputDecoration(labelText: "Description"),
+              //   maxLines: 5,
+              //   onChanged: (value) {
+              //     description = value;
+              //   },
+              // ),
+              // const SizedBox(height: 20),
+            ],
           ),
         ),
       ),

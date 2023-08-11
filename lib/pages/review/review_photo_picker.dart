@@ -18,8 +18,10 @@ class RestaurantReviewPhotoPicker extends StatefulWidget {
 class _RestaurantReviewPhotoPickerState
     extends State<RestaurantReviewPhotoPicker> {
   List<AssetEntity> _recentImages = [];
-  List<AssetEntity> _selectedAssets = [];
+  final List<AssetEntity> _selectedAssets = [];
   AssetEntity? _selectedAsset;
+  final ValueNotifier<List<AssetEntity>> _selectedAssetsNotifier =
+      ValueNotifier<List<AssetEntity>>([]);
 
   @override
   void initState() {
@@ -44,48 +46,39 @@ class _RestaurantReviewPhotoPickerState
   Widget build(BuildContext context) {
     // Compute the thumbnail size based on the screen width
     final screenWidth = MediaQuery.of(context).size.width;
-    final thumbnailSize =
-        ((screenWidth - 20) / 3).floor(); // 10*2 for mainAxisSpacing
+    final thumbnailSize = ((screenWidth) / 2.5).floor();
 
+    final selectedAssetHeight =
+        screenWidth.floor(); // Full width for the selected asset
+    final selectedAssetWidth =
+        (selectedAssetHeight * 0.8).floor(); // 60% of the width for the height
     return Column(
       children: [
-        const Padding(
-          padding: EdgeInsets.all(16.0),
-          child: Text('Legg til bilder',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-        ),
         if (_selectedAsset != null)
-          AssetThumbnail(
-            asset: _selectedAsset!,
-            thumbnailSize: ThumbnailSize(thumbnailSize, thumbnailSize),
-          ),
+          if (_selectedAsset != null)
+            AssetThumbnail(
+              asset: _selectedAsset!,
+              width: selectedAssetWidth, // specify the desired width
+              height: selectedAssetHeight, // specify a smaller desired height
+              // thumbWidth:
+              //     selectedAssetThumbnailSize, // value larger than display width for clarity
+              // thumbHeight:
+              //     selectedAssetThumbnailSize, // value larger than display height for clarity
+            ),
         const SizedBox(height: 20),
         Expanded(
           child: GridView.builder(
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3,
-              mainAxisSpacing: 10,
-              crossAxisSpacing: 10,
-            ),
+                crossAxisCount: 4,
+                childAspectRatio:
+                    0.775, // adjusted for a little more height based on the aspect ratio
+                mainAxisSpacing: 0,
+                crossAxisSpacing: 0,
+                mainAxisExtent: 101),
             itemCount: _recentImages.length,
             itemBuilder: (context, index) {
-              return GestureDetector(
-                onTap: () {
-                  setState(() {
-                    if (_selectedAssets.contains(_recentImages[index])) {
-                      _selectedAssets.remove(_recentImages[index]);
-                    } else {
-                      _selectedAssets.add(_recentImages[index]);
-                    }
-                    // Setting the most recently picked image as the _selectedAsset
-                    _selectedAsset = _recentImages[index];
-                  });
-                },
-                child: buildAssetThumbnailWithSelectionIndicator(
-                  _recentImages[index],
-                  ThumbnailSize(thumbnailSize, thumbnailSize),
-                ),
-              );
+              return buildAssetThumbnailWithSelectionIndicator(
+                  _recentImages[index], thumbnailSize, thumbnailSize);
             },
           ),
         ),
@@ -94,61 +87,84 @@ class _RestaurantReviewPhotoPickerState
   }
 
   Widget buildAssetThumbnailWithSelectionIndicator(
-      AssetEntity asset, ThumbnailSize thumbnailSize) {
-    int? assetIndex = _selectedAssets.indexOf(asset);
-    bool isSelected = assetIndex != -1;
+      AssetEntity asset, int width, int height) {
+    final cHeight = (height * 0.6).toInt();
 
-    return Stack(
-      children: [
-        AssetThumbnail(
-          asset: asset,
-          thumbnailSize: thumbnailSize,
-        ), // Your AssetThumbnail widget
-
-        if (isSelected)
-          Positioned(
-            top: 8,
-            right: 8,
-            child: CircleAvatar(
-              backgroundColor: Colors.blue, // or any desired color
-              radius: 12,
-              child: Text(
-                '${assetIndex + 1}', // +1 because list index starts at 0
-                style: const TextStyle(fontSize: 12, color: Colors.white),
-              ),
-            ),
+    return GestureDetector(
+      onTap: () {
+        int assetIndex = _selectedAssetsNotifier.value.indexOf(asset);
+        if (assetIndex != -1) {
+          _selectedAssetsNotifier.value.removeAt(assetIndex);
+        } else {
+          _selectedAssetsNotifier.value.add(asset);
+        }
+        _selectedAssetsNotifier.value =
+            List.from(_selectedAssetsNotifier.value); // to notify the change
+        _selectedAsset = asset; // if needed
+      },
+      child: Stack(
+        children: [
+          AssetThumbnail(
+            asset: asset,
+            thumbWidth: width,
+            thumbHeight: cHeight,
           ),
-      ],
+          ValueListenableBuilder<List<AssetEntity>>(
+            valueListenable: _selectedAssetsNotifier,
+            builder: (context, selectedAssets, child) {
+              int assetIndex = selectedAssets.indexOf(asset);
+              if (assetIndex == -1) return const SizedBox.shrink();
+              return Positioned(
+                top: 4,
+                right: 4,
+                child: CircleAvatar(
+                  backgroundColor: Colors.blue,
+                  radius: 8,
+                  child: Text(
+                    '${assetIndex + 1}',
+                    style: const TextStyle(fontSize: 12, color: Colors.white),
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
     );
   }
 }
 
 class AssetThumbnail extends StatelessWidget {
   final AssetEntity asset;
-  final double? height;
-  final ThumbnailSize thumbnailSize;
+  final int? width;
+  final int? height;
+  final int thumbWidth;
+  final int thumbHeight;
 
   const AssetThumbnail({
     super.key,
     required this.asset,
+    this.width,
     this.height,
-    required this.thumbnailSize,
+    this.thumbWidth = 200,
+    this.thumbHeight = 200,
   });
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+
     return FutureBuilder<Uint8List?>(
-      future: asset.thumbnailDataWithSize(thumbnailSize),
+      future:
+          asset.thumbnailDataWithSize(ThumbnailSize(thumbWidth, thumbHeight)),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.done &&
             snapshot.data != null) {
-          return AspectRatio(
-            aspectRatio: 1, // to maintain square aspect ratio
-            child: Image.memory(
-              snapshot.data!,
-              fit: BoxFit.cover,
-              height: height,
-            ),
+          return Image.memory(
+            snapshot.data!,
+            width: width?.toDouble() ?? screenWidth / 4.35,
+            height: height?.toDouble() ?? 100,
+            fit: BoxFit.cover,
           );
         }
         return const Center(child: CircularProgressIndicator());
