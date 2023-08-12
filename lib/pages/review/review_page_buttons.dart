@@ -35,7 +35,7 @@ class _ReviewPageButtonsState extends State<ReviewPageButtons> {
   Widget _buildRightButton(BuildContext context) {
     if (widget.canSubmit == true) {
       return Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.symmetric(horizontal: 16.0),
         child: ElevatedButton(
           style: ButtonStyle(
             elevation: MaterialStateProperty.all(8.0), // Increased shadow depth
@@ -63,8 +63,7 @@ class _ReviewPageButtonsState extends State<ReviewPageButtons> {
           ),
           onPressed: widget.canSubmit! ? widget.onRightPressed : null,
           child: Padding(
-            padding:
-                const EdgeInsets.symmetric(vertical: 12.0, horizontal: 12.0),
+            padding: const EdgeInsets.symmetric(horizontal: 12.0),
             child: Row(
               mainAxisSize: MainAxisSize
                   .min, // To ensure the Row takes only as much space as required

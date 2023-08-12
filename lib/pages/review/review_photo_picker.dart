@@ -23,10 +23,13 @@ class _RestaurantReviewPhotoPickerState
   final ValueNotifier<List<AssetEntity>> _selectedAssetsNotifier =
       ValueNotifier<List<AssetEntity>>([]);
 
+  late final ValueNotifier<AssetEntity?> _selectedAssetNotifier;
+
   @override
   void initState() {
     super.initState();
-    _loadRecentImages();
+    _loadRecentImages().then((value) =>
+        _selectedAssetNotifier = ValueNotifier<AssetEntity?>(_selectedAsset));
   }
 
   Future<void> _loadRecentImages() async {
@@ -48,23 +51,9 @@ class _RestaurantReviewPhotoPickerState
     final screenWidth = MediaQuery.of(context).size.width;
     final thumbnailSize = ((screenWidth) / 2.5).floor();
 
-    final selectedAssetHeight =
-        screenWidth.floor(); // Full width for the selected asset
-    final selectedAssetWidth =
-        (selectedAssetHeight * 0.8).floor(); // 60% of the width for the height
     return Column(
       children: [
-        if (_selectedAsset != null)
-          if (_selectedAsset != null)
-            AssetThumbnail(
-              asset: _selectedAsset!,
-              width: selectedAssetWidth, // specify the desired width
-              height: selectedAssetHeight, // specify a smaller desired height
-              // thumbWidth:
-              //     selectedAssetThumbnailSize, // value larger than display width for clarity
-              // thumbHeight:
-              //     selectedAssetThumbnailSize, // value larger than display height for clarity
-            ),
+        if (_selectedAsset != null) _buildSelectedAsset(context),
         const SizedBox(height: 20),
         Expanded(
           child: GridView.builder(
@@ -91,17 +80,7 @@ class _RestaurantReviewPhotoPickerState
     final cHeight = (height * 0.6).toInt();
 
     return GestureDetector(
-      onTap: () {
-        int assetIndex = _selectedAssetsNotifier.value.indexOf(asset);
-        if (assetIndex != -1) {
-          _selectedAssetsNotifier.value.removeAt(assetIndex);
-        } else {
-          _selectedAssetsNotifier.value.add(asset);
-        }
-        _selectedAssetsNotifier.value =
-            List.from(_selectedAssetsNotifier.value); // to notify the change
-        _selectedAsset = asset; // if needed
-      },
+      onTap: () => _handleOnThumbnailTap(asset),
       child: Stack(
         children: [
           AssetThumbnail(
@@ -131,6 +110,47 @@ class _RestaurantReviewPhotoPickerState
         ],
       ),
     );
+  }
+
+  Widget _buildSelectedAsset(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    final selectedAssetHeight =
+        screenWidth.floor(); // Full width for the selected asset
+    final selectedAssetWidth =
+        (selectedAssetHeight * 0.8).floor(); // 60% of the width fo
+
+    return ValueListenableBuilder(
+      valueListenable: _selectedAssetNotifier,
+      builder: (context, selectedAsset, child) {
+        if (selectedAsset == null) return const SizedBox.shrink();
+        return AssetThumbnail(
+          asset: selectedAsset!,
+          width: selectedAssetWidth, // specify the desired width
+          height: selectedAssetHeight, // specify a smaller desired height
+        );
+      },
+    );
+  }
+
+  void _handleOnThumbnailTap(AssetEntity asset) {
+    final selectedAssets = _selectedAssetsNotifier.value;
+
+    int assetIndex = selectedAssets.indexOf(asset);
+    if (assetIndex != -1) {
+      _selectedAssetsNotifier.value.removeAt(assetIndex);
+      if (selectedAssets.isEmpty) {
+        _selectedAssetNotifier.value = _recentImages.first;
+      } else {
+        _selectedAssetNotifier.value = selectedAssets.last;
+      }
+    } else {
+      _selectedAssetNotifier.value = asset;
+
+      _selectedAssetsNotifier.value.add(asset);
+    }
+    _selectedAssetsNotifier.value =
+        List.from(_selectedAssetsNotifier.value); // to trigger a rebuild
   }
 }
 

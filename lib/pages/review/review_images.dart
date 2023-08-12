@@ -34,29 +34,12 @@ class _RestaurantReviewImagesState extends State<RestaurantReviewImages>
     super.build(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      child: Column(
-        children: [
-          const Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              "Del noen bilder av besøket ditt",
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-          const SizedBox(height: 24),
-          Expanded(
-            child: RestaurantReviewPhotoPicker(
-              onImagesSelected: (selectedImages) {
-                setState(() {
-                  _images.addAll(selectedImages);
-                });
-              },
-            ),
-          ),
-        ],
+      child: RestaurantReviewPhotoPicker(
+        onImagesSelected: (selectedImages) {
+          setState(() {
+            _images.addAll(selectedImages);
+          });
+        },
       ),
     );
   }
