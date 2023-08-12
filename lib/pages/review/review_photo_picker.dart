@@ -22,8 +22,8 @@ class _RestaurantReviewPhotoPickerState
   AssetEntity? _selectedAsset;
   final ValueNotifier<List<AssetEntity>> _selectedAssetsNotifier =
       ValueNotifier<List<AssetEntity>>([]);
-
-  late final ValueNotifier<AssetEntity?> _selectedAssetNotifier;
+  ValueNotifier<AssetEntity?> _selectedAssetNotifier = ValueNotifier(null);
+  final Map<AssetEntity, Uint8List> _thumbnailCache = {};
 
   @override
   void initState() {
@@ -51,9 +51,25 @@ class _RestaurantReviewPhotoPickerState
     final screenWidth = MediaQuery.of(context).size.width;
     final thumbnailSize = ((screenWidth) / 2.5).floor();
 
+    final selectedAssetHeight =
+        screenWidth.floor(); // Full width for the selected asset
+    final selectedAssetWidth =
+        (selectedAssetHeight * 0.8).floor(); // 60% of the width fo
+
     return Column(
       children: [
-        if (_selectedAsset != null) _buildSelectedAsset(context),
+        ValueListenableBuilder(
+          valueListenable: _selectedAssetNotifier,
+          builder: (context, selectedAsset, child) {
+            if (selectedAsset == null) return const SizedBox.shrink();
+            return AssetThumbnail(
+              asset: selectedAsset,
+              width: selectedAssetWidth, // specify the desired width
+              height: selectedAssetHeight, // specify a smaller desired height
+              cache: _thumbnailCache,
+            );
+          },
+        ),
         const SizedBox(height: 20),
         Expanded(
           child: GridView.builder(
@@ -87,49 +103,65 @@ class _RestaurantReviewPhotoPickerState
             asset: asset,
             thumbWidth: width,
             thumbHeight: cHeight,
+            cache: _thumbnailCache,
           ),
           ValueListenableBuilder<List<AssetEntity>>(
             valueListenable: _selectedAssetsNotifier,
             builder: (context, selectedAssets, child) {
               int assetIndex = selectedAssets.indexOf(asset);
-              if (assetIndex == -1) return const SizedBox.shrink();
               return Positioned(
-                top: 4,
-                right: 4,
-                child: CircleAvatar(
-                  backgroundColor: Colors.blue,
-                  radius: 8,
-                  child: Text(
-                    '${assetIndex + 1}',
-                    style: const TextStyle(fontSize: 12, color: Colors.white),
-                  ),
+                left: 0,
+                top: 0,
+                right: 0,
+                bottom: 0,
+                child: Stack(
+                  children: [
+                    if (_selectedAssetNotifier.value == asset)
+                      Positioned(
+                        left: 0,
+                        top: 0,
+                        right: 0,
+                        bottom: 0,
+                        child: Container(
+                          color: Colors.white.withOpacity(0.5),
+                        ),
+                      ),
+                    Positioned(
+                      top: 4,
+                      right: 4,
+                      child: Container(
+                          decoration: const BoxDecoration(
+                            color: Colors.transparent,
+                            border: Border(
+                              top: BorderSide(width: 1, color: Colors.white),
+                              left: BorderSide(width: 1, color: Colors.white),
+                              right: BorderSide(width: 1, color: Colors.white),
+                              bottom: BorderSide(width: 1, color: Colors.white),
+                            ),
+                            shape: BoxShape.circle,
+                          ),
+                          child: assetIndex != -1
+                              ? CircleAvatar(
+                                  backgroundColor: Colors.blue,
+                                  radius: 8,
+                                  child: Text(
+                                    '${assetIndex + 1}',
+                                    style: const TextStyle(
+                                        fontSize: 12, color: Colors.white),
+                                  ),
+                                )
+                              : const CircleAvatar(
+                                  backgroundColor: Colors.transparent,
+                                  radius: 8,
+                                )),
+                    ),
+                  ],
                 ),
               );
             },
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildSelectedAsset(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-
-    final selectedAssetHeight =
-        screenWidth.floor(); // Full width for the selected asset
-    final selectedAssetWidth =
-        (selectedAssetHeight * 0.8).floor(); // 60% of the width fo
-
-    return ValueListenableBuilder(
-      valueListenable: _selectedAssetNotifier,
-      builder: (context, selectedAsset, child) {
-        if (selectedAsset == null) return const SizedBox.shrink();
-        return AssetThumbnail(
-          asset: selectedAsset!,
-          width: selectedAssetWidth, // specify the desired width
-          height: selectedAssetHeight, // specify a smaller desired height
-        );
-      },
     );
   }
 
@@ -160,6 +192,7 @@ class AssetThumbnail extends StatelessWidget {
   final int? height;
   final int thumbWidth;
   final int thumbHeight;
+  final Map<AssetEntity, Uint8List> cache; // add this line
 
   const AssetThumbnail({
     super.key,
@@ -168,11 +201,22 @@ class AssetThumbnail extends StatelessWidget {
     this.height,
     this.thumbWidth = 200,
     this.thumbHeight = 200,
+    required this.cache, // add this line
   });
 
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
+
+    // Check the cache first
+    if (cache.containsKey(asset)) {
+      return Image.memory(
+        cache[asset]!,
+        width: width?.toDouble() ?? screenWidth / 4.35,
+        height: height?.toDouble() ?? 100,
+        fit: BoxFit.cover,
+      );
+    }
 
     return FutureBuilder<Uint8List?>(
       future:
@@ -180,6 +224,8 @@ class AssetThumbnail extends StatelessWidget {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.done &&
             snapshot.data != null) {
+          // Save to the cache
+          cache[asset] = snapshot.data!;
           return Image.memory(
             snapshot.data!,
             width: width?.toDouble() ?? screenWidth / 4.35,
