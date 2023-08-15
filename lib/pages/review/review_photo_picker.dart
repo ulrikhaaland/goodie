@@ -18,7 +18,6 @@ class RestaurantReviewPhotoPicker extends StatefulWidget {
 class _RestaurantReviewPhotoPickerState
     extends State<RestaurantReviewPhotoPicker> {
   List<AssetEntity> _recentImages = [];
-  final List<AssetEntity> _selectedAssets = [];
   AssetEntity? _selectedAsset;
   final ValueNotifier<List<AssetEntity>> _selectedAssetsNotifier =
       ValueNotifier<List<AssetEntity>>([]);
@@ -64,9 +63,10 @@ class _RestaurantReviewPhotoPickerState
             if (selectedAsset == null) return const SizedBox.shrink();
             return AssetThumbnail(
               asset: selectedAsset,
-              width: selectedAssetWidth, // specify the desired width
-              height: selectedAssetHeight, // specify a smaller desired height
+              width: selectedAssetWidth,
+              height: selectedAssetHeight,
               cache: _thumbnailCache,
+              fullResolution: true, // set this to true for the selected asset
             );
           },
         ),
@@ -165,7 +165,7 @@ class _RestaurantReviewPhotoPickerState
     );
   }
 
-  void _handleOnThumbnailTap(AssetEntity asset) {
+  Future<void> _handleOnThumbnailTap(AssetEntity asset) async {
     final selectedAssets = _selectedAssetsNotifier.value;
 
     int assetIndex = selectedAssets.indexOf(asset);
@@ -177,12 +177,22 @@ class _RestaurantReviewPhotoPickerState
         _selectedAssetNotifier.value = selectedAssets.last;
       }
     } else {
-      _selectedAssetNotifier.value = asset;
+      final fullResAsset = await _fetchHighResolutionAsset(asset);
 
-      _selectedAssetsNotifier.value.add(asset);
+      _selectedAssetNotifier.value = fullResAsset;
+      _selectedAssetsNotifier.value.add(fullResAsset);
+
+      // _selectedAssetsNotifier.value.add(asset);
     }
     _selectedAssetsNotifier.value =
         List.from(_selectedAssetsNotifier.value); // to trigger a rebuild
+  }
+
+  Future<AssetEntity> _fetchHighResolutionAsset(AssetEntity asset) async {
+    // Fetch the high resolution of the image here. This might take some time.
+    await asset.originBytes;
+
+    return asset;
   }
 }
 
@@ -192,7 +202,8 @@ class AssetThumbnail extends StatelessWidget {
   final int? height;
   final int thumbWidth;
   final int thumbHeight;
-  final Map<AssetEntity, Uint8List> cache; // add this line
+  final Map<AssetEntity, Uint8List> cache;
+  final bool fullResolution;
 
   const AssetThumbnail({
     super.key,
@@ -201,7 +212,8 @@ class AssetThumbnail extends StatelessWidget {
     this.height,
     this.thumbWidth = 200,
     this.thumbHeight = 200,
-    required this.cache, // add this line
+    required this.cache,
+    this.fullResolution = false,
   });
 
   @override
@@ -211,7 +223,7 @@ class AssetThumbnail extends StatelessWidget {
     // Check the cache first
     if (cache.containsKey(asset)) {
       return Image.memory(
-        cache[asset]!,
+        cache[asset.originBytes]!,
         width: width?.toDouble() ?? screenWidth / 4.35,
         height: height?.toDouble() ?? 100,
         fit: BoxFit.cover,
@@ -219,13 +231,14 @@ class AssetThumbnail extends StatelessWidget {
     }
 
     return FutureBuilder<Uint8List?>(
-      future:
-          asset.thumbnailDataWithSize(ThumbnailSize(thumbWidth, thumbHeight)),
+      future: fullResolution
+          ? asset.originBytes
+          : asset.thumbnailDataWithSize(ThumbnailSize(thumbWidth, thumbHeight)),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.done &&
             snapshot.data != null) {
           // Save to the cache
-          cache[asset] = snapshot.data!;
+          asset.originBytes.then((value) => cache[asset] = value!);
           return Image.memory(
             snapshot.data!,
             width: width?.toDouble() ?? screenWidth / 4.35,
