@@ -1,3 +1,4 @@
+import 'dart:ffi';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -8,8 +9,9 @@ import 'package:photo_view/photo_view.dart';
 class RestaurantReviewPhotoPicker extends StatefulWidget {
   final Function(List<File>) onImagesSelected;
 
-  const RestaurantReviewPhotoPicker(
-      {super.key, required this.onImagesSelected});
+  const RestaurantReviewPhotoPicker({Key? key, required this.onImagesSelected})
+      : super(key: key);
+
   @override
   // ignore: library_private_types_in_public_api
   _RestaurantReviewPhotoPickerState createState() =>
@@ -28,33 +30,27 @@ class _RestaurantReviewPhotoPickerState
   @override
   void initState() {
     super.initState();
-    _loadRecentImages().then((value) =>
-        _selectedAssetNotifier = ValueNotifier<AssetEntity?>(_selectedAsset));
+    _loadRecentImages();
   }
 
   Future<void> _loadRecentImages() async {
     final List<AssetPathEntity> paths =
         await PhotoManager.getAssetPathList(onlyAll: true);
     final AssetPathEntity recentPath = paths.first;
-    final recentImages = await recentPath.getAssetListRange(
-        start: 0, end: 10); // Fetching the 10 most recent images
+    final recentImages = await recentPath.getAssetListRange(start: 0, end: 10);
     setState(() {
       _recentImages = recentImages;
-      _selectedAsset = recentImages
-          .first; // Set the most recent image as selected by default
+      _selectedAsset = recentImages.first;
+      _selectedAssetNotifier.value = _selectedAsset;
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    // Compute the thumbnail size based on the screen width
     final screenWidth = MediaQuery.of(context).size.width;
-    final thumbnailSize = ((screenWidth) / 2.5).floor();
-
-    final selectedAssetHeight =
-        screenWidth.floor(); // Full width for the selected asset
-    final selectedAssetWidth =
-        (selectedAssetHeight * 0.8).floor(); // 60% of the width fo
+    final thumbnailSize = (screenWidth / 2.5).floor();
+    final selectedAssetHeight = screenWidth.floor();
+    final selectedAssetWidth = (selectedAssetHeight * 0.8).floor();
 
     return Column(
       children: [
@@ -70,7 +66,7 @@ class _RestaurantReviewPhotoPickerState
                 width: selectedAssetWidth,
                 height: selectedAssetHeight,
                 cache: _thumbnailCache,
-                fullResolution: true, // set this to true for the selected asset
+                fullResolution: true,
               );
             },
           ),
@@ -79,12 +75,12 @@ class _RestaurantReviewPhotoPickerState
         Flexible(
           child: GridView.builder(
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 4,
-                childAspectRatio:
-                    0.775, // adjusted for a little more height based on the aspect ratio
-                mainAxisSpacing: 0,
-                crossAxisSpacing: 0,
-                mainAxisExtent: 101),
+              crossAxisCount: 4,
+              childAspectRatio: 0.775,
+              mainAxisSpacing: 0,
+              crossAxisSpacing: 0,
+              mainAxisExtent: 101,
+            ),
             itemCount: _recentImages.length,
             itemBuilder: (context, index) {
               return buildAssetThumbnailWithSelectionIndicator(
@@ -110,60 +106,10 @@ class _RestaurantReviewPhotoPickerState
             thumbHeight: cHeight,
             cache: _thumbnailCache,
           ),
-          ValueListenableBuilder<List<AssetEntity>>(
-            valueListenable: _selectedAssetsNotifier,
-            builder: (context, selectedAssets, child) {
-              int assetIndex = selectedAssets.indexOf(asset);
-              return Positioned(
-                left: 0,
-                top: 0,
-                right: 0,
-                bottom: 0,
-                child: Stack(
-                  children: [
-                    if (_selectedAssetNotifier.value == asset)
-                      Positioned(
-                        left: 0,
-                        top: 0,
-                        right: 0,
-                        bottom: 0,
-                        child: Container(
-                          color: Colors.white.withOpacity(0.5),
-                        ),
-                      ),
-                    Positioned(
-                      top: 4,
-                      right: 4,
-                      child: Container(
-                          decoration: const BoxDecoration(
-                            color: Colors.transparent,
-                            border: Border(
-                              top: BorderSide(width: 1, color: Colors.white),
-                              left: BorderSide(width: 1, color: Colors.white),
-                              right: BorderSide(width: 1, color: Colors.white),
-                              bottom: BorderSide(width: 1, color: Colors.white),
-                            ),
-                            shape: BoxShape.circle,
-                          ),
-                          child: assetIndex != -1
-                              ? CircleAvatar(
-                                  backgroundColor: Colors.blue,
-                                  radius: 8,
-                                  child: Text(
-                                    '${assetIndex + 1}',
-                                    style: const TextStyle(
-                                        fontSize: 12, color: Colors.white),
-                                  ),
-                                )
-                              : const CircleAvatar(
-                                  backgroundColor: Colors.transparent,
-                                  radius: 8,
-                                )),
-                    ),
-                  ],
-                ),
-              );
-            },
+          SelectionIndicator(
+            asset: asset,
+            selectedAssetsNotifier: _selectedAssetsNotifier,
+            currentAssetNotifier: _selectedAssetNotifier,
           ),
         ],
       ),
@@ -175,21 +121,21 @@ class _RestaurantReviewPhotoPickerState
 
     int assetIndex = selectedAssets.indexOf(asset);
     if (assetIndex != -1) {
-      _selectedAssetsNotifier.value.removeAt(assetIndex);
-      if (selectedAssets.isEmpty) {
-        _selectedAssetNotifier.value = _recentImages.first;
-      } else {
-        _selectedAssetNotifier.value = selectedAssets.last;
+      if (_selectedAssetNotifier.value?.id != asset.id) {
+        _selectedAssetNotifier.value = asset;
+        return;
       }
+      _selectedAssetsNotifier.value.removeAt(assetIndex);
+      _selectedAssetNotifier.value =
+          selectedAssets.isEmpty ? _recentImages.first : selectedAssets.last;
     } else {
       // Check the lower limit here
       // Remove first item if the limit is reached
-      if (selectedAssets.length >= 6) {
+      if (selectedAssets.length >= 10) {
         _selectedAssetsNotifier.value.removeAt(0);
       }
-      // Check the upper limit here
-      final fullResAsset = await _fetchHighResolutionAsset(asset);
 
+      final fullResAsset = await _fetchHighResolutionAsset(asset);
       _selectedAssetNotifier.value = fullResAsset;
       _selectedAssetsNotifier.value.add(fullResAsset);
     }
@@ -198,10 +144,72 @@ class _RestaurantReviewPhotoPickerState
   }
 
   Future<AssetEntity> _fetchHighResolutionAsset(AssetEntity asset) async {
-    // Fetch the high resolution of the image here. This might take some time.
     await asset.originBytes;
-
     return asset;
+  }
+}
+
+class SelectionIndicator extends StatelessWidget {
+  final AssetEntity asset;
+  final ValueNotifier<List<AssetEntity>> selectedAssetsNotifier;
+  final ValueNotifier<AssetEntity?> currentAssetNotifier;
+
+  const SelectionIndicator({
+    super.key,
+    required this.asset,
+    required this.selectedAssetsNotifier,
+    required this.currentAssetNotifier,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<List<AssetEntity>>(
+      valueListenable: selectedAssetsNotifier,
+      builder: (context, selectedAssets, child) {
+        int assetIndex = selectedAssets.indexOf(asset);
+        return Positioned(
+          left: 0,
+          top: 0,
+          right: 0,
+          bottom: 0,
+          child: Stack(
+            children: [
+              if (currentAssetNotifier.value == asset)
+                Positioned.fill(
+                  child: Container(
+                    color: Colors.white.withOpacity(0.5),
+                  ),
+                ),
+              Positioned(
+                top: 4,
+                right: 4,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.transparent,
+                    border: Border.all(width: 1, color: Colors.white),
+                    shape: BoxShape.circle,
+                  ),
+                  child: assetIndex != -1
+                      ? CircleAvatar(
+                          backgroundColor: Colors.blue,
+                          radius: 8,
+                          child: Text(
+                            '${assetIndex + 1}',
+                            style: const TextStyle(
+                                fontSize: 12, color: Colors.white),
+                          ),
+                        )
+                      : const CircleAvatar(
+                          backgroundColor: Colors.transparent,
+                          radius: 8,
+                        ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 }
 
@@ -215,7 +223,7 @@ class AssetThumbnail extends StatelessWidget {
   final bool fullResolution;
 
   const AssetThumbnail({
-    super.key,
+    Key? key,
     required this.asset,
     this.width,
     this.height,
@@ -223,32 +231,47 @@ class AssetThumbnail extends StatelessWidget {
     this.thumbHeight = 200,
     required this.cache,
     this.fullResolution = false,
-  });
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
 
-    // Check the cache first
-    if (cache.containsKey(asset)) {
-      return fullResolution
-          ? PhotoView(
-              customSize: Size(width!.toDouble(), height!.toDouble()),
-              imageProvider: MemoryImage(cache[asset]!),
-              minScale: PhotoViewComputedScale.contained,
-              maxScale: PhotoViewComputedScale.covered * 2,
-              backgroundDecoration: const BoxDecoration(
-                color: Colors.transparent,
-              ),
-            )
-          : Image.memory(
-              cache[asset]!,
-              width: width?.toDouble() ?? screenWidth / 4.35,
-              height: height?.toDouble() ?? 100,
-              fit: BoxFit.cover,
-            );
-    }
+    return cache.containsKey(asset)
+        ? _buildCachedImage(screenWidth, cache[asset]!)
+        : _buildFutureImage(screenWidth);
+  }
 
+  Widget _buildCachedImage(
+    double screenWidth,
+    Uint8List imageBytes,
+  ) {
+    return fullResolution
+        ? SizedBox(
+            width: width?.toDouble() ?? screenWidth / 4.35,
+            height: height?.toDouble() ?? 100,
+            child: ClipRect(
+              child: PhotoView(
+                key: Key(asset.id),
+                imageProvider: MemoryImage(cache[asset] ?? imageBytes),
+                minScale: PhotoViewComputedScale.contained,
+                maxScale: PhotoViewComputedScale.covered * 2,
+                backgroundDecoration: const BoxDecoration(
+                  color: Colors.transparent,
+                ),
+                basePosition: Alignment.center,
+              ),
+            ),
+          )
+        : Image.memory(
+            cache[asset] ?? imageBytes,
+            width: width?.toDouble() ?? screenWidth / 4.35,
+            height: height?.toDouble() ?? 100,
+            fit: BoxFit.cover,
+          );
+  }
+
+  Widget _buildFutureImage(double screenWidth) {
     return FutureBuilder<Uint8List?>(
       future: fullResolution
           ? asset.originBytes
@@ -256,23 +279,8 @@ class AssetThumbnail extends StatelessWidget {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.done &&
             snapshot.data != null) {
-          // Save to the cache
           asset.originBytes.then((value) => cache[asset] = value!);
-          return fullResolution
-              ? PhotoView(
-                  imageProvider: MemoryImage(snapshot.data!),
-                  minScale: PhotoViewComputedScale.contained,
-                  maxScale: PhotoViewComputedScale.covered * 2,
-                  backgroundDecoration: const BoxDecoration(
-                    color: Colors.transparent,
-                  ),
-                )
-              : Image.memory(
-                  snapshot.data!,
-                  width: width?.toDouble() ?? screenWidth / 4.35,
-                  height: height?.toDouble() ?? 100,
-                  fit: BoxFit.cover,
-                );
+          return _buildCachedImage(screenWidth, snapshot.data!);
         }
         return const Center(child: CircularProgressIndicator());
       },
