@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:photo_manager/photo_manager.dart';
+import 'package:photo_view/photo_view.dart';
 
 class RestaurantReviewPhotoPicker extends StatefulWidget {
   final Function(List<File>) onImagesSelected;
@@ -57,21 +58,25 @@ class _RestaurantReviewPhotoPickerState
 
     return Column(
       children: [
-        ValueListenableBuilder(
-          valueListenable: _selectedAssetNotifier,
-          builder: (context, selectedAsset, child) {
-            if (selectedAsset == null) return const SizedBox.shrink();
-            return AssetThumbnail(
-              asset: selectedAsset,
-              width: selectedAssetWidth,
-              height: selectedAssetHeight,
-              cache: _thumbnailCache,
-              fullResolution: true, // set this to true for the selected asset
-            );
-          },
+        SizedBox(
+          height: selectedAssetHeight.toDouble(),
+          width: selectedAssetWidth.toDouble(),
+          child: ValueListenableBuilder(
+            valueListenable: _selectedAssetNotifier,
+            builder: (context, selectedAsset, child) {
+              if (selectedAsset == null) return const SizedBox.shrink();
+              return AssetThumbnail(
+                asset: selectedAsset,
+                width: selectedAssetWidth,
+                height: selectedAssetHeight,
+                cache: _thumbnailCache,
+                fullResolution: true, // set this to true for the selected asset
+              );
+            },
+          ),
         ),
         const SizedBox(height: 20),
-        Expanded(
+        Flexible(
           child: GridView.builder(
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 4,
@@ -177,12 +182,16 @@ class _RestaurantReviewPhotoPickerState
         _selectedAssetNotifier.value = selectedAssets.last;
       }
     } else {
+      // Check the lower limit here
+      // Remove first item if the limit is reached
+      if (selectedAssets.length >= 6) {
+        _selectedAssetsNotifier.value.removeAt(0);
+      }
+      // Check the upper limit here
       final fullResAsset = await _fetchHighResolutionAsset(asset);
 
       _selectedAssetNotifier.value = fullResAsset;
       _selectedAssetsNotifier.value.add(fullResAsset);
-
-      // _selectedAssetsNotifier.value.add(asset);
     }
     _selectedAssetsNotifier.value =
         List.from(_selectedAssetsNotifier.value); // to trigger a rebuild
@@ -222,12 +231,22 @@ class AssetThumbnail extends StatelessWidget {
 
     // Check the cache first
     if (cache.containsKey(asset)) {
-      return Image.memory(
-        cache[asset.originBytes]!,
-        width: width?.toDouble() ?? screenWidth / 4.35,
-        height: height?.toDouble() ?? 100,
-        fit: BoxFit.cover,
-      );
+      return fullResolution
+          ? PhotoView(
+              customSize: Size(width!.toDouble(), height!.toDouble()),
+              imageProvider: MemoryImage(cache[asset]!),
+              minScale: PhotoViewComputedScale.contained,
+              maxScale: PhotoViewComputedScale.covered * 2,
+              backgroundDecoration: const BoxDecoration(
+                color: Colors.transparent,
+              ),
+            )
+          : Image.memory(
+              cache[asset]!,
+              width: width?.toDouble() ?? screenWidth / 4.35,
+              height: height?.toDouble() ?? 100,
+              fit: BoxFit.cover,
+            );
     }
 
     return FutureBuilder<Uint8List?>(
@@ -239,12 +258,21 @@ class AssetThumbnail extends StatelessWidget {
             snapshot.data != null) {
           // Save to the cache
           asset.originBytes.then((value) => cache[asset] = value!);
-          return Image.memory(
-            snapshot.data!,
-            width: width?.toDouble() ?? screenWidth / 4.35,
-            height: height?.toDouble() ?? 100,
-            fit: BoxFit.cover,
-          );
+          return fullResolution
+              ? PhotoView(
+                  imageProvider: MemoryImage(snapshot.data!),
+                  minScale: PhotoViewComputedScale.contained,
+                  maxScale: PhotoViewComputedScale.covered * 2,
+                  backgroundDecoration: const BoxDecoration(
+                    color: Colors.transparent,
+                  ),
+                )
+              : Image.memory(
+                  snapshot.data!,
+                  width: width?.toDouble() ?? screenWidth / 4.35,
+                  height: height?.toDouble() ?? 100,
+                  fit: BoxFit.cover,
+                );
         }
         return const Center(child: CircularProgressIndicator());
       },
