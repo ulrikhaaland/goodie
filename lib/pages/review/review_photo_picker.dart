@@ -6,6 +6,20 @@ import 'package:flutter/material.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:photo_view/photo_view.dart';
 
+// ignore: must_be_immutable
+class GoodieAsset extends AssetEntity {
+  AssetEntity asset;
+  Uint8List? editedImage;
+
+  GoodieAsset({
+    required this.asset,
+  }) : super(
+            id: asset.id,
+            typeInt: asset.typeInt,
+            width: asset.width,
+            height: asset.height);
+}
+
 class RestaurantReviewPhotoPicker extends StatefulWidget {
   final Function(List<File>) onImagesSelected;
 
@@ -20,12 +34,12 @@ class RestaurantReviewPhotoPicker extends StatefulWidget {
 
 class _RestaurantReviewPhotoPickerState
     extends State<RestaurantReviewPhotoPicker> {
-  List<AssetEntity> _recentImages = [];
-  AssetEntity? _selectedAsset;
-  final ValueNotifier<List<AssetEntity>> _selectedAssetsNotifier =
-      ValueNotifier<List<AssetEntity>>([]);
-  ValueNotifier<AssetEntity?> _selectedAssetNotifier = ValueNotifier(null);
-  final Map<AssetEntity, Uint8List> _thumbnailCache = {};
+  List<GoodieAsset> _recentImages = [];
+  GoodieAsset? _selectedAsset;
+  final ValueNotifier<List<GoodieAsset>> _selectedAssetsNotifier =
+      ValueNotifier<List<GoodieAsset>>([]);
+  ValueNotifier<GoodieAsset?> _selectedAssetNotifier = ValueNotifier(null);
+  final Map<GoodieAsset, Uint8List> _thumbnailCache = {};
 
   @override
   void initState() {
@@ -39,8 +53,12 @@ class _RestaurantReviewPhotoPickerState
     final AssetPathEntity recentPath = paths.first;
     final recentImages = await recentPath.getAssetListRange(start: 0, end: 10);
     setState(() {
-      _recentImages = recentImages;
-      _selectedAsset = recentImages.first;
+      _recentImages = recentImages
+          .map((e) => GoodieAsset(
+                asset: e,
+              ))
+          .toList();
+      _selectedAsset = _recentImages.first;
       _selectedAssetNotifier.value = _selectedAsset;
     });
   }
@@ -93,7 +111,7 @@ class _RestaurantReviewPhotoPickerState
   }
 
   Widget buildAssetThumbnailWithSelectionIndicator(
-      AssetEntity asset, int width, int height) {
+      GoodieAsset asset, int width, int height) {
     final cHeight = (height * 0.6).toInt();
 
     return GestureDetector(
@@ -116,7 +134,7 @@ class _RestaurantReviewPhotoPickerState
     );
   }
 
-  Future<void> _handleOnThumbnailTap(AssetEntity asset) async {
+  Future<void> _handleOnThumbnailTap(GoodieAsset asset) async {
     final selectedAssets = _selectedAssetsNotifier.value;
 
     int assetIndex = selectedAssets.indexOf(asset);
@@ -143,16 +161,16 @@ class _RestaurantReviewPhotoPickerState
         List.from(_selectedAssetsNotifier.value); // to trigger a rebuild
   }
 
-  Future<AssetEntity> _fetchHighResolutionAsset(AssetEntity asset) async {
+  Future<GoodieAsset> _fetchHighResolutionAsset(GoodieAsset asset) async {
     await asset.originBytes;
     return asset;
   }
 }
 
 class SelectionIndicator extends StatelessWidget {
-  final AssetEntity asset;
-  final ValueNotifier<List<AssetEntity>> selectedAssetsNotifier;
-  final ValueNotifier<AssetEntity?> currentAssetNotifier;
+  final GoodieAsset asset;
+  final ValueNotifier<List<GoodieAsset>> selectedAssetsNotifier;
+  final ValueNotifier<GoodieAsset?> currentAssetNotifier;
 
   const SelectionIndicator({
     super.key,
@@ -163,7 +181,7 @@ class SelectionIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<List<AssetEntity>>(
+    return ValueListenableBuilder<List<GoodieAsset>>(
       valueListenable: selectedAssetsNotifier,
       builder: (context, selectedAssets, child) {
         int assetIndex = selectedAssets.indexOf(asset);
@@ -213,13 +231,13 @@ class SelectionIndicator extends StatelessWidget {
   }
 }
 
-class AssetThumbnail extends StatelessWidget {
-  final AssetEntity asset;
+class AssetThumbnail extends StatefulWidget {
+  final GoodieAsset asset;
   final int? width;
   final int? height;
   final int thumbWidth;
   final int thumbHeight;
-  final Map<AssetEntity, Uint8List> cache;
+  final Map<GoodieAsset, Uint8List> cache;
   final bool fullResolution;
 
   const AssetThumbnail({
@@ -234,11 +252,27 @@ class AssetThumbnail extends StatelessWidget {
   }) : super(key: key);
 
   @override
+  State<AssetThumbnail> createState() => _AssetThumbnailState();
+}
+
+class _AssetThumbnailState extends State<AssetThumbnail> {
+  MemoryImage? editImage;
+  PhotoViewController? controller;
+
+  @override
+  void initState() {
+    if (widget.fullResolution) {
+      controller = PhotoViewController();
+    }
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
 
-    return cache.containsKey(asset)
-        ? _buildCachedImage(screenWidth, cache[asset]!)
+    return widget.cache.containsKey(widget.asset)
+        ? _buildCachedImage(screenWidth, widget.cache[widget.asset]!)
         : _buildFutureImage(screenWidth);
   }
 
@@ -246,40 +280,50 @@ class AssetThumbnail extends StatelessWidget {
     double screenWidth,
     Uint8List imageBytes,
   ) {
-    return fullResolution
-        ? SizedBox(
-            width: width?.toDouble() ?? screenWidth / 4.35,
-            height: height?.toDouble() ?? 100,
-            child: ClipRect(
-              child: PhotoView(
-                key: Key(asset.id),
-                imageProvider: MemoryImage(cache[asset] ?? imageBytes),
-                minScale: PhotoViewComputedScale.contained,
-                maxScale: PhotoViewComputedScale.covered * 2,
-                backgroundDecoration: const BoxDecoration(
-                  color: Colors.transparent,
-                ),
-                basePosition: Alignment.center,
-              ),
+    if (widget.fullResolution) {
+      editImage = MemoryImage(
+          widget.asset.editedImage ?? widget.cache[widget.asset] ?? imageBytes);
+      return SizedBox(
+        width: widget.width?.toDouble() ?? screenWidth / 4.35,
+        height: widget.height?.toDouble() ?? 100,
+        child: ClipRect(
+          child: PhotoView(
+            key: Key(widget.asset.id),
+            controller: controller,
+            imageProvider: editImage,
+            minScale: PhotoViewComputedScale.contained,
+            maxScale: PhotoViewComputedScale.covered * 2,
+            backgroundDecoration: const BoxDecoration(
+              color: Colors.transparent,
             ),
-          )
-        : Image.memory(
-            cache[asset] ?? imageBytes,
-            width: width?.toDouble() ?? screenWidth / 4.35,
-            height: height?.toDouble() ?? 100,
-            fit: BoxFit.cover,
-          );
+            basePosition: Alignment.center,
+            onScaleEnd: (context, details, controllerValue) => setState(() {
+              widget.asset.editedImage = editImage!.bytes;
+            }),
+          ),
+        ),
+      );
+    } else {
+      return Image.memory(
+        widget.cache[widget.asset] ?? imageBytes,
+        width: widget.width?.toDouble() ?? screenWidth / 4.35,
+        height: widget.height?.toDouble() ?? 100,
+        fit: BoxFit.cover,
+      );
+    }
   }
 
   Widget _buildFutureImage(double screenWidth) {
     return FutureBuilder<Uint8List?>(
-      future: fullResolution
-          ? asset.originBytes
-          : asset.thumbnailDataWithSize(ThumbnailSize(thumbWidth, thumbHeight)),
+      future: widget.fullResolution
+          ? widget.asset.originBytes
+          : widget.asset.thumbnailDataWithSize(
+              ThumbnailSize(widget.thumbWidth, widget.thumbHeight)),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.done &&
             snapshot.data != null) {
-          asset.originBytes.then((value) => cache[asset] = value!);
+          widget.asset.originBytes
+              .then((value) => widget.cache[widget.asset] = value!);
           return _buildCachedImage(screenWidth, snapshot.data!);
         }
         return const Center(child: CircularProgressIndicator());
