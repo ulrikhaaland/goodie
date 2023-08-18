@@ -55,7 +55,7 @@ class _RestaurantReviewReviewState extends State<RestaurantReviewReview> {
     return SingleChildScrollView(
       child: Padding(
         padding: const EdgeInsets.only(
-          top: 16,
+          top: 100,
           left: 16,
           right: 16,
         ),

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:goodie/pages/review/review_images.dart';
@@ -31,7 +33,7 @@ class _RestaurantReviewPageState extends State<RestaurantReviewPage>
 
   bool _canSubmit = false;
 
-  bool showListItem = false;
+  bool showListItem = true;
 
   @override
   bool get wantKeepAlive => true;
@@ -79,7 +81,7 @@ class _RestaurantReviewPageState extends State<RestaurantReviewPage>
                   }),
             ],
           ),
-          if (_selectedRestaurant != null && _pageIndex != 0)
+          if (_selectedRestaurant != null && _pageIndex != 0 && showListItem)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: _buildRestaurantListItem(context),
@@ -114,8 +116,13 @@ class _RestaurantReviewPageState extends State<RestaurantReviewPage>
   }
 
   void _handleOnLeftPressed() {
+    _pageIndex = _pageIndex - 1;
+
+    showListItem = true;
+    if (_pageIndex == 1) {
+      _handleListItem();
+    }
     setState(() {
-      _pageIndex = _pageIndex - 1;
       if (_pageIndex == 0) {
         _selectedRestaurant = null;
       }
@@ -125,6 +132,10 @@ class _RestaurantReviewPageState extends State<RestaurantReviewPage>
   }
 
   void _handleOnRightPressed() {
+    showListItem = true;
+    if (_pageIndex == 1) {
+      _handleListItem();
+    }
     setState(() {
       _pageIndex = _pageIndex + 1;
 
@@ -140,12 +151,23 @@ class _RestaurantReviewPageState extends State<RestaurantReviewPage>
 
   void _onSelectRestaurant(Restaurant restaurant) {
     setState(() {
+      _handleListItem();
       _selectedRestaurant = restaurant;
       images = [];
       _review = null;
       _pageIndex = 1;
       _pageController.nextPage(
           duration: const Duration(milliseconds: 400), curve: Curves.easeInOut);
+    });
+  }
+
+  void _handleListItem() {
+    Timer(const Duration(milliseconds: 500), () {
+      if (mounted && _pageIndex == 1) {
+        setState(() {
+          showListItem = false;
+        });
+      }
     });
   }
 

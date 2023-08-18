@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:photo_manager/photo_manager.dart';
@@ -44,18 +45,26 @@ class _RestaurantReviewPhotoPickerState
   final ValueNotifier<GoodieAsset?> _selectedAssetNotifier =
       ValueNotifier(null);
   final Map<GoodieAsset, Uint8List> _thumbnailCache = {};
+  bool showListItem = false;
 
   @override
   void initState() {
     super.initState();
     _loadRecentImages();
+    Timer(const Duration(milliseconds: 500), () {
+      if (mounted) {
+        setState(() {
+          showListItem = true;
+        });
+      }
+    });
   }
 
   Future<void> _loadRecentImages() async {
     final List<AssetPathEntity> paths =
         await PhotoManager.getAssetPathList(onlyAll: true);
     final AssetPathEntity recentPath = paths.first;
-    final recentImages = await recentPath.getAssetListRange(start: 0, end: 10);
+    final recentImages = await recentPath.getAssetListRange(start: 0, end: 100);
     if (mounted) {
       setState(() {
         _recentImages = recentImages
@@ -78,58 +87,76 @@ class _RestaurantReviewPhotoPickerState
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
     final thumbnailSize = (screenWidth / 2.5).floor();
     final selectedAssetHeight = screenWidth.floor();
     final selectedAssetWidth = (selectedAssetHeight * 0.8).floor();
 
-    return CustomScrollView(
-      controller: widget.scrollController,
-      slivers: [
-        SliverAppBar(
-          backgroundColor: Colors.transparent,
-          floating: true,
-          snap: true,
-          expandedHeight:
-              150.0, // Adjust this value to your desired height for _buildRestaurantListItem
-          flexibleSpace: FlexibleSpaceBar(
-            background: widget.restaurantListItem,
-          ),
-        ),
-        SliverToBoxAdapter(
-          child: SizedBox(
-            height: selectedAssetHeight.toDouble(),
-            width: selectedAssetWidth.toDouble(),
-            child: ValueListenableBuilder(
-              valueListenable: _selectedAssetNotifier,
-              builder: (context, selectedAsset, child) {
-                if (selectedAsset == null) return const SizedBox.shrink();
-                return AssetThumbnail(
-                  key: Key("${selectedAsset.id}full"),
-                  asset: selectedAsset,
-                  width: selectedAssetWidth,
-                  height: selectedAssetHeight,
-                  cache: _thumbnailCache,
-                  fullResolution: true,
-                );
-              },
+    return Stack(
+      children: [
+        Column(
+          children: [
+            const SizedBox(height: 100),
+            SizedBox(
+              height: selectedAssetHeight.toDouble(),
+              width: selectedAssetWidth.toDouble(),
+              child: ValueListenableBuilder(
+                valueListenable: _selectedAssetNotifier,
+                builder: (context, selectedAsset, child) {
+                  if (selectedAsset == null) return const SizedBox.shrink();
+                  return AssetThumbnail(
+                    key: Key("${selectedAsset.id}full"),
+                    asset: selectedAsset,
+                    width: selectedAssetWidth,
+                    height: selectedAssetHeight,
+                    cache: _thumbnailCache,
+                    fullResolution: true,
+                  );
+                },
+              ),
             ),
-          ),
+            const SizedBox(height: 20),
+          ],
         ),
-        const SliverToBoxAdapter(child: SizedBox(height: 20)),
-        SliverGrid(
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 4,
-            childAspectRatio: 0.775,
-            mainAxisSpacing: 0,
-            crossAxisSpacing: 0,
-            mainAxisExtent: 101,
-          ),
-          delegate: SliverChildBuilderDelegate(
-            (BuildContext context, int index) {
-              return buildAssetThumbnailWithSelectionIndicator(
-                  _recentImages[index], thumbnailSize, thumbnailSize);
-            },
-            childCount: _recentImages.length,
+        SizedBox(
+          height: screenHeight,
+          child: CustomScrollView(
+            controller: widget.scrollController,
+            slivers: [
+              SliverAppBar(
+                backgroundColor: Colors.transparent,
+                floating: true,
+                snap: true,
+                expandedHeight:
+                    100.0, // Adjust this value to your desired height for _buildRestaurantListItem
+                flexibleSpace: FlexibleSpaceBar(
+                  background:
+                      showListItem ? widget.restaurantListItem : Container(),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: Container(
+                  height: selectedAssetHeight.toDouble(),
+                  color: Colors.white,
+                ),
+              ),
+              SliverGrid(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 4,
+                  childAspectRatio: 0.775,
+                  mainAxisSpacing: 0,
+                  crossAxisSpacing: 0,
+                  mainAxisExtent: 101,
+                ),
+                delegate: SliverChildBuilderDelegate(
+                  (BuildContext context, int index) {
+                    return buildAssetThumbnailWithSelectionIndicator(
+                        _recentImages[index], thumbnailSize, thumbnailSize);
+                  },
+                  childCount: _recentImages.length,
+                ),
+              ),
+            ],
           ),
         ),
       ],
