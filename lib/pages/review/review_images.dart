@@ -1,15 +1,21 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:goodie/pages/review/review_photo_picker.dart';
 
 import '../../model/restaurant.dart';
 
 class RestaurantReviewImages extends StatefulWidget {
-  final Restaurant? restaurant;
-  final List<File> images;
+  final Function(List<GoodieAsset>) onImagesSelected;
+  final Restaurant? selectedRestaurant;
+  final ScrollController scrollController;
+  final Widget restaurantListItem;
 
-  const RestaurantReviewImages(
-      {super.key, required this.restaurant, required this.images});
+  const RestaurantReviewImages({
+    super.key,
+    required this.onImagesSelected,
+    this.selectedRestaurant,
+    required this.scrollController,
+    required this.restaurantListItem,
+  });
   @override
   // ignore: library_private_types_in_public_api
   _RestaurantReviewImagesState createState() => _RestaurantReviewImagesState();
@@ -17,16 +23,15 @@ class RestaurantReviewImages extends StatefulWidget {
 
 class _RestaurantReviewImagesState extends State<RestaurantReviewImages>
     with AutomaticKeepAliveClientMixin {
-  late List<File> _images;
-
   @override
   bool get wantKeepAlive => true;
 
   @override
-  void initState() {
-    super.initState();
-    _images =
-        List.from(widget.images); // make a modifiable copy of widget.images
+  void didUpdateWidget(covariant RestaurantReviewImages oldWidget) {
+    if (oldWidget.selectedRestaurant?.id != widget.selectedRestaurant?.id) {
+      setState(() {});
+    }
+    super.didUpdateWidget(oldWidget);
   }
 
   @override
@@ -35,10 +40,11 @@ class _RestaurantReviewImagesState extends State<RestaurantReviewImages>
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: RestaurantReviewPhotoPicker(
+        key: Key(widget.selectedRestaurant?.id ?? "picker"),
+        scrollController: widget.scrollController,
+        restaurantListItem: widget.restaurantListItem,
         onImagesSelected: (selectedImages) {
-          setState(() {
-            _images.addAll(selectedImages);
-          });
+          widget.onImagesSelected(selectedImages);
         },
       ),
     );

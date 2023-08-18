@@ -1,7 +1,4 @@
-import 'dart:ffi';
-import 'dart:io';
 import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:photo_view/photo_view.dart';
@@ -9,7 +6,8 @@ import 'package:photo_view/photo_view.dart';
 // ignore: must_be_immutable
 class GoodieAsset extends AssetEntity {
   AssetEntity asset;
-  Uint8List? editedImage;
+  double? scale;
+  Offset? offset;
 
   GoodieAsset({
     required this.asset,
@@ -21,10 +19,16 @@ class GoodieAsset extends AssetEntity {
 }
 
 class RestaurantReviewPhotoPicker extends StatefulWidget {
-  final Function(List<File>) onImagesSelected;
+  final Function(List<GoodieAsset>) onImagesSelected;
+  final ScrollController scrollController;
+  final Widget restaurantListItem;
 
-  const RestaurantReviewPhotoPicker({Key? key, required this.onImagesSelected})
-      : super(key: key);
+  const RestaurantReviewPhotoPicker({
+    Key? key,
+    required this.onImagesSelected,
+    required this.scrollController,
+    required this.restaurantListItem,
+  }) : super(key: key);
 
   @override
   // ignore: library_private_types_in_public_api
@@ -35,10 +39,10 @@ class RestaurantReviewPhotoPicker extends StatefulWidget {
 class _RestaurantReviewPhotoPickerState
     extends State<RestaurantReviewPhotoPicker> {
   List<GoodieAsset> _recentImages = [];
-  GoodieAsset? _selectedAsset;
   final ValueNotifier<List<GoodieAsset>> _selectedAssetsNotifier =
       ValueNotifier<List<GoodieAsset>>([]);
-  ValueNotifier<GoodieAsset?> _selectedAssetNotifier = ValueNotifier(null);
+  final ValueNotifier<GoodieAsset?> _selectedAssetNotifier =
+      ValueNotifier(null);
   final Map<GoodieAsset, Uint8List> _thumbnailCache = {};
 
   @override
@@ -52,15 +56,23 @@ class _RestaurantReviewPhotoPickerState
         await PhotoManager.getAssetPathList(onlyAll: true);
     final AssetPathEntity recentPath = paths.first;
     final recentImages = await recentPath.getAssetListRange(start: 0, end: 10);
-    setState(() {
-      _recentImages = recentImages
-          .map((e) => GoodieAsset(
-                asset: e,
-              ))
-          .toList();
-      _selectedAsset = _recentImages.first;
-      _selectedAssetNotifier.value = _selectedAsset;
-    });
+    if (mounted) {
+      setState(() {
+        _recentImages = recentImages
+            .map((e) => GoodieAsset(
+                  asset: e,
+                ))
+            .toList();
+        _selectedAssetNotifier.value = _recentImages.first;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _selectedAssetNotifier.dispose();
+    _selectedAssetsNotifier.dispose();
+    super.dispose();
   }
 
   @override
@@ -70,40 +82,54 @@ class _RestaurantReviewPhotoPickerState
     final selectedAssetHeight = screenWidth.floor();
     final selectedAssetWidth = (selectedAssetHeight * 0.8).floor();
 
-    return Column(
-      children: [
-        SizedBox(
-          height: selectedAssetHeight.toDouble(),
-          width: selectedAssetWidth.toDouble(),
-          child: ValueListenableBuilder(
-            valueListenable: _selectedAssetNotifier,
-            builder: (context, selectedAsset, child) {
-              if (selectedAsset == null) return const SizedBox.shrink();
-              return AssetThumbnail(
-                asset: selectedAsset,
-                width: selectedAssetWidth,
-                height: selectedAssetHeight,
-                cache: _thumbnailCache,
-                fullResolution: true,
-              );
-            },
+    return CustomScrollView(
+      controller: widget.scrollController,
+      slivers: [
+        SliverAppBar(
+          backgroundColor: Colors.transparent,
+          floating: true,
+          snap: true,
+          expandedHeight:
+              150.0, // Adjust this value to your desired height for _buildRestaurantListItem
+          flexibleSpace: FlexibleSpaceBar(
+            background: widget.restaurantListItem,
           ),
         ),
-        const SizedBox(height: 20),
-        Flexible(
-          child: GridView.builder(
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 4,
-              childAspectRatio: 0.775,
-              mainAxisSpacing: 0,
-              crossAxisSpacing: 0,
-              mainAxisExtent: 101,
+        SliverToBoxAdapter(
+          child: SizedBox(
+            height: selectedAssetHeight.toDouble(),
+            width: selectedAssetWidth.toDouble(),
+            child: ValueListenableBuilder(
+              valueListenable: _selectedAssetNotifier,
+              builder: (context, selectedAsset, child) {
+                if (selectedAsset == null) return const SizedBox.shrink();
+                return AssetThumbnail(
+                  key: Key("${selectedAsset.id}full"),
+                  asset: selectedAsset,
+                  width: selectedAssetWidth,
+                  height: selectedAssetHeight,
+                  cache: _thumbnailCache,
+                  fullResolution: true,
+                );
+              },
             ),
-            itemCount: _recentImages.length,
-            itemBuilder: (context, index) {
+          ),
+        ),
+        const SliverToBoxAdapter(child: SizedBox(height: 20)),
+        SliverGrid(
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 4,
+            childAspectRatio: 0.775,
+            mainAxisSpacing: 0,
+            crossAxisSpacing: 0,
+            mainAxisExtent: 101,
+          ),
+          delegate: SliverChildBuilderDelegate(
+            (BuildContext context, int index) {
               return buildAssetThumbnailWithSelectionIndicator(
                   _recentImages[index], thumbnailSize, thumbnailSize);
             },
+            childCount: _recentImages.length,
           ),
         ),
       ],
@@ -119,6 +145,7 @@ class _RestaurantReviewPhotoPickerState
       child: Stack(
         children: [
           AssetThumbnail(
+            key: Key("${asset.id}thumbnail"),
             asset: asset,
             thumbWidth: width,
             thumbHeight: cHeight,
@@ -140,7 +167,9 @@ class _RestaurantReviewPhotoPickerState
     int assetIndex = selectedAssets.indexOf(asset);
     if (assetIndex != -1) {
       if (_selectedAssetNotifier.value?.id != asset.id) {
-        _selectedAssetNotifier.value = asset;
+        setState(() {
+          _selectedAssetNotifier.value = asset;
+        });
         return;
       }
       _selectedAssetsNotifier.value.removeAt(assetIndex);
@@ -157,6 +186,8 @@ class _RestaurantReviewPhotoPickerState
       _selectedAssetNotifier.value = fullResAsset;
       _selectedAssetsNotifier.value.add(fullResAsset);
     }
+    widget.onImagesSelected(_selectedAssetsNotifier.value);
+
     _selectedAssetsNotifier.value =
         List.from(_selectedAssetsNotifier.value); // to trigger a rebuild
   }
@@ -262,9 +293,17 @@ class _AssetThumbnailState extends State<AssetThumbnail> {
   @override
   void initState() {
     if (widget.fullResolution) {
-      controller = PhotoViewController();
+      controller = PhotoViewController(
+          initialPosition: widget.asset.offset ?? Offset.zero,
+          initialScale: widget.asset.scale ?? 1.0);
     }
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    controller?.dispose();
+    super.dispose();
   }
 
   @override
@@ -281,25 +320,26 @@ class _AssetThumbnailState extends State<AssetThumbnail> {
     Uint8List imageBytes,
   ) {
     if (widget.fullResolution) {
-      editImage = MemoryImage(
-          widget.asset.editedImage ?? widget.cache[widget.asset] ?? imageBytes);
       return SizedBox(
-        width: widget.width?.toDouble() ?? screenWidth / 4.35,
-        height: widget.height?.toDouble() ?? 100,
+        width: widget.width!.toDouble(),
+        height: widget.height!.toDouble(),
         child: ClipRect(
           child: PhotoView(
             key: Key(widget.asset.id),
             controller: controller,
-            imageProvider: editImage,
-            minScale: PhotoViewComputedScale.contained,
+            imageProvider:
+                MemoryImage(widget.cache[widget.asset] ?? imageBytes),
+            minScale: PhotoViewComputedScale.covered,
             maxScale: PhotoViewComputedScale.covered * 2,
+            initialScale: widget.asset.scale,
             backgroundDecoration: const BoxDecoration(
               color: Colors.transparent,
             ),
             basePosition: Alignment.center,
-            onScaleEnd: (context, details, controllerValue) => setState(() {
-              widget.asset.editedImage = editImage!.bytes;
-            }),
+            onScaleEnd: (context, details, controllerValue) {
+              widget.asset.scale = controllerValue.scale;
+              widget.asset.offset = controllerValue.position;
+            },
           ),
         ),
       );
@@ -322,8 +362,12 @@ class _AssetThumbnailState extends State<AssetThumbnail> {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.done &&
             snapshot.data != null) {
-          widget.asset.originBytes
-              .then((value) => widget.cache[widget.asset] = value!);
+          widget.asset.originBytes.then((value) {
+            widget.cache[widget.asset] = value!;
+            if (widget.fullResolution) {
+              setState(() {});
+            }
+          });
           return _buildCachedImage(screenWidth, snapshot.data!);
         }
         return const Center(child: CircularProgressIndicator());

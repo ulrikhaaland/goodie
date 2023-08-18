@@ -1,10 +1,9 @@
-import 'dart:io';
-
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:goodie/pages/review/review_images.dart';
 import 'package:goodie/pages/review/review_list_view.dart';
 import 'package:goodie/pages/review/review_page_buttons.dart';
+import 'package:goodie/pages/review/review_photo_picker.dart';
 import 'package:goodie/pages/review/review_progress_bar.dart';
 import 'package:goodie/pages/review/review_review.dart';
 
@@ -22,13 +21,17 @@ class _RestaurantReviewPageState extends State<RestaurantReviewPage>
     with AutomaticKeepAliveClientMixin {
   Restaurant? _selectedRestaurant;
   RestaurantReview? _review;
-  List<File> images = [];
+  List<GoodieAsset> images = [];
 
   final PageController _pageController = PageController();
+
+  final _imageScrollController = ScrollController();
 
   int _pageIndex = 0;
 
   bool _canSubmit = false;
+
+  bool showListItem = false;
 
   @override
   bool get wantKeepAlive => true;
@@ -38,51 +41,62 @@ class _RestaurantReviewPageState extends State<RestaurantReviewPage>
     super.build(context);
 
     return SafeArea(
-      child: Column(
+      child: Stack(
         children: [
+          PageView(
+            key: const Key("pageview"),
+            controller: _pageController,
+            physics:
+                const NeverScrollableScrollPhysics(), // so users can't swipe between them
+            children: [
+              ResturantReviewSelect(
+                onSelectRestaurant: (restaurant) {
+                  _onSelectRestaurant(restaurant);
+                },
+              ),
+              RestaurantReviewImages(
+                key: Key(_selectedRestaurant?.id ?? "images"),
+                scrollController: _imageScrollController,
+                selectedRestaurant: _selectedRestaurant,
+                restaurantListItem: _buildRestaurantListItem(context),
+                onImagesSelected: (List<GoodieAsset> selected) {
+                  setState(() {
+                    images = selected;
+                  });
+                },
+              ),
+              RestaurantReviewReview(
+                  key: Key(_selectedRestaurant?.id ?? "review"),
+                  restaurant: _selectedRestaurant,
+                  onBackPressed: () => _pageController.previousPage(
+                      duration: const Duration(milliseconds: 400),
+                      curve: Curves.easeInOut),
+                  onCanSubmit: (canSubmit) {
+                    _handleOnCanSubmit(canSubmit);
+                  },
+                  onReviewRestaurant: (review) {
+                    _review = review;
+                  }),
+            ],
+          ),
           if (_selectedRestaurant != null && _pageIndex != 0)
-            _buildRestaurantListItem(context)!,
-          Expanded(
-            child: Column(
-              children: [
-                Expanded(
-                  child: PageView(
-                    key: const Key("pageview"),
-                    controller: _pageController,
-                    physics:
-                        const NeverScrollableScrollPhysics(), // so users can't swipe between them
-                    children: [
-                      ResturantReviewSelect(
-                        onSelectRestaurant: (restaurant) {
-                          _onSelectRestaurant(restaurant);
-                        },
-                      ),
-                      RestaurantReviewImages(
-                        key: Key(_selectedRestaurant?.id ?? "images"),
-                        restaurant: _selectedRestaurant,
-                        images: images,
-                      ),
-                      RestaurantReviewReview(
-                          key: Key(_selectedRestaurant?.id ?? "review"),
-                          restaurant: _selectedRestaurant,
-                          onBackPressed: () => _pageController.previousPage(
-                              duration: const Duration(milliseconds: 400),
-                              curve: Curves.easeInOut),
-                          onCanSubmit: (canSubmit) {
-                            _handleOnCanSubmit(canSubmit);
-                          },
-                          onReviewRestaurant: (review) {
-                            _review = review;
-                          }),
-                    ],
-                  ),
-                ),
-                if (_pageIndex != 0) ...[
-                  ReviewProgressBar(currentIndex: _pageIndex, totalPages: 4),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: _buildRestaurantListItem(context),
+            ),
+          if (_pageIndex != 0) ...[
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: Column(
+                children: [
+                  // ReviewProgressBar(
+                  //     currentIndex: _pageIndex, totalPages: 4),
                   ReviewPageButtons(
                     isSubmit: _pageIndex == 3,
                     canSubmit: _canSubmit,
-                    rightButtonText: _pageIndex == 1 ? "Hopp over" : "Neste",
+                    rightButtonText: _getRightButtonText(),
                     onLeftPressed: () {
                       _handleOnLeftPressed();
                     },
@@ -90,10 +104,10 @@ class _RestaurantReviewPageState extends State<RestaurantReviewPage>
                       _handleOnRightPressed();
                     },
                   ),
-                ]
-              ],
+                ],
+              ),
             ),
-          ),
+          ]
         ],
       ),
     );
@@ -141,54 +155,50 @@ class _RestaurantReviewPageState extends State<RestaurantReviewPage>
     super.dispose();
   }
 
-  Widget? _buildRestaurantListItem(BuildContext context) {
-    if (_selectedRestaurant == null) return null;
+  Widget _buildRestaurantListItem(BuildContext context) {
+    if (_selectedRestaurant == null) return Container();
 
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        children: [
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: ClipRRect(
-              borderRadius: BorderRadius.circular(8.0),
-              child: CachedNetworkImage(
-                imageUrl: _selectedRestaurant!.coverImg ?? '',
-                placeholder: (context, url) => const SizedBox(
-                  width: 50, // Set the width
-                  height: 50, // Set the height
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2.0,
-                  ),
-                ),
-                errorWidget: (context, url, error) => const Icon(Icons.error),
+    return Column(
+      children: [
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: ClipRRect(
+            borderRadius: BorderRadius.circular(8.0),
+            child: CachedNetworkImage(
+              imageUrl: _selectedRestaurant!.coverImg ?? '',
+              placeholder: (context, url) => const SizedBox(
                 width: 50, // Set the width
                 height: 50, // Set the height
-                fit: BoxFit.cover,
-              ),
-            ),
-            title: Text(
-              _selectedRestaurant!.name,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
-            ),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 2),
-                Text(
-                  _selectedRestaurant!.description ?? '',
-                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                  overflow: TextOverflow.ellipsis,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.0,
                 ),
-                const SizedBox(
-                    height: 2), // Space between description and rating
-              ],
+              ),
+              errorWidget: (context, url, error) => const Icon(Icons.error),
+              width: 50, // Set the width
+              height: 50, // Set the height
+              fit: BoxFit.cover,
             ),
           ),
-          const Divider(),
-        ],
-      ),
+          title: Text(
+            _selectedRestaurant!.name,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
+          ),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 2),
+              Text(
+                _selectedRestaurant!.description ?? '',
+                style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 2), // Space between description and rating
+            ],
+          ),
+        ),
+        const Divider(),
+      ],
     );
   }
 
@@ -196,5 +206,16 @@ class _RestaurantReviewPageState extends State<RestaurantReviewPage>
 
   void _handleOnCanSubmit(bool canSubmit) {
     _canSubmit = canSubmit;
+  }
+
+  String _getRightButtonText() {
+    if (_pageIndex == 1) {
+      if (images.isNotEmpty) {
+        return "Velg ${images.length}";
+      } else {
+        return "Hopp over";
+      }
+    }
+    return "Neste";
   }
 }
