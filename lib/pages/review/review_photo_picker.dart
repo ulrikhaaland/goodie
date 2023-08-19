@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:typed_data';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:photo_view/photo_view.dart';
 
@@ -64,7 +66,8 @@ class _RestaurantReviewPhotoPickerState
     final List<AssetPathEntity> paths =
         await PhotoManager.getAssetPathList(onlyAll: true);
     final AssetPathEntity recentPath = paths.first;
-    final recentImages = await recentPath.getAssetListRange(start: 0, end: 100);
+    final recentImages =
+        await recentPath.getAssetListRange(start: 0, end: 9999);
     if (mounted) {
       setState(() {
         _recentImages = recentImages
@@ -84,6 +87,8 @@ class _RestaurantReviewPhotoPickerState
     super.dispose();
   }
 
+  bool _scrollable = true;
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
@@ -92,74 +97,90 @@ class _RestaurantReviewPhotoPickerState
     final selectedAssetHeight = screenWidth.floor();
     final selectedAssetWidth = (selectedAssetHeight * 0.8).floor();
 
-    return Stack(
-      children: [
-        Column(
-          children: [
-            const SizedBox(height: 100),
-            SizedBox(
-              height: selectedAssetHeight.toDouble(),
-              width: selectedAssetWidth.toDouble(),
+    return SizedBox(
+      height: screenHeight,
+      child: CustomScrollView(
+        controller: widget.scrollController,
+        physics: _scrollable
+            ? const AlwaysScrollableScrollPhysics()
+            : const NeverScrollableScrollPhysics(),
+        slivers: [
+          SliverAppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            floating: true, // Add this line
+            expandedHeight: 100.0,
+            flexibleSpace: FlexibleSpaceBar(
+              background:
+                  showListItem ? widget.restaurantListItem : Container(),
+            ),
+          ),
+          SliverPersistentHeader(
+            pinned: true,
+            delegate: _SliverHeaderDelegate(
+              minHeight: selectedAssetHeight.toDouble(),
+              maxHeight: selectedAssetHeight.toDouble(),
               child: ValueListenableBuilder(
                 valueListenable: _selectedAssetNotifier,
                 builder: (context, selectedAsset, child) {
                   if (selectedAsset == null) return const SizedBox.shrink();
-                  return AssetThumbnail(
-                    key: Key("${selectedAsset.id}full"),
-                    asset: selectedAsset,
-                    width: selectedAssetWidth,
-                    height: selectedAssetHeight,
-                    cache: _thumbnailCache,
-                    fullResolution: true,
+
+                  return Listener(
+                    onPointerDown: (_) {
+                      setState(() {
+                        _scrollable = false;
+                      });
+                    },
+                    onPointerUp: (_) {
+                      setState(() {
+                        _scrollable = true;
+                      });
+                    },
+                    child: AssetThumbnail(
+                      key: Key("${selectedAsset.id}full"),
+                      asset: selectedAsset,
+                      width: selectedAssetWidth,
+                      height: selectedAssetHeight,
+                      cache: _thumbnailCache,
+                      fullResolution: true,
+                    ),
                   );
                 },
               ),
             ),
-            const SizedBox(height: 20),
-          ],
-        ),
-        SizedBox(
-          height: screenHeight,
-          child: CustomScrollView(
-            controller: widget.scrollController,
-            slivers: [
-              SliverAppBar(
-                backgroundColor: Colors.transparent,
-                floating: true,
-                snap: true,
-                expandedHeight:
-                    100.0, // Adjust this value to your desired height for _buildRestaurantListItem
-                flexibleSpace: FlexibleSpaceBar(
-                  background:
-                      showListItem ? widget.restaurantListItem : Container(),
-                ),
-              ),
-              SliverToBoxAdapter(
-                child: Container(
-                  height: selectedAssetHeight.toDouble(),
-                  color: Colors.white,
-                ),
-              ),
-              SliverGrid(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 4,
-                  childAspectRatio: 0.775,
-                  mainAxisSpacing: 0,
-                  crossAxisSpacing: 0,
-                  mainAxisExtent: 101,
-                ),
-                delegate: SliverChildBuilderDelegate(
-                  (BuildContext context, int index) {
-                    return buildAssetThumbnailWithSelectionIndicator(
-                        _recentImages[index], thumbnailSize, thumbnailSize);
-                  },
-                  childCount: _recentImages.length,
-                ),
-              ),
-            ],
           ),
-        ),
-      ],
+          const SliverToBoxAdapter(
+            child: SizedBox(
+              height: 20,
+            ),
+          ),
+          SliverGrid(
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 4,
+              childAspectRatio: 0.775,
+              mainAxisSpacing: 0,
+              crossAxisSpacing: 0,
+              mainAxisExtent: 101,
+            ),
+            delegate: SliverChildBuilderDelegate(
+              (BuildContext context, int index) {
+                // If the index is 0, return the "Open Camera Roll" item
+                if (index == 0) {
+                  return _buildPickImage();
+                }
+
+                // Adjust the index to account for the additional item
+                index = index - 1;
+
+                return buildAssetThumbnailWithSelectionIndicator(
+                    _recentImages[index], thumbnailSize, thumbnailSize);
+              },
+              childCount: _recentImages.length +
+                  1, // Add 1 for the "Open Camera Roll" item
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -222,6 +243,80 @@ class _RestaurantReviewPhotoPickerState
   Future<GoodieAsset> _fetchHighResolutionAsset(GoodieAsset asset) async {
     await asset.originBytes;
     return asset;
+  }
+
+  Widget _buildPickImage() {
+    return GestureDetector(
+      onTap: () async {
+        final pickedFiles = await ImagePicker().pickMultiImage();
+        if (pickedFiles.isNotEmpty) {
+          List<GoodieAsset> newAssets = [];
+          for (var file in pickedFiles) {
+            final assetPaths = await PhotoManager.getAssetPathList();
+            for (var path in assetPaths) {
+              final assetList = await path.getAssetListRange(
+                  start: 0, end: 9999); // Adjust the range as needed
+// "1000000037"
+              AssetEntity? matchedAsset;
+              for (var asset in assetList) {
+                if (asset.relativePath == file.path) {
+                  matchedAsset = asset;
+                  break;
+                }
+              }
+
+              if (matchedAsset != null) {
+                newAssets.add(GoodieAsset(asset: matchedAsset));
+                break; // Break the outer loop once the asset is found
+              }
+            }
+          }
+          setState(() {
+            _selectedAssetsNotifier.value.addAll(newAssets);
+            _recentImages.insertAll(
+                0, newAssets); // Add new assets to the beginning
+          });
+        }
+      },
+      child: const Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.add_a_photo), // Use any appropriate icon
+          Text("Åpne kamera-rull", textAlign: TextAlign.center),
+        ],
+      ),
+    );
+  }
+}
+
+class _SliverHeaderDelegate extends SliverPersistentHeaderDelegate {
+  final double minHeight;
+  final double maxHeight;
+  final Widget child;
+
+  _SliverHeaderDelegate({
+    required this.minHeight,
+    required this.maxHeight,
+    required this.child,
+  });
+
+  @override
+  double get minExtent => minHeight;
+
+  @override
+  double get maxExtent => maxHeight;
+
+  @override
+  Widget build(
+      BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return SizedBox.expand(child: child);
+  }
+
+  @override
+  bool shouldRebuild(_SliverHeaderDelegate oldDelegate) {
+    return maxHeight != oldDelegate.maxHeight ||
+        minHeight != oldDelegate.minHeight ||
+        child != oldDelegate.child;
   }
 }
 
@@ -315,6 +410,7 @@ class AssetThumbnail extends StatefulWidget {
 
 class _AssetThumbnailState extends State<AssetThumbnail> {
   MemoryImage? editImage;
+
   PhotoViewController? controller;
 
   @override
@@ -353,7 +449,7 @@ class _AssetThumbnailState extends State<AssetThumbnail> {
         child: ClipRect(
           child: PhotoView(
             key: Key(widget.asset.id),
-            controller: controller,
+            controller: controller!,
             imageProvider:
                 MemoryImage(widget.cache[widget.asset] ?? imageBytes),
             minScale: PhotoViewComputedScale.covered,
