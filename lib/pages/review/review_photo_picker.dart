@@ -1,10 +1,12 @@
 import 'dart:async';
+import 'dart:io';
+import 'dart:math';
 import 'dart:typed_data';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:photo_view/photo_view.dart';
+import 'package:collection/collection.dart';
 
 // ignore: must_be_immutable
 class GoodieAsset extends AssetEntity {
@@ -250,32 +252,36 @@ class _RestaurantReviewPhotoPickerState
       onTap: () async {
         final pickedFiles = await ImagePicker().pickMultiImage();
         if (pickedFiles.isNotEmpty) {
-          List<GoodieAsset> newAssets = [];
           for (var file in pickedFiles) {
-            final assetPaths = await PhotoManager.getAssetPathList();
-            for (var path in assetPaths) {
-              final assetList = await path.getAssetListRange(
-                  start: 0, end: 9999); // Adjust the range as needed
-// "1000000037"
-              AssetEntity? matchedAsset;
-              for (var asset in assetList) {
-                if (asset.relativePath == file.path) {
-                  matchedAsset = asset;
-                  break;
-                }
-              }
+            final fileId = file.name.split(".").first;
 
-              if (matchedAsset != null) {
-                newAssets.add(GoodieAsset(asset: matchedAsset));
-                break; // Break the outer loop once the asset is found
+            GoodieAsset? asset = _recentImages.firstWhereOrNull(
+              (element) => element.id == fileId,
+            );
+
+            bool isRecent = asset != null;
+
+            if (asset == null) {
+              final entity = await xFileToAssetEntity(file);
+              if (entity == null) continue;
+              asset = GoodieAsset(asset: entity);
+            } else {
+              final isSelected = _selectedAssetsNotifier.value.firstWhereOrNull(
+                    (element) => element.id == fileId,
+                  ) !=
+                  null;
+
+              if (isSelected) {
+                continue;
               }
             }
+            if (isRecent) {
+              _recentImages.removeWhere((element) => element.id == fileId);
+            }
+            _recentImages.insert(0, asset);
+            _selectedAssetsNotifier.value.insert(0, asset);
           }
-          setState(() {
-            _selectedAssetsNotifier.value.addAll(newAssets);
-            _recentImages.insertAll(
-                0, newAssets); // Add new assets to the beginning
-          });
+          setState(() {});
         }
       },
       child: const Column(
@@ -286,6 +292,21 @@ class _RestaurantReviewPhotoPickerState
         ],
       ),
     );
+  }
+
+  Future<AssetEntity?> xFileToAssetEntity(XFile file) async {
+    final assetPaths = await PhotoManager.getAssetPathList();
+    for (var path in assetPaths) {
+      final assetList = await path.getAssetListRange(
+          start: 0, end: 9999); // Adjust the range as needed
+
+      for (var asset in assetList) {
+        if (asset.relativePath == file.path) {
+          return asset;
+        }
+      }
+    }
+    return null;
   }
 }
 
