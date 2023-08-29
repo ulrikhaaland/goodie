@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
+import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:photo_manager/photo_manager.dart';
@@ -13,6 +14,7 @@ class GoodieAsset extends AssetEntity {
   AssetEntity asset;
   double? scale;
   Offset? offset;
+  int? byteLength;
 
   GoodieAsset({
     required this.asset,
@@ -68,18 +70,25 @@ class _RestaurantReviewPhotoPickerState
     final List<AssetPathEntity> paths =
         await PhotoManager.getAssetPathList(onlyAll: true);
     final AssetPathEntity recentPath = paths.first;
-    final recentImages =
-        await recentPath.getAssetListRange(start: 0, end: 9999);
-    if (mounted) {
-      setState(() {
-        _recentImages = recentImages
-            .map((e) => GoodieAsset(
-                  asset: e,
-                ))
-            .toList();
-        _selectedAssetNotifier.value = _recentImages.first;
-      });
-    }
+    recentPath.getAssetListRange(start: 0, end: 100).then((recentImages) {
+      if (mounted) {
+        setState(() {
+          _recentImages = recentImages
+              .map((e) => GoodieAsset(
+                    asset: e,
+                  ))
+              .toList();
+          _selectedAssetNotifier.value = _recentImages.first;
+        });
+        _recentImages.forEach((element) async {
+          element.originBytes.then((value) {
+            if (value != null) {
+              element.byteLength = value.lengthInBytes;
+            }
+          });
+        });
+      }
+    });
   }
 
   @override
@@ -250,14 +259,25 @@ class _RestaurantReviewPhotoPickerState
   Widget _buildPickImage() {
     return GestureDetector(
       onTap: () async {
-        final pickedFiles = await ImagePicker().pickMultiImage();
+        final List<XFile> pickedFiles = await ImagePicker().pickMultiImage();
         if (pickedFiles.isNotEmpty) {
           for (var file in pickedFiles) {
-            final fileId = file.name.split(".").first;
+            final Uint8List pickedImageDataTemp = await file.readAsBytes();
 
-            GoodieAsset? asset = _recentImages.firstWhereOrNull(
-              (element) => element.id == fileId,
+            GoodieAsset? asset;
+
+            asset = _recentImages.firstWhereOrNull(
+              (element) =>
+                  element.byteLength == pickedImageDataTemp.lengthInBytes,
             );
+
+            final ffile = _recentImages.first;
+
+            if (ffile == file.path) {
+              print("same");
+            } else {
+              print("not same");
+            }
 
             bool isRecent = asset != null;
 
@@ -267,7 +287,8 @@ class _RestaurantReviewPhotoPickerState
               asset = GoodieAsset(asset: entity);
             } else {
               final isSelected = _selectedAssetsNotifier.value.firstWhereOrNull(
-                    (element) => element.id == fileId,
+                    (element) =>
+                        element.byteLength == pickedImageDataTemp.lengthInBytes,
                   ) !=
                   null;
 
@@ -276,7 +297,8 @@ class _RestaurantReviewPhotoPickerState
               }
             }
             if (isRecent) {
-              _recentImages.removeWhere((element) => element.id == fileId);
+              _recentImages.removeWhere((element) =>
+                  element.byteLength == pickedImageDataTemp.lengthInBytes);
             }
             _recentImages.insert(0, asset);
             _selectedAssetsNotifier.value.insert(0, asset);
@@ -287,7 +309,7 @@ class _RestaurantReviewPhotoPickerState
       child: const Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.add_a_photo), // Use any appropriate icon
+          Icon(Icons.camera_roll), // Use any appropriate icon
           Text("Åpne kamera-rull", textAlign: TextAlign.center),
         ],
       ),
@@ -300,13 +322,19 @@ class _RestaurantReviewPhotoPickerState
       final assetList = await path.getAssetListRange(
           start: 0, end: 9999); // Adjust the range as needed
 
-      for (var asset in assetList) {
-        if (asset.relativePath == file.path) {
-          return asset;
-        }
-      }
+      return assetList
+          .firstWhereOrNull((element) => element.id == extractId(file.name));
     }
     return null;
+  }
+
+  String extractId(String input) {
+    final RegExp regExp = RegExp(r'image_picker_([\w-]+)\.jpg');
+    final match = regExp.firstMatch(input);
+    if (match != null && match.groupCount >= 1) {
+      return match.group(1)!; // This will return the ID
+    }
+    return ''; // Return an empty string or handle it as you need if no match is found
   }
 }
 
