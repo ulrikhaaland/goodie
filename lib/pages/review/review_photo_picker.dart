@@ -15,7 +15,7 @@ class GoodieAsset extends AssetEntity {
   AssetEntity asset;
   double? scale;
   Offset? offset;
-  Uint8List? byteLength;
+  int? byteLength;
 
   GoodieAsset({
     required this.asset,
@@ -86,7 +86,7 @@ class _RestaurantReviewPhotoPickerState
           element.originFile.then((value) {
             if (value != null) {
               value.readAsBytes().then((value) {
-                element.byteLength = value;
+                element.byteLength = value.lengthInBytes;
               });
             }
           });
@@ -268,28 +268,12 @@ class _RestaurantReviewPhotoPickerState
           for (var file in pickedFiles) {
             final Uint8List pickedImageDataTemp = await file.readAsBytes();
 
+            final byteLength = pickedImageDataTemp.lengthInBytes;
+
             GoodieAsset? asset;
 
             asset = _recentImages.firstWhereOrNull((element) =>
-                element.byteLength != null &&
-                element.byteLength![0] == pickedImageDataTemp[0] &&
-                element.byteLength![1] == pickedImageDataTemp[1] &&
-                element.byteLength![2] == pickedImageDataTemp[2] &&
-                element.byteLength![3] == pickedImageDataTemp[3] &&
-                element.byteLength![4] == pickedImageDataTemp[4] &&
-                element.byteLength![5] == pickedImageDataTemp[5] &&
-                element.byteLength![6] == pickedImageDataTemp[6] &&
-                element.byteLength![7] == pickedImageDataTemp[7] &&
-                element.byteLength![8] == pickedImageDataTemp[8] &&
-                element.byteLength![9] == pickedImageDataTemp[9]);
-
-            final ffile = _recentImages.first.byteLength![0];
-
-            if (ffile == file.path) {
-              print("same");
-            } else {
-              print("not same");
-            }
+                element.byteLength != null && element.byteLength == byteLength);
 
             bool isRecent = asset != null;
 
@@ -299,8 +283,7 @@ class _RestaurantReviewPhotoPickerState
               asset = GoodieAsset(asset: entity);
             } else {
               final isSelected = _selectedAssetsNotifier.value.firstWhereOrNull(
-                    (element) =>
-                        element.byteLength == pickedImageDataTemp.lengthInBytes,
+                    (element) => element.byteLength == byteLength,
                   ) !=
                   null;
 
@@ -308,12 +291,11 @@ class _RestaurantReviewPhotoPickerState
                 continue;
               }
             }
-            if (isRecent) {
-              _recentImages.removeWhere((element) =>
-                  element.byteLength == pickedImageDataTemp.lengthInBytes);
+            if (!isRecent) {
+              _recentImages.insert(0, asset);
             }
-            _recentImages.insert(0, asset);
-            _selectedAssetsNotifier.value.insert(0, asset);
+            _selectedAssetsNotifier.value.add(asset);
+            _selectedAssetNotifier.value = asset;
           }
           setState(() {});
         }
