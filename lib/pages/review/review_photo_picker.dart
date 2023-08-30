@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ffi';
 import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
@@ -14,7 +15,7 @@ class GoodieAsset extends AssetEntity {
   AssetEntity asset;
   double? scale;
   Offset? offset;
-  int? byteLength;
+  Uint8List? byteLength;
 
   GoodieAsset({
     required this.asset,
@@ -80,10 +81,13 @@ class _RestaurantReviewPhotoPickerState
               .toList();
           _selectedAssetNotifier.value = _recentImages.first;
         });
+
         _recentImages.forEach((element) async {
-          element.originBytes.then((value) {
+          element.originFile.then((value) {
             if (value != null) {
-              element.byteLength = value.lengthInBytes;
+              value.readAsBytes().then((value) {
+                element.byteLength = value;
+              });
             }
           });
         });
@@ -266,12 +270,20 @@ class _RestaurantReviewPhotoPickerState
 
             GoodieAsset? asset;
 
-            asset = _recentImages.firstWhereOrNull(
-              (element) =>
-                  element.byteLength == pickedImageDataTemp.lengthInBytes,
-            );
+            asset = _recentImages.firstWhereOrNull((element) =>
+                element.byteLength != null &&
+                element.byteLength![0] == pickedImageDataTemp[0] &&
+                element.byteLength![1] == pickedImageDataTemp[1] &&
+                element.byteLength![2] == pickedImageDataTemp[2] &&
+                element.byteLength![3] == pickedImageDataTemp[3] &&
+                element.byteLength![4] == pickedImageDataTemp[4] &&
+                element.byteLength![5] == pickedImageDataTemp[5] &&
+                element.byteLength![6] == pickedImageDataTemp[6] &&
+                element.byteLength![7] == pickedImageDataTemp[7] &&
+                element.byteLength![8] == pickedImageDataTemp[8] &&
+                element.byteLength![9] == pickedImageDataTemp[9]);
 
-            final ffile = _recentImages.first;
+            final ffile = _recentImages.first.byteLength![0];
 
             if (ffile == file.path) {
               print("same");
