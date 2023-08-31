@@ -16,9 +16,11 @@ class GoodieAsset extends AssetEntity {
   double? scale;
   Offset? offset;
   int? byteLength;
+  File? imageFile;
 
   GoodieAsset({
     required this.asset,
+    this.imageFile,
   }) : super(
             id: asset.id,
             typeInt: asset.typeInt,
@@ -245,9 +247,8 @@ class _RestaurantReviewPhotoPickerState
         _selectedAssetsNotifier.value.removeAt(0);
       }
 
-      final fullResAsset = await _fetchHighResolutionAsset(asset);
-      _selectedAssetNotifier.value = fullResAsset;
-      _selectedAssetsNotifier.value.add(fullResAsset);
+      _selectedAssetNotifier.value = asset;
+      _selectedAssetsNotifier.value.add(asset);
     }
     widget.onImagesSelected(_selectedAssetsNotifier.value);
 
@@ -278,9 +279,7 @@ class _RestaurantReviewPhotoPickerState
             bool isRecent = asset != null;
 
             if (asset == null) {
-              final entity = await xFileToAssetEntity(file);
-              if (entity == null) continue;
-              asset = GoodieAsset(asset: entity);
+              asset = xFileToAssetEntity(file);
             } else {
               final isSelected = _selectedAssetsNotifier.value.firstWhereOrNull(
                     (element) => element.byteLength == byteLength,
@@ -297,7 +296,7 @@ class _RestaurantReviewPhotoPickerState
             _selectedAssetsNotifier.value.add(asset);
             _selectedAssetNotifier.value = asset;
           }
-          setState(() {});
+          widget.onImagesSelected(_selectedAssetsNotifier.value);
         }
       },
       child: const Column(
@@ -310,16 +309,18 @@ class _RestaurantReviewPhotoPickerState
     );
   }
 
-  Future<AssetEntity?> xFileToAssetEntity(XFile file) async {
-    final assetPaths = await PhotoManager.getAssetPathList();
-    for (var path in assetPaths) {
-      final assetList = await path.getAssetListRange(
-          start: 0, end: 9999); // Adjust the range as needed
+  GoodieAsset xFileToAssetEntity(XFile file) {
+    AssetEntity asset = AssetEntity(
+        id: file.name,
+        typeInt: 1,
+        width: 1,
+        height: 1,
+        relativePath: file.path);
 
-      return assetList
-          .firstWhereOrNull((element) => element.id == extractId(file.name));
-    }
-    return null;
+    return GoodieAsset(
+      asset: asset,
+      imageFile: File(file.path),
+    );
   }
 
   String extractId(String input) {
@@ -521,19 +522,17 @@ class _AssetThumbnailState extends State<AssetThumbnail> {
 
   Widget _buildFutureImage(double screenWidth) {
     return FutureBuilder<Uint8List?>(
-      future: widget.fullResolution
-          ? widget.asset.originBytes
-          : widget.asset.thumbnailDataWithSize(
-              ThumbnailSize(widget.thumbWidth, widget.thumbHeight)),
+      future: widget.asset.imageFile?.readAsBytes() ?? widget.asset.originBytes,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.done &&
             snapshot.data != null) {
-          widget.asset.originBytes.then((value) {
-            widget.cache[widget.asset] = value!;
-            if (widget.fullResolution) {
-              setState(() {});
-            }
-          });
+          if (widget.asset.imageFile != null) {}
+          // widget.asset.originBytes.then((value) {
+          widget.cache[widget.asset] = snapshot.data!;
+          if (widget.fullResolution) {
+            // setState(() {});
+          }
+          // });
           return _buildCachedImage(screenWidth, snapshot.data!);
         }
         return const Center(child: CircularProgressIndicator());
