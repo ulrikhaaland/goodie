@@ -2,13 +2,13 @@ import 'dart:async';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:goodie/pages/review/review_images.dart';
 import 'package:goodie/pages/review/review_list_view.dart';
 import 'package:goodie/pages/review/review_page_buttons.dart';
 import 'package:goodie/pages/review/review_photo_picker.dart';
 import 'package:goodie/pages/review/review_progress_bar.dart';
 import 'package:goodie/pages/review/review_review.dart';
 
+import '../../bloc/review.dart';
 import '../../model/restaurant.dart';
 
 class RestaurantReviewPage extends StatefulWidget {
@@ -21,13 +21,16 @@ class RestaurantReviewPage extends StatefulWidget {
 
 class _RestaurantReviewPageState extends State<RestaurantReviewPage>
     with AutomaticKeepAliveClientMixin {
-  Restaurant? _selectedRestaurant;
-  RestaurantReview? _review;
-  List<GoodieAsset> images = [];
-
   final PageController _pageController = PageController();
+  final RestaurantReviewProvider _reviewProvider = RestaurantReviewProvider();
 
-  final _imageScrollController = ScrollController();
+  Restaurant? get _selectedRestaurant => _reviewProvider.selectedRestaurant;
+
+  List<GoodieAsset> get _images => _reviewProvider.selectedAssetsNotifier.value;
+
+  set _selectedRestaurant(Restaurant? restaurant) {
+    _reviewProvider.selectedRestaurant = restaurant;
+  }
 
   int _pageIndex = 0;
 
@@ -56,16 +59,10 @@ class _RestaurantReviewPageState extends State<RestaurantReviewPage>
                   _onSelectRestaurant(restaurant);
                 },
               ),
-              RestaurantReviewImages(
-                key: Key(_selectedRestaurant?.id ?? "images"),
-                scrollController: _imageScrollController,
-                selectedRestaurant: _selectedRestaurant,
+              RestaurantReviewPhotoPicker(
+                key: Key(_selectedRestaurant?.id ?? "picker"),
                 restaurantListItem: _buildRestaurantListItem(context),
-                onImagesSelected: (List<GoodieAsset> selected) {
-                  setState(() {
-                    images = selected;
-                  });
-                },
+                reviewProvider: _reviewProvider,
               ),
               RestaurantReviewReview(
                   key: Key(_selectedRestaurant?.id ?? "review"),
@@ -76,9 +73,7 @@ class _RestaurantReviewPageState extends State<RestaurantReviewPage>
                   onCanSubmit: (canSubmit) {
                     _handleOnCanSubmit(canSubmit);
                   },
-                  onReviewRestaurant: (review) {
-                    _review = review;
-                  }),
+                  review: _reviewProvider.getReview()),
             ],
           ),
           if (_selectedRestaurant != null && _pageIndex != 0 && showListItem)
@@ -153,8 +148,8 @@ class _RestaurantReviewPageState extends State<RestaurantReviewPage>
     setState(() {
       _handleListItem();
       _selectedRestaurant = restaurant;
-      images = [];
-      _review = null;
+      _reviewProvider.selectedAssetsNotifier.value = [];
+      _reviewProvider.review = null;
       _pageIndex = 1;
       _pageController.nextPage(
           duration: const Duration(milliseconds: 400), curve: Curves.easeInOut);
@@ -232,8 +227,8 @@ class _RestaurantReviewPageState extends State<RestaurantReviewPage>
 
   String _getRightButtonText() {
     if (_pageIndex == 1) {
-      if (images.isNotEmpty) {
-        return "Velg ${images.length}";
+      if (_images.isNotEmpty) {
+        return "Velg ${_images.length}";
       } else {
         return "Hopp over";
       }

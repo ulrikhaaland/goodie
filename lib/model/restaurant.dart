@@ -56,14 +56,14 @@ class RestaurantReview {
   final String restaurantId;
   final String userId;
   final String? description; //
-  final num ratingFood; // 0-10 (needed for both dine in and takeout)
+  final num? ratingFood; // 0-10 (needed for both dine in and takeout)
   final num? ratingService; // 0-10 (needed only for dinein)
-  final num ratingPrice; // 0-10 (needed for both dine in and takeout)
+  final num? ratingPrice; // 0-10 (needed for both dine in and takeout)
   final num? ratingAtmosphere; // 0-10 (needed only for dinein)
   final num? ratingCleanliness; // 0-10 (needed only for dinein)
   final num? ratingPackaging; // 0-10 (needed only for takeout)
-  final num ratingOverall; // 0-10 (needed for both dine in and takeout)
-  final DateTime timestamp;
+  final num? ratingOverall; // 0-10 (needed for both dine in and takeout)
+  final DateTime? timestamp;
   final bool dineIn; // If not dine-in, then takeout
   final List<Image>? images; // Images of the review
   // Below are not for making a review, but for other users to interact with the review
@@ -71,22 +71,22 @@ class RestaurantReview {
   final List<Like>? likes; // Likes on the review
 
   RestaurantReview(
-      {this.images,
-      required this.ratingFood,
+      {required this.restaurantId,
+      required this.userId,
+      required this.dineIn,
+      this.images,
+      this.ratingFood,
       this.ratingService,
       this.comments,
       this.likes,
-      required this.ratingPrice,
+      this.ratingPrice,
       this.ratingAtmosphere,
       this.ratingCleanliness,
       this.ratingPackaging,
-      required this.ratingOverall,
+      this.ratingOverall,
       this.id,
-      required this.dineIn,
-      required this.restaurantId,
-      required this.userId,
-      required this.description,
-      required this.timestamp});
+      this.description,
+      this.timestamp});
 }
 
 class Comment {

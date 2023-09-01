@@ -7,16 +7,16 @@ import 'review_rating.dart';
 
 class RestaurantReviewReview extends StatefulWidget {
   final Restaurant? restaurant;
-  final Function(RestaurantReview) onReviewRestaurant;
   final Function() onBackPressed;
   final Function(bool canSubmit) onCanSubmit;
+  final RestaurantReview review;
 
   const RestaurantReviewReview({
     super.key,
     required this.restaurant,
-    required this.onReviewRestaurant,
     required this.onBackPressed,
     required this.onCanSubmit,
+    required this.review,
   });
 
   @override
@@ -24,31 +24,9 @@ class RestaurantReviewReview extends StatefulWidget {
 }
 
 class _RestaurantReviewReviewState extends State<RestaurantReviewReview> {
-  double? ratingFood;
-  double? ratingService;
-  double? ratingPrice;
-  double? ratingCleanliness;
-  double? ratingPackaging;
-  double? ratingAtmosphere;
-  bool dineIn = true;
-  String? description;
-  bool _canSubmit = false;
+  RestaurantReview get review => widget.review;
 
-  // This method was misspelled in the original snippet
-  @override
-  void didUpdateWidget(covariant RestaurantReviewReview oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.restaurant != widget.restaurant) {
-      ratingFood = null;
-      ratingService = null;
-      dineIn = true;
-      ratingPrice = null;
-      ratingCleanliness = null;
-      ratingPackaging = null;
-      ratingAtmosphere = null;
-      description = null;
-    }
-  }
+  bool _canSubmit = false;
 
   @override
   Widget build(BuildContext context) {
@@ -65,7 +43,7 @@ class _RestaurantReviewReviewState extends State<RestaurantReviewReview> {
             children: [
               _buildDineInOrTakeout(),
               const SizedBox(height: 20),
-              _buildRating("Smak", ratingFood, (value) {
+              _buildRating("Smak", review.ratingFood, (value) {
                 setState(() {
                   ratingFood = value;
                 });
@@ -195,7 +173,7 @@ class _RestaurantReviewReviewState extends State<RestaurantReviewReview> {
   }
 
   Widget _buildRating(
-      String label, double? currentRating, Function(double) onRatingChanged) {
+      String label, num? currentRating, Function(num) onRatingChanged) {
     return Column(
       children: [
         Align(
@@ -221,7 +199,7 @@ class _RestaurantReviewReviewState extends State<RestaurantReviewReview> {
   }
 
   _handleOnSubmit() {
-    if (ratingFood == null || ratingPrice == null) {
+    if (review.ratingFood == null || review.ratingPrice == null) {
       // maybe show an error to user here or handle this scenario
       return;
     }
@@ -231,44 +209,27 @@ class _RestaurantReviewReviewState extends State<RestaurantReviewReview> {
 
     // Compute average
     int validRatingsCount = 2; // food and price are always there
-    double totalRating = ratingFood! + ratingPrice!;
+    num totalRating = review.ratingFood! + review.ratingPrice!;
 
-    if (dineIn) {
-      if (ratingService != null) {
+    if (review.dineIn) {
+      if (review.ratingService != null) {
         validRatingsCount++;
-        totalRating += ratingService!;
+        totalRating += review.ratingService!;
       }
-      if (ratingCleanliness != null) {
+      if (review.ratingCleanliness != null) {
         validRatingsCount++;
-        totalRating += ratingCleanliness!;
+        totalRating += review.ratingCleanliness!;
       }
-      if (ratingAtmosphere != null) {
+      if (review.ratingAtmosphere != null) {
         validRatingsCount++;
-        totalRating += ratingAtmosphere!;
+        totalRating += review.ratingAtmosphere!;
       }
-    } else if (ratingPackaging != null) {
+    } else if (review.ratingPackaging != null) {
       validRatingsCount++;
-      totalRating += ratingPackaging!;
+      totalRating += review.ratingPackaging!;
     }
 
     double ratingOverall = totalRating / validRatingsCount;
-
-    // Submit the review
-    widget.onReviewRestaurant(RestaurantReview(
-      restaurantId: widget.restaurant!.id,
-      userId: authProvider.user!.firebaseUser!.uid,
-      description: description,
-      ratingFood: ratingFood!,
-      ratingService: dineIn ? ratingService : null,
-      ratingPrice: ratingPrice!,
-      ratingCleanliness: dineIn ? ratingCleanliness : null,
-      ratingPackaging: !dineIn ? ratingPackaging : null,
-      ratingAtmosphere: dineIn ? ratingAtmosphere : null,
-      ratingOverall: ratingOverall,
-      timestamp: DateTime.now(),
-      dineIn: dineIn,
-      images: [], // assuming no images for now
-    ));
   }
 
   Widget _buildDineInOrTakeout() {
@@ -292,12 +253,14 @@ class _RestaurantReviewReviewState extends State<RestaurantReviewReview> {
                     ),
                   ),
                   backgroundColor: MaterialStateProperty.all(
-                    dineIn ? Theme.of(context).primaryColor : Colors.grey[200],
+                    review.dineIn
+                        ? Theme.of(context).primaryColor
+                        : Colors.grey[200],
                   ),
                 ),
                 onPressed: () {
                   setState(() {
-                    dineIn = true;
+                    review.dineIn = true;
                   });
                 },
                 child: Text(
