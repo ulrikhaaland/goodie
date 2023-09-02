@@ -11,11 +11,11 @@ import '../../bloc/review.dart';
 
 // ignore: must_be_immutable
 
-class RestaurantReviewPhotoPicker extends StatefulWidget {
+class RestaurantReviewPhotoPage extends StatefulWidget {
   final Widget restaurantListItem;
   final RestaurantReviewProvider reviewProvider;
 
-  const RestaurantReviewPhotoPicker({
+  const RestaurantReviewPhotoPage({
     Key? key,
     required this.restaurantListItem,
     required this.reviewProvider,
@@ -23,12 +23,11 @@ class RestaurantReviewPhotoPicker extends StatefulWidget {
 
   @override
   // ignore: library_private_types_in_public_api
-  _RestaurantReviewPhotoPickerState createState() =>
-      _RestaurantReviewPhotoPickerState();
+  _RestaurantReviewPhotoPageState createState() =>
+      _RestaurantReviewPhotoPageState();
 }
 
-class _RestaurantReviewPhotoPickerState
-    extends State<RestaurantReviewPhotoPicker> {
+class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage> {
   bool showListItem = false;
 
   ValueNotifier<GoodieAsset?> get _selectedAssetNotifier =>

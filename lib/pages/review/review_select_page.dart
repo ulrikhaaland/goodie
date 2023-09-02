@@ -5,20 +5,21 @@ import 'package:provider/provider.dart';
 import '../../../model/restaurant.dart';
 import '../../bloc/restaurants.dart';
 
-class ResturantReviewSelect extends StatefulWidget {
+class ResturantReviewSelectPage extends StatefulWidget {
   final Function(Restaurant) onSelectRestaurant;
 
-  const ResturantReviewSelect({
+  const ResturantReviewSelectPage({
     Key? key,
     required this.onSelectRestaurant,
   }) : super(key: key);
 
   @override
   // ignore: library_private_types_in_public_api
-  _ResturantReviewSelectState createState() => _ResturantReviewSelectState();
+  _ResturantReviewSelectPageState createState() =>
+      _ResturantReviewSelectPageState();
 }
 
-class _ResturantReviewSelectState extends State<ResturantReviewSelect>
+class _ResturantReviewSelectPageState extends State<ResturantReviewSelectPage>
     with AutomaticKeepAliveClientMixin {
   @override
   bool get wantKeepAlive => true;

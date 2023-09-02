@@ -2,11 +2,12 @@ import 'dart:async';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:goodie/pages/review/review_list_view.dart';
+import 'package:goodie/pages/review/review_select_page.dart';
 import 'package:goodie/pages/review/review_page_buttons.dart';
-import 'package:goodie/pages/review/review_photo_picker.dart';
+import 'package:goodie/pages/review/review_photo_page.dart';
 import 'package:goodie/pages/review/review_progress_bar.dart';
-import 'package:goodie/pages/review/review_rating.dart';
+import 'package:goodie/pages/review/review_rating_page.dart';
+import 'package:goodie/pages/review/review_summary_page.dart';
 
 import '../../bloc/review.dart';
 import '../../model/restaurant.dart';
@@ -61,17 +62,17 @@ class _RestaurantReviewPageState extends State<RestaurantReviewPage>
             physics:
                 const NeverScrollableScrollPhysics(), // so users can't swipe between them
             children: [
-              ResturantReviewSelect(
+              ResturantReviewSelectPage(
                 onSelectRestaurant: (restaurant) {
                   _onSelectRestaurant(restaurant);
                 },
               ),
-              RestaurantReviewPhotoPicker(
+              RestaurantReviewPhotoPage(
                 key: Key(_selectedRestaurant?.id ?? "picker"),
                 restaurantListItem: _buildRestaurantListItem(context),
                 reviewProvider: _reviewProvider,
               ),
-              RestaurantReviewRating(
+              RestaurantReviewRatingPage(
                   key: Key(_selectedRestaurant?.id ?? "review"),
                   restaurant: _selectedRestaurant,
                   onBackPressed: () => _pageController.previousPage(
@@ -81,6 +82,10 @@ class _RestaurantReviewPageState extends State<RestaurantReviewPage>
                     _handleOnCanSubmit(canSubmit);
                   },
                   review: _reviewProvider.getReview()),
+              RestaurantReviewSummaryPage(
+                key: Key(_selectedRestaurant?.id ?? "summary"),
+                reviewProvider: _reviewProvider,
+              ),
             ],
           ),
           if (_selectedRestaurant != null && _pageIndex != 0 && showListItem)

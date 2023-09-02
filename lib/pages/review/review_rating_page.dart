@@ -5,13 +5,13 @@ import '../../bloc/auth.dart';
 import '../../model/restaurant.dart';
 import 'review_rate.dart';
 
-class RestaurantReviewRating extends StatefulWidget {
+class RestaurantReviewRatingPage extends StatefulWidget {
   final Restaurant? restaurant;
   final Function() onBackPressed;
   final Function(bool canSubmit) onCanSubmit;
   final RestaurantReview? review;
 
-  const RestaurantReviewRating({
+  const RestaurantReviewRatingPage({
     super.key,
     required this.restaurant,
     required this.onBackPressed,
@@ -20,10 +20,11 @@ class RestaurantReviewRating extends StatefulWidget {
   });
 
   @override
-  State<RestaurantReviewRating> createState() => _RestaurantReviewReviewState();
+  State<RestaurantReviewRatingPage> createState() =>
+      _RestaurantReviewReviewState();
 }
 
-class _RestaurantReviewReviewState extends State<RestaurantReviewRating> {
+class _RestaurantReviewReviewState extends State<RestaurantReviewRatingPage> {
   RestaurantReview get review => widget.review!;
 
   bool _canSubmit = false;
