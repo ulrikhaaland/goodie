@@ -241,8 +241,10 @@ class _RestaurantReviewPhotoPickerState
             if (!isRecent) {
               _recentImages.insert(0, asset);
             }
-            _selectedAssetsNotifier.value.add(asset);
             _selectedAssetNotifier.value = asset;
+            final oldList = _selectedAssetsNotifier.value;
+            final newList = List<GoodieAsset>.from(oldList)..add(asset);
+            _selectedAssetsNotifier.value = newList;
           }
         }
       },

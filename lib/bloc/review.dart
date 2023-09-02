@@ -1,11 +1,8 @@
 import 'dart:io';
 import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:photo_manager/photo_manager.dart';
-
 import '../model/restaurant.dart';
-import '../pages/review/review_photo_picker.dart';
 
 class RestaurantReviewProvider with ChangeNotifier {
   Restaurant? selectedRestaurant;
@@ -20,14 +17,20 @@ class RestaurantReviewProvider with ChangeNotifier {
     loadRecentImages();
   }
 
-  RestaurantReview getReview() {
-    if (review != null) return review!;
-    return RestaurantReview(
-      restaurantId: selectedRestaurant!.id,
-      userId: "test",
-      images: [],
-      dineIn: false,
-    );
+  RestaurantReview? getReview() {
+    if (selectedRestaurant == null) {
+      return null;
+    } else if (review != null) {
+      return review!;
+    } else {
+      review = RestaurantReview(
+        restaurantId: selectedRestaurant!.id,
+        userId: "test",
+        images: [],
+        dineIn: true,
+      );
+      return review;
+    }
   }
 
   Future<void> loadRecentImages() async {

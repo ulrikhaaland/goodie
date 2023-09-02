@@ -6,7 +6,7 @@ import 'package:goodie/pages/review/review_list_view.dart';
 import 'package:goodie/pages/review/review_page_buttons.dart';
 import 'package:goodie/pages/review/review_photo_picker.dart';
 import 'package:goodie/pages/review/review_progress_bar.dart';
-import 'package:goodie/pages/review/review_review.dart';
+import 'package:goodie/pages/review/review_rating.dart';
 
 import '../../bloc/review.dart';
 import '../../model/restaurant.dart';
@@ -42,9 +42,16 @@ class _RestaurantReviewPageState extends State<RestaurantReviewPage>
   bool get wantKeepAlive => true;
 
   @override
+  void initState() {
+    _reviewProvider.selectedAssetsNotifier.addListener(() {
+      setState(() {});
+    });
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
     super.build(context);
-
     return SafeArea(
       child: Stack(
         children: [
@@ -64,7 +71,7 @@ class _RestaurantReviewPageState extends State<RestaurantReviewPage>
                 restaurantListItem: _buildRestaurantListItem(context),
                 reviewProvider: _reviewProvider,
               ),
-              RestaurantReviewReview(
+              RestaurantReviewRating(
                   key: Key(_selectedRestaurant?.id ?? "review"),
                   restaurant: _selectedRestaurant,
                   onBackPressed: () => _pageController.previousPage(
@@ -86,22 +93,16 @@ class _RestaurantReviewPageState extends State<RestaurantReviewPage>
               bottom: 0,
               left: 0,
               right: 0,
-              child: Column(
-                children: [
-                  // ReviewProgressBar(
-                  //     currentIndex: _pageIndex, totalPages: 4),
-                  ReviewPageButtons(
-                    isSubmit: _pageIndex == 3,
-                    canSubmit: _canSubmit,
-                    rightButtonText: _getRightButtonText(),
-                    onLeftPressed: () {
-                      _handleOnLeftPressed();
-                    },
-                    onRightPressed: () {
-                      _handleOnRightPressed();
-                    },
-                  ),
-                ],
+              child: ReviewPageButtons(
+                isSubmit: _pageIndex == 2,
+                canSubmit: _pageIndex == 2 ? _canSubmit : true,
+                rightButtonText: _getRightButtonText(),
+                onLeftPressed: () {
+                  _handleOnLeftPressed();
+                },
+                onRightPressed: () {
+                  _handleOnRightPressed();
+                },
               ),
             ),
           ]
@@ -127,6 +128,9 @@ class _RestaurantReviewPageState extends State<RestaurantReviewPage>
   }
 
   void _handleOnRightPressed() {
+    if (_pageIndex == 2 && _canSubmit == false) {
+      return;
+    }
     showListItem = true;
     if (_pageIndex == 1) {
       _handleListItem();
@@ -169,6 +173,7 @@ class _RestaurantReviewPageState extends State<RestaurantReviewPage>
   @override
   void dispose() {
     _pageController.dispose();
+
     super.dispose();
   }
 
@@ -222,7 +227,9 @@ class _RestaurantReviewPageState extends State<RestaurantReviewPage>
   void _handleOnReview() {}
 
   void _handleOnCanSubmit(bool canSubmit) {
-    _canSubmit = canSubmit;
+    setState(() {
+      _canSubmit = canSubmit;
+    });
   }
 
   String _getRightButtonText() {

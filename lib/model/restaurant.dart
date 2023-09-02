@@ -52,23 +52,23 @@ class Restaurant {
 }
 
 class RestaurantReview {
-  final String? id;
-  final String restaurantId;
-  final String userId;
-  final String? description; //
-  final num? ratingFood; // 0-10 (needed for both dine in and takeout)
-  final num? ratingService; // 0-10 (needed only for dinein)
-  final num? ratingPrice; // 0-10 (needed for both dine in and takeout)
-  final num? ratingAtmosphere; // 0-10 (needed only for dinein)
-  final num? ratingCleanliness; // 0-10 (needed only for dinein)
-  final num? ratingPackaging; // 0-10 (needed only for takeout)
-  final num? ratingOverall; // 0-10 (needed for both dine in and takeout)
-  final DateTime? timestamp;
-  final bool dineIn; // If not dine-in, then takeout
-  final List<Image>? images; // Images of the review
+  String? id;
+  String restaurantId;
+  String userId;
+  String? description; //
+  num? ratingFood; // 0-10 (needed for both dine in and takeout)
+  num? ratingService; // 0-10 (needed only for dinein)
+  num? ratingPrice; // 0-10 (needed for both dine in and takeout)
+  num? ratingAtmosphere; // 0-10 (needed only for dinein)
+  num? ratingCleanliness; // 0-10 (needed only for dinein)
+  num? ratingPackaging; // 0-10 (needed only for takeout)
+  num? ratingOverall; // 0-10 (needed for both dine in and takeout)
+  DateTime? timestamp;
+  bool dineIn; // If not dine-in, then takeout
+  List<Image>? images; // Images of the review
   // Below are not for making a review, but for other users to interact with the review
-  final List<Comment>? comments; // Comments on the review
-  final List<Like>? likes; // Likes on the review
+  List<Comment>? comments; // Comments on the review
+  List<Like>? likes; // Likes on the review
 
   RestaurantReview(
       {required this.restaurantId,
