@@ -143,13 +143,8 @@ class _RestaurantReviewPageState extends State<RestaurantReviewPage>
     setState(() {
       _pageIndex = _pageIndex + 1;
 
-      if (_pageIndex == 3) {
-        _handleOnReview();
-      } else {
-        _pageController.nextPage(
-            duration: const Duration(milliseconds: 400),
-            curve: Curves.easeInOut);
-      }
+      _pageController.nextPage(
+          duration: const Duration(milliseconds: 400), curve: Curves.easeInOut);
     });
   }
 
@@ -244,6 +239,8 @@ class _RestaurantReviewPageState extends State<RestaurantReviewPage>
       } else {
         return "Hopp over";
       }
+    } else if (_pageIndex == 3) {
+      return "Del";
     }
     return "Neste";
   }

@@ -95,7 +95,7 @@ class _RestaurantReviewReviewState extends State<RestaurantReviewRatingPage> {
                     ],
                     const SizedBox(height: 20),
                     _buildRating(
-                        "Total",
+                        "Total${_computeOverallRating() != null ? ': ${_computeOverallRating()!.toStringAsFixed(1)}' : ''}",
                         currentRating: _computeOverallRating(),
                         (p0) => null,
                         isTotal: true)
@@ -138,7 +138,7 @@ class _RestaurantReviewReviewState extends State<RestaurantReviewRatingPage> {
         const SizedBox(height: 16),
         RatingWidget(
           key: Key(label),
-          rating: currentRating?.toInt(),
+          rating: currentRating,
           onRatingSelected: (selectedRating) {
             onRatingChanged(selectedRating.toDouble());
           },
@@ -147,40 +147,6 @@ class _RestaurantReviewReviewState extends State<RestaurantReviewRatingPage> {
         const SizedBox(height: 20),
       ],
     );
-  }
-
-  _handleOnSubmit() {
-    if (review.ratingFood == null || review.ratingPrice == null) {
-      // maybe show an error to user here or handle this scenario
-      return;
-    }
-
-    // get user id from auth provider
-    final authProvider = context.read<AuthProvider>();
-
-    // Compute average
-    int validRatingsCount = 2; // food and price are always there
-    num totalRating = review.ratingFood! + review.ratingPrice!;
-
-    if (review.dineIn) {
-      if (review.ratingService != null) {
-        validRatingsCount++;
-        totalRating += review.ratingService!;
-      }
-      if (review.ratingCleanliness != null) {
-        validRatingsCount++;
-        totalRating += review.ratingCleanliness!;
-      }
-      if (review.ratingAtmosphere != null) {
-        validRatingsCount++;
-        totalRating += review.ratingAtmosphere!;
-      }
-    } else if (review.ratingPackaging != null) {
-      validRatingsCount++;
-      totalRating += review.ratingPackaging!;
-    }
-
-    double ratingOverall = totalRating / validRatingsCount;
   }
 
   Widget _buildDineInOrTakeout() {
@@ -213,6 +179,7 @@ class _RestaurantReviewReviewState extends State<RestaurantReviewRatingPage> {
                   setState(() {
                     review.dineIn = true;
                   });
+                  _setCanSubmit();
                 },
                 child: Text(
                   "Dine-In",
@@ -243,6 +210,7 @@ class _RestaurantReviewReviewState extends State<RestaurantReviewRatingPage> {
                   setState(() {
                     review.dineIn = false;
                   });
+                  _setCanSubmit();
                 },
                 child: Text(
                   "Takeout",
@@ -275,19 +243,23 @@ class _RestaurantReviewReviewState extends State<RestaurantReviewRatingPage> {
 
     if (_canSubmit != canSubmit) widget.onCanSubmit(canSubmit);
 
-    if (canSubmit) _handleOnSubmit();
+    if (canSubmit) {
+      review.ratingOverall = _computeOverallRating();
+    }
 
     _canSubmit = canSubmit;
   }
 
-  double? _computeOverallRating() {
+  num? _computeOverallRating() {
+    num? rating;
+
     if (review.dineIn) {
       if (review.ratingFood != null &&
           review.ratingService != null &&
           review.ratingPrice != null &&
           review.ratingCleanliness != null &&
           review.ratingAtmosphere != null) {
-        return (review.ratingFood! +
+        rating = (review.ratingFood! +
                 review.ratingService! +
                 review.ratingPrice! +
                 review.ratingCleanliness! +
@@ -298,12 +270,12 @@ class _RestaurantReviewReviewState extends State<RestaurantReviewRatingPage> {
       if (review.ratingFood != null &&
           review.ratingPrice != null &&
           review.ratingPackaging != null) {
-        return (review.ratingFood! +
+        rating = (review.ratingFood! +
                 review.ratingPrice! +
                 review.ratingPackaging!) /
             3;
       }
     }
-    return null; // Return null if not all required ratings are provided
+    return rating; // Return null if not all required ratings are provided
   }
 }

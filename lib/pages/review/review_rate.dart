@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class RatingWidget extends StatelessWidget {
-  final int? rating;
+  final num? rating;
   final Function(int) onRatingSelected;
   final bool isTotalRating;
 
@@ -24,9 +24,9 @@ class RatingWidget extends StatelessWidget {
         ),
         const SizedBox(width: 8),
         Text(
-          _getRatingData(rating?.toDouble())['description'] ?? '',
-          style: TextStyle(
-            fontWeight: isTotalRating ? FontWeight.bold : FontWeight.normal,
+          (_getRatingData(rating?.toDouble())['description'] ?? ''),
+          style: const TextStyle(
+            fontWeight: FontWeight.normal,
           ),
         )
       ],
@@ -37,21 +37,18 @@ class RatingWidget extends StatelessWidget {
     bool isColored = rating != null && circleRating <= rating!;
     bool isSelected = circleRating == rating;
 
-    Color getCircleColor(int? rating) {
-      switch (rating) {
-        case 1:
-          return Colors.red;
-        case 2:
-          return Colors.orange;
-        case 3:
-          return Colors.yellow;
-        case 4:
-          return Colors.lightGreen;
-        case 5:
-          return Colors.green;
-        default:
-          return Colors.grey.shade300;
-      }
+    if (isTotalRating) {
+      final trunc = rating?.truncate();
+      isSelected = circleRating == trunc;
+    }
+
+    Color getCircleColor(num? rating) {
+      if (rating == null) return Colors.grey.shade300;
+      if (rating < 2) return Colors.red;
+      if (rating < 3) return Colors.orange;
+      if (rating < 4) return Colors.yellow;
+      if (rating < 5) return Colors.lightGreen;
+      return Colors.green;
     }
 
     double circleSize =

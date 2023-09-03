@@ -56,6 +56,8 @@ class RestaurantReviewProvider with ChangeNotifier {
       });
     });
   }
+
+  void onShareReview() {}
 }
 
 // ignore: must_be_immutable

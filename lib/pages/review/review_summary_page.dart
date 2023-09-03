@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:goodie/bloc/review.dart';
+import 'package:goodie/model/restaurant.dart';
+import 'package:goodie/pages/review/review_rate.dart';
 
 class RestaurantReviewSummaryPage extends StatefulWidget {
   final RestaurantReviewProvider reviewProvider;
-  const RestaurantReviewSummaryPage({super.key, required this.reviewProvider});
+
+  const RestaurantReviewSummaryPage({
+    super.key,
+    required this.reviewProvider,
+  });
 
   @override
   State<RestaurantReviewSummaryPage> createState() =>
@@ -15,6 +21,23 @@ class _RestaurantReviewSummaryPageState
   final TextEditingController _commentController = TextEditingController();
 
   RestaurantReviewProvider get provider => widget.reviewProvider;
+
+  RestaurantReview get review => provider.getReview()!;
+
+  @override
+  void initState() {
+    _commentController.text = review.description ?? "";
+    _commentController.addListener(() {
+      review.description = _commentController.text;
+    });
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    _commentController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -46,34 +69,43 @@ class _RestaurantReviewSummaryPageState
                   },
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
             ],
 
             // Display overall rating
-            const Text(
-              "Overall Rating:",
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+            Text(
+              "Total: ${review.ratingOverall!.toStringAsPrecision(2)}",
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
             ),
             const SizedBox(height: 8),
             // You can use your RatingWidget here
-            // RatingWidget(
-            //   rating: provider.getReview()?.rating,
-            //   onRatingSelected: (rating) {},
-            // ),
+            RatingWidget(
+              rating: review.ratingOverall,
+              onRatingSelected: (rating) {},
+              isTotalRating: true,
+            ),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
 
             // Comment field
-            const Text(
-              "Comment:",
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+            const Row(
+              children: [
+                Text(
+                  "Kommentar",
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                ),
+                Text(
+                  " (valgfritt)",
+                  style: TextStyle(fontSize: 16),
+                ),
+              ],
             ),
             const SizedBox(height: 8),
             TextField(
               controller: _commentController,
               maxLines: 5,
               decoration: const InputDecoration(
-                hintText: "Share your experience...",
+                hintText: "Del litt om din opplevelse...",
                 border: OutlineInputBorder(),
               ),
             ),
