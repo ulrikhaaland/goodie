@@ -32,11 +32,7 @@ class _RestaurantReviewReviewState extends State<RestaurantReviewRatingPage> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(
-        top: 100,
-        left: 16,
-        right: 16,
-      ),
+      padding: const EdgeInsets.only(top: 100, left: 16, right: 16, bottom: 64),
       child: SizedBox(
         height: MediaQuery.of(context).size.height - 136,
         child: Column(

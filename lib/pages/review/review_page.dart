@@ -133,6 +133,10 @@ class _RestaurantReviewPageState extends State<RestaurantReviewPage>
   }
 
   void _handleOnRightPressed() {
+    if (_pageIndex == 3) {
+      return;
+    }
+
     if (_pageIndex == 2 && _canSubmit == false) {
       return;
     }
@@ -140,6 +144,7 @@ class _RestaurantReviewPageState extends State<RestaurantReviewPage>
     if (_pageIndex == 1) {
       _handleListItem();
     }
+
     setState(() {
       _pageIndex = _pageIndex + 1;
 
