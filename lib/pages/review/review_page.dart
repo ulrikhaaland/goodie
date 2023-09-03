@@ -60,7 +60,7 @@ class _RestaurantReviewPageState extends State<RestaurantReviewPage>
             key: const Key("pageview"),
             controller: _pageController,
             physics:
-                const NeverScrollableScrollPhysics(), // so users can't swipe between them
+                const LeftOnlyScrollPhysics(), // so users can't swipe between them
             children: [
               ResturantReviewSelectPage(
                 onSelectRestaurant: (restaurant) {
@@ -125,6 +125,7 @@ class _RestaurantReviewPageState extends State<RestaurantReviewPage>
     }
     setState(() {
       if (_pageIndex == 0) {
+        _canSubmit = false;
         _selectedRestaurant = null;
       }
       _pageController.previousPage(
@@ -248,5 +249,23 @@ class _RestaurantReviewPageState extends State<RestaurantReviewPage>
       return "Del";
     }
     return "Neste";
+  }
+}
+
+class LeftOnlyScrollPhysics extends ScrollPhysics {
+  const LeftOnlyScrollPhysics({ScrollPhysics? parent}) : super(parent: parent);
+
+  @override
+  LeftOnlyScrollPhysics applyTo(ScrollPhysics? ancestor) {
+    return LeftOnlyScrollPhysics(parent: buildParent(ancestor));
+  }
+
+  @override
+  double applyBoundaryConditions(ScrollMetrics position, double value) {
+    // If trying to scroll to the right by a user (non-zero velocity), disallow it
+    if (value > position.pixels && position.outOfRange) {
+      return value - position.pixels;
+    }
+    return 0.0;
   }
 }

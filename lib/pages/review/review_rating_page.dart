@@ -39,7 +39,6 @@ class _RestaurantReviewReviewState extends State<RestaurantReviewRatingPage> {
           children: [
             _buildDineInOrTakeout(),
             const SizedBox(height: 20),
-
             Flexible(
               child: SingleChildScrollView(
                 child: Column(
