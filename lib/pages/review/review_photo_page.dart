@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:exif/exif.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:photo_manager/photo_manager.dart';
@@ -42,10 +43,25 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage> {
 
   List<GoodieAsset> get _recentImages => widget.reviewProvider.recentImages;
 
-  @override
+  bool _scrollable = true;
+
   @override
   void initState() {
-    super.initState();
+    _selectedAssetsNotifier.addListener(() {
+      _handleSelectedRestaurant();
+    });
+    _recentImages[1].file.then((value) {
+      if (value != null) {
+        extractLocation(value).then((value) {
+          if (value != null) {
+            print(
+                'Latitude: ${value['latitude']}, Longitude: ${value['longitude']}');
+          } else {
+            print('No location data found in the image.');
+          }
+        });
+      }
+    });
     Timer(const Duration(milliseconds: 500), () {
       if (mounted) {
         setState(() {
@@ -53,9 +69,16 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage> {
         });
       }
     });
+    super.initState();
   }
 
-  bool _scrollable = true;
+  @override
+  void dispose() {
+    _selectedAssetsNotifier.removeListener(() {
+      _handleSelectedRestaurant();
+    });
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -270,6 +293,23 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage> {
       imageFile: File(file.path),
     );
   }
+
+  Future<void> _handleSelectedRestaurant() async {
+    final assets = _selectedAssetsNotifier.value;
+
+    for (var asset in assets) {
+      final assetss = asset;
+      final image = assetss.imageFile ?? await assetss.file;
+
+      final location = await extractLocation(image!);
+      if (location != null) {
+        print(
+            'Latitude: ${location['latitude']}, Longitude: ${location['longitude']}');
+      } else {
+        print('No location data found in the image.');
+      }
+    }
+  }
 }
 
 class _SliverHeaderDelegate extends SliverPersistentHeaderDelegate {
@@ -421,6 +461,15 @@ class _AssetThumbnailState extends State<AssetThumbnail> {
         : _buildFutureImage(screenWidth);
   }
 
+  MemoryImage? createMemoryImage(Uint8List data) {
+    try {
+      return MemoryImage(data);
+    } catch (e) {
+      print("Error creating MemoryImage: $e");
+      return null;
+    }
+  }
+
   Widget _buildCachedImage(
     double screenWidth,
     Uint8List imageBytes,
@@ -434,7 +483,7 @@ class _AssetThumbnailState extends State<AssetThumbnail> {
             key: Key(widget.asset.id),
             controller: controller!,
             imageProvider:
-                MemoryImage(widget.cache[widget.asset] ?? imageBytes),
+                createMemoryImage(widget.cache[widget.asset] ?? imageBytes),
             minScale: PhotoViewComputedScale.covered,
             maxScale: PhotoViewComputedScale.covered * 2,
             initialScale: widget.asset.scale,
@@ -478,4 +527,49 @@ class _AssetThumbnailState extends State<AssetThumbnail> {
       },
     );
   }
+}
+
+Future<Map<String, double>?> extractLocation(File imageFile) async {
+  final Map<String, IfdTag> data =
+      await readExifFromBytes(await imageFile.readAsBytes());
+
+  if (data.isEmpty ||
+      !data.containsKey('GPS GPSLatitude') ||
+      !data.containsKey('GPS GPSLongitude')) {
+    print("No EXIF information found");
+    return null;
+  }
+
+  final lat = _convertToDecimal(
+      data['GPS GPSLatitude']!.values, data['GPS GPSLatitudeRef']!.printable);
+  final lon = _convertToDecimal(
+      data['GPS GPSLongitude']!.values, data['GPS GPSLongitudeRef']!.printable);
+
+  return {'latitude': lat, 'longitude': lon};
+}
+
+double _convertToDecimal(IfdValues idf, String ref) {
+  final values = idf.toList();
+
+  if (values.length < 3) {
+    throw ArgumentError('Expected at least 3 values.');
+  }
+
+  double degrees = values[0].denominator != 0
+      ? values[0].numerator / values[0].denominator
+      : 0;
+  double minutes = values[1].denominator != 0
+      ? values[1].numerator / values[1].denominator
+      : 0;
+  double seconds = values.length > 2 && values[2].denominator != 0
+      ? values[2].numerator / values[2].denominator
+      : 0;
+
+  double res = degrees + (minutes / 60) + (seconds / 3600);
+
+  if (ref == 'S' || ref == 'W') {
+    res = -res;
+  }
+
+  return res;
 }
