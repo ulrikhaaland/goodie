@@ -50,18 +50,7 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage> {
     _selectedAssetsNotifier.addListener(() {
       _handleSelectedRestaurant();
     });
-    _recentImages[1].file.then((value) {
-      if (value != null) {
-        extractLocation(value).then((value) {
-          if (value != null) {
-            print(
-                'Latitude: ${value['latitude']}, Longitude: ${value['longitude']}');
-          } else {
-            print('No location data found in the image.');
-          }
-        });
-      }
-    });
+
     Timer(const Duration(milliseconds: 500), () {
       if (mounted) {
         setState(() {
@@ -97,15 +86,24 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage> {
               ? const AlwaysScrollableScrollPhysics()
               : const NeverScrollableScrollPhysics(),
           slivers: [
-            SliverAppBar(
+            const SliverAppBar(
               backgroundColor: Colors.transparent,
               elevation: 0,
               floating: true, // Add this line
               expandedHeight: 100.0,
               flexibleSpace: FlexibleSpaceBar(
-                background:
-                    showListItem ? widget.restaurantListItem : Container(),
-              ),
+                  background: Column(
+                children: [
+                  SizedBox(height: 24.0),
+                  Text(
+                    'Legg til noen bilder fra besøket',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              )),
             ),
             SliverPersistentHeader(
               pinned: true,

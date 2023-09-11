@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 import 'bloc/auth.dart';
 import 'bloc/filter.dart';
 import 'bloc/location.dart';
+import 'data/migration.dart';
 import 'pages/restaurants/shops/shop_page.dart';
 
 void main() async {
