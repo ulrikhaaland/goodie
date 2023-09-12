@@ -43,6 +43,8 @@ class _RestaurantReviewPageState extends State<RestaurantReviewPage>
 
   bool showListItem = true;
 
+  bool hasSelectedRestaurant = false;
+
   @override
   bool get wantKeepAlive => true;
 
@@ -76,31 +78,31 @@ class _RestaurantReviewPageState extends State<RestaurantReviewPage>
               reviewProvider: _reviewProvider,
             ),
             ResturantReviewSelectPage(
+              restaurants: _reviewProvider.restaurants,
+              selectedRestaurant: _selectedRestaurant,
               onSelectRestaurant: (restaurant) {
                 _onSelectRestaurant(restaurant);
               },
             ),
             RestaurantReviewRatingPage(
-                key: Key(_selectedRestaurant?.id ?? "review"),
-                restaurant: _selectedRestaurant,
-                onBackPressed: () => _pageController.previousPage(
-                    duration: const Duration(milliseconds: 400),
-                    curve: Curves.easeInOut),
-                onCanSubmit: (canSubmit) {
-                  _handleOnCanSubmit(canSubmit);
-                },
-                review: _reviewProvider.getReview()),
+              key: Key(_selectedRestaurant?.id ?? "review"),
+              restaurant: _selectedRestaurant,
+              onBackPressed: () => _pageController.previousPage(
+                  duration: const Duration(milliseconds: 400),
+                  curve: Curves.easeInOut),
+              onCanSubmit: (canSubmit) {
+                _handleOnCanSubmit(canSubmit);
+              },
+              review: _reviewProvider.getReview(),
+              listItem: _buildRestaurantListItem(context),
+            ),
             RestaurantReviewSummaryPage(
               key: Key(_selectedRestaurant?.id ?? "summary"),
               reviewProvider: _reviewProvider,
+              listItem: _buildRestaurantListItem(context),
             ),
           ],
         ),
-        if (_selectedRestaurant != null && _pageIndex != 0 && showListItem)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: _buildRestaurantListItem(context),
-          ),
         Positioned(
           bottom: 0,
           left: 0,
@@ -109,6 +111,9 @@ class _RestaurantReviewPageState extends State<RestaurantReviewPage>
             isSubmit: _pageIndex == 2,
             canSubmit: _pageIndex == 2 ? _canSubmit : true,
             rightButtonText: _getRightButtonText(),
+            hideLeftButton: _pageIndex == 0,
+            hideRightButton: _pageIndex == 1 &&
+                (_selectedRestaurant == null || hasSelectedRestaurant == false),
             onLeftPressed: () {
               _handleOnLeftPressed();
             },
@@ -124,15 +129,7 @@ class _RestaurantReviewPageState extends State<RestaurantReviewPage>
   void _handleOnLeftPressed() {
     _pageIndex = _pageIndex - 1;
 
-    showListItem = true;
-    if (_pageIndex == 1) {
-      _handleListItem();
-    }
     setState(() {
-      if (_pageIndex == 0) {
-        _canSubmit = false;
-        _selectedRestaurant = null;
-      }
       _pageController.previousPage(
           duration: const Duration(milliseconds: 400), curve: Curves.easeInOut);
     });
@@ -146,29 +143,31 @@ class _RestaurantReviewPageState extends State<RestaurantReviewPage>
     if (_pageIndex == 2 && _canSubmit == false) {
       return;
     }
-    showListItem = true;
-    if (_pageIndex == 1) {
-      _handleListItem();
-    }
 
     setState(() {
       _pageIndex = _pageIndex + 1;
 
-      _pageController.nextPage(
-          duration: const Duration(milliseconds: 400), curve: Curves.easeInOut);
+      if (_pageIndex == 1 && _reviewProvider.selectedRestaurant != null) {
+        _pageController.jumpToPage(2);
+      } else {
+        _pageController.nextPage(
+            duration: const Duration(milliseconds: 400),
+            curve: Curves.easeInOut);
+      }
     });
   }
 
   void _onSelectRestaurant(Restaurant restaurant) {
     setState(() {
-      _handleListItem();
       _selectedRestaurant = restaurant;
-      _reviewProvider.selectedAssetsNotifier.value = [];
-      _reviewProvider.review = null;
-      _pageIndex = 1;
-      _pageController.nextPage(
-          duration: const Duration(milliseconds: 400), curve: Curves.easeInOut);
+      if (hasSelectedRestaurant == false) {
+        _pageIndex = 2;
+        _pageController.nextPage(
+            duration: const Duration(milliseconds: 400),
+            curve: Curves.easeInOut);
+      }
     });
+    hasSelectedRestaurant = true;
   }
 
   void _handleListItem() {

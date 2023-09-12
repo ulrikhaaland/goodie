@@ -7,14 +7,17 @@ import '../../bloc/restaurants.dart';
 
 class ResturantReviewSelectPage extends StatefulWidget {
   final Function(Restaurant) onSelectRestaurant;
+  final List<Restaurant> restaurants;
+  final Restaurant? selectedRestaurant;
 
   const ResturantReviewSelectPage({
     Key? key,
     required this.onSelectRestaurant,
+    required this.restaurants,
+    required this.selectedRestaurant,
   }) : super(key: key);
 
   @override
-  // ignore: library_private_types_in_public_api
   _ResturantReviewSelectPageState createState() =>
       _ResturantReviewSelectPageState();
 }
@@ -31,16 +34,8 @@ class _ResturantReviewSelectPageState extends State<ResturantReviewSelectPage>
   @override
   void initState() {
     super.initState();
-
-    final restaurantProvider =
-        Provider.of<RestaurantProvider>(context, listen: false);
-
-    restaurantProvider.addListener(() {
-      setState(() {
-        _allRestaurants = restaurantProvider.restaurants;
-        _filteredRestaurants = _allRestaurants;
-      });
-    });
+    _allRestaurants = widget.restaurants;
+    _filteredRestaurants = _allRestaurants;
 
     _searchController.addListener(_onSearchChanged);
   }
@@ -62,7 +57,7 @@ class _ResturantReviewSelectPageState extends State<ResturantReviewSelectPage>
               .contains(_searchController.text.trim().toLowerCase()))
           .toList();
     }
-    setState(() {}); // This will trigger a rebuild of the widget
+    setState(() {});
   }
 
   @override
@@ -76,12 +71,6 @@ class _ResturantReviewSelectPageState extends State<ResturantReviewSelectPage>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 24.0),
-
-            // IconButton(
-            //   padding: EdgeInsets.zero,
-            //   icon: const Icon(Icons.arrow_back, color: Colors.black, size: 24),
-            //   onPressed: () => Navigator.pop(context),
-            // ),
             const Padding(
               padding: EdgeInsets.only(left: 16.0),
               child: Text(
@@ -97,7 +86,6 @@ class _ResturantReviewSelectPageState extends State<ResturantReviewSelectPage>
               padding:
                   const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
               child: TextField(
-                // autofocus: true,
                 focusNode: _searchFocusNode,
                 controller: _searchController,
                 decoration: InputDecoration(
@@ -111,10 +99,9 @@ class _ResturantReviewSelectPageState extends State<ResturantReviewSelectPage>
             Expanded(
               child: ListView.builder(
                 cacheExtent: 500,
-                itemCount: _filteredRestaurants.length, // Use the filtered list
+                itemCount: _filteredRestaurants.length,
                 itemBuilder: (context, index) {
                   final restaurant = _filteredRestaurants[index];
-
                   precacheImage(
                       NetworkImage(restaurant.coverImg ?? ''), context);
                   return InkWell(
@@ -134,73 +121,90 @@ class _ResturantReviewSelectPageState extends State<ResturantReviewSelectPage>
   }
 
   Widget _buildRestaurantListItem(BuildContext context, Restaurant restaurant) {
+    bool isSelected = widget.selectedRestaurant == restaurant;
+
     return Column(
       children: [
-        ListTile(
-          leading: ClipRRect(
-            borderRadius: BorderRadius.circular(8.0),
-            child: CachedNetworkImage(
-              imageUrl: restaurant.coverImg ?? '',
-              placeholder: (context, url) => const SizedBox(
-                width: 50, // Set the width
-                height: 50, // Set the height
-                child: CircularProgressIndicator(
-                  strokeWidth: 2.0,
-                ),
+        if (isSelected)
+          Card(
+            elevation: 3.0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8.0),
+              side: BorderSide(
+                color: Colors.grey[300]!,
+                width: 1.0,
               ),
-              errorWidget: (context, url, error) => const Icon(Icons.error),
-              width: 50, // Set the width
-              height: 50, // Set the height
-              fit: BoxFit.cover,
             ),
-          ),
-          title: Text(
-            restaurant.name,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontWeight: FontWeight.normal, fontSize: 14),
-          ),
-          subtitle: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 2),
-              Text(
-                restaurant.description ?? '',
-                style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 2), // Space between description and rating
-              Row(
-                children: [
-                  Text(
-                      '${restaurant.rating.toString().length == 1 ? "${restaurant.rating}.0" : restaurant.rating ?? 'N/A'} ★'),
-                  const SizedBox(
-                      width: 10), // Space between rating and price level
-                  Text(getPriceLevelSigns(restaurant.priceLevel)),
-                  const Spacer(),
-                  ...restaurant.categories
-                      .take(2)
-                      .map((
-                        category,
-                      ) =>
-                          Text(
-                            category +
-                                (restaurant.categories.first == category
-                                    ? ", "
-                                    : ""),
-                            style: const TextStyle(
-                                fontSize: 12, color: Colors.blueAccent),
-                          ))
-                      .toList(),
-                ],
-              ),
-            ],
-          ),
-        ),
+            margin: EdgeInsets.symmetric(vertical: 4.0),
+            color: Colors.grey[50], // subtle off-white
+            child: _listTileContent(restaurant),
+          )
+        else
+          _listTileContent(restaurant),
         const Padding(
           padding: EdgeInsets.symmetric(horizontal: 16.0),
           child: Divider(),
         ),
       ],
+    );
+  }
+
+  Widget _listTileContent(Restaurant restaurant) {
+    return ListTile(
+      leading: ClipRRect(
+        borderRadius: BorderRadius.circular(8.0),
+        child: CachedNetworkImage(
+          imageUrl: restaurant.coverImg ?? '',
+          placeholder: (context, url) => const SizedBox(
+            width: 50,
+            height: 50,
+            child: CircularProgressIndicator(
+              strokeWidth: 2.0,
+            ),
+          ),
+          errorWidget: (context, url, error) => const Icon(Icons.error),
+          width: 50,
+          height: 50,
+          fit: BoxFit.cover,
+        ),
+      ),
+      title: Text(
+        restaurant.name,
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(fontWeight: FontWeight.normal, fontSize: 14),
+      ),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 2),
+          Text(
+            restaurant.description ?? '',
+            style: TextStyle(color: Colors.grey[600], fontSize: 12),
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 2),
+          Row(
+            children: [
+              Text(
+                  '${restaurant.rating.toString().length == 1 ? "${restaurant.rating}.0" : restaurant.rating ?? 'N/A'} ★'),
+              const SizedBox(width: 10),
+              Text(getPriceLevelSigns(restaurant.priceLevel)),
+              const Spacer(),
+              ...restaurant.categories
+                  .take(2)
+                  .map((category) => Text(
+                        category +
+                            (restaurant.categories.first == category
+                                ? ", "
+                                : ""),
+                        style: const TextStyle(
+                            fontSize: 12, color: Colors.blueAccent),
+                      ))
+                  .toList(),
+            ],
+          ),
+        ],
+      ),
     );
   }
 

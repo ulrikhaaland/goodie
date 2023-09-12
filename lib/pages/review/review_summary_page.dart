@@ -5,10 +5,12 @@ import 'package:goodie/pages/review/review_rate.dart';
 
 class RestaurantReviewSummaryPage extends StatefulWidget {
   final RestaurantReviewProvider reviewProvider;
+  final Widget listItem;
 
   const RestaurantReviewSummaryPage({
     super.key,
     required this.reviewProvider,
+    required this.listItem,
   });
 
   @override
@@ -47,9 +49,7 @@ class _RestaurantReviewSummaryPageState
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(
-              height: 80,
-            ),
+            widget.listItem,
             // Display selected images
             if (provider.selectedAssetsNotifier.value.isNotEmpty) ...[
               SizedBox(
@@ -74,7 +74,7 @@ class _RestaurantReviewSummaryPageState
 
             // Display overall rating
             Text(
-              "Total: ${review.ratingOverall!.toStringAsPrecision(2)}",
+              "Total Rating: ${review.ratingOverall!.toStringAsPrecision(2)}",
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
             ),
             const SizedBox(height: 8),

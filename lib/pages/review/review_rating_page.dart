@@ -10,6 +10,7 @@ class RestaurantReviewRatingPage extends StatefulWidget {
   final Function() onBackPressed;
   final Function(bool canSubmit) onCanSubmit;
   final RestaurantReview? review;
+  final Widget listItem;
 
   const RestaurantReviewRatingPage({
     super.key,
@@ -17,6 +18,7 @@ class RestaurantReviewRatingPage extends StatefulWidget {
     required this.onBackPressed,
     required this.onCanSubmit,
     required this.review,
+    required this.listItem,
   });
 
   @override
@@ -32,11 +34,12 @@ class _RestaurantReviewReviewState extends State<RestaurantReviewRatingPage> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(top: 100, left: 16, right: 16, bottom: 64),
+      padding: const EdgeInsets.only(top: 16, left: 16, right: 16, bottom: 64),
       child: SizedBox(
         height: MediaQuery.of(context).size.height - 136,
         child: Column(
           children: [
+            widget.listItem,
             _buildDineInOrTakeout(),
             const SizedBox(height: 20),
             Flexible(

@@ -83,7 +83,7 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage> {
               backgroundColor: Colors.transparent,
               elevation: 0,
               floating: true, // Add this line
-              expandedHeight: 76,
+              expandedHeight: 78,
               flexibleSpace: FlexibleSpaceBar(
                   background: Column(
                 children: [

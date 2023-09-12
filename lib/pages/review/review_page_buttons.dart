@@ -6,6 +6,8 @@ class ReviewPageButtons extends StatefulWidget {
   final String rightButtonText;
   final bool? canSubmit;
   final bool isSubmit;
+  final bool hideLeftButton;
+  final bool hideRightButton;
 
   const ReviewPageButtons({
     Key? key,
@@ -14,6 +16,8 @@ class ReviewPageButtons extends StatefulWidget {
     required this.isSubmit,
     this.rightButtonText = "Neste",
     required this.canSubmit,
+    required this.hideLeftButton,
+    required this.hideRightButton,
   }) : super(key: key);
 
   @override
@@ -26,8 +30,9 @@ class _ReviewPageButtonsState extends State<ReviewPageButtons> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        _buildLeftButton(),
-        _buildRightButton(context),
+        if (widget.hideLeftButton) const Spacer(),
+        if (!widget.hideLeftButton) _buildLeftButton(),
+        if (!widget.hideRightButton) _buildRightButton(context),
       ],
     );
   }
