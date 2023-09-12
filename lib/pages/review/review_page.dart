@@ -2,12 +2,14 @@ import 'dart:async';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:goodie/bloc/restaurants.dart';
 import 'package:goodie/pages/review/review_select_page.dart';
 import 'package:goodie/pages/review/review_page_buttons.dart';
 import 'package:goodie/pages/review/review_photo_page.dart';
 import 'package:goodie/pages/review/review_progress_bar.dart';
 import 'package:goodie/pages/review/review_rating_page.dart';
 import 'package:goodie/pages/review/review_summary_page.dart';
+import 'package:provider/provider.dart';
 
 import '../../bloc/review.dart';
 import '../../model/restaurant.dart';
@@ -24,6 +26,8 @@ class _RestaurantReviewPageState extends State<RestaurantReviewPage>
     with AutomaticKeepAliveClientMixin {
   final PageController _pageController = PageController();
   final RestaurantReviewProvider _reviewProvider = RestaurantReviewProvider();
+
+  late final RestaurantProvider restaurantProvider;
 
   Restaurant? get _selectedRestaurant => _reviewProvider.selectedRestaurant;
 
@@ -44,6 +48,11 @@ class _RestaurantReviewPageState extends State<RestaurantReviewPage>
 
   @override
   void initState() {
+    restaurantProvider =
+        Provider.of<RestaurantProvider>(context, listen: false);
+
+    _reviewProvider.restaurants = restaurantProvider.restaurants;
+
     _reviewProvider.selectedAssetsNotifier.addListener(() {
       setState(() {});
     });
@@ -235,7 +244,7 @@ class _RestaurantReviewPageState extends State<RestaurantReviewPage>
   }
 
   String _getRightButtonText() {
-    if (_pageIndex == 1) {
+    if (_pageIndex == 0) {
       if (_images.isNotEmpty) {
         return "Velg ${_images.length}";
       } else {

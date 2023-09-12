@@ -47,10 +47,6 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage> {
 
   @override
   void initState() {
-    _selectedAssetsNotifier.addListener(() {
-      _handleSelectedRestaurant();
-    });
-
     Timer(const Duration(milliseconds: 500), () {
       if (mounted) {
         setState(() {
@@ -63,9 +59,6 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage> {
 
   @override
   void dispose() {
-    _selectedAssetsNotifier.removeListener(() {
-      _handleSelectedRestaurant();
-    });
     super.dispose();
   }
 
@@ -90,18 +83,19 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage> {
               backgroundColor: Colors.transparent,
               elevation: 0,
               floating: true, // Add this line
-              expandedHeight: 100.0,
+              expandedHeight: 76,
               flexibleSpace: FlexibleSpaceBar(
                   background: Column(
                 children: [
                   SizedBox(height: 24.0),
                   Text(
-                    'Legg til noen bilder fra besøket',
+                    'Legg til bilder fra besøket',
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
+                  SizedBox(height: 24.0),
                 ],
               )),
             ),
@@ -290,23 +284,6 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage> {
       asset: asset,
       imageFile: File(file.path),
     );
-  }
-
-  Future<void> _handleSelectedRestaurant() async {
-    final assets = _selectedAssetsNotifier.value;
-
-    for (var asset in assets) {
-      final assetss = asset;
-      final image = assetss.imageFile ?? await assetss.file;
-
-      final location = await extractLocation(image!);
-      if (location != null) {
-        print(
-            'Latitude: ${location['latitude']}, Longitude: ${location['longitude']}');
-      } else {
-        print('No location data found in the image.');
-      }
-    }
   }
 }
 
@@ -525,49 +502,4 @@ class _AssetThumbnailState extends State<AssetThumbnail> {
       },
     );
   }
-}
-
-Future<Map<String, double>?> extractLocation(File imageFile) async {
-  final Map<String, IfdTag> data =
-      await readExifFromBytes(await imageFile.readAsBytes());
-
-  if (data.isEmpty ||
-      !data.containsKey('GPS GPSLatitude') ||
-      !data.containsKey('GPS GPSLongitude')) {
-    print("No EXIF information found");
-    return null;
-  }
-
-  final lat = _convertToDecimal(
-      data['GPS GPSLatitude']!.values, data['GPS GPSLatitudeRef']!.printable);
-  final lon = _convertToDecimal(
-      data['GPS GPSLongitude']!.values, data['GPS GPSLongitudeRef']!.printable);
-
-  return {'latitude': lat, 'longitude': lon};
-}
-
-double _convertToDecimal(IfdValues idf, String ref) {
-  final values = idf.toList();
-
-  if (values.length < 3) {
-    throw ArgumentError('Expected at least 3 values.');
-  }
-
-  double degrees = values[0].denominator != 0
-      ? values[0].numerator / values[0].denominator
-      : 0;
-  double minutes = values[1].denominator != 0
-      ? values[1].numerator / values[1].denominator
-      : 0;
-  double seconds = values.length > 2 && values[2].denominator != 0
-      ? values[2].numerator / values[2].denominator
-      : 0;
-
-  double res = degrees + (minutes / 60) + (seconds / 3600);
-
-  if (ref == 'S' || ref == 'W') {
-    res = -res;
-  }
-
-  return res;
 }
