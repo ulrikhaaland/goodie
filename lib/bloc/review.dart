@@ -73,7 +73,10 @@ class RestaurantReviewProvider with ChangeNotifier {
         .map((e) => e.restaurant!)
         .toList();
 
-    for (var asset in assets.where((element) => element.restaurant == null)) {
+    final assetsCopy = List.from(assets);
+
+    for (var asset
+        in assetsCopy.where((element) => element.restaurant == null)) {
       final assetss = asset;
       final image = assetss.imageFile ?? await assetss.file;
 

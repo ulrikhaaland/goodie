@@ -55,6 +55,14 @@ void main() async {
   );
 }
 
+const primaryColor = Color(0xFFFF6B6B); // Anchor color
+const secondaryColor = Color(0xFFFFA6A6); // Lighter shade of primary
+const accent1Color = Color(0xFFFF8D8D); // Slightly different shade of primary
+const accent2Color = Color(0xFFFF4A4A); // Darker shade of primary
+const bgColor = Color(0xFFFFF2F2); // Very light shade for background
+const textColor = Color(0xFF7B3F3F); // Dark shade for text
+const highlightColor = Color(0xFFFFB9B9); // Pastel shade for highlights
+
 class MainApp extends StatelessWidget {
   const MainApp({super.key});
 
@@ -62,7 +70,27 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
 
+    // Create a custom theme using the defined colors
+    final customTheme = ThemeData(
+      primaryColor: primaryColor,
+      colorScheme: const ColorScheme.light(
+        primary: primaryColor,
+        secondary: secondaryColor,
+        background: bgColor,
+        onBackground: textColor,
+        surface: bgColor,
+        onSurface: textColor,
+        primaryContainer: accent1Color,
+        secondaryContainer: accent2Color,
+      ),
+      buttonTheme: const ButtonThemeData(
+        buttonColor: highlightColor,
+      ),
+      // Add other theme properties if needed
+    );
+
     return MaterialApp(
+      theme: customTheme,
       home: authProvider.firebaseUser != null
           ? const HomeWithBottomNavigation()
           : const LoginPage(),
@@ -100,7 +128,7 @@ class _HomeWithBottomNavigationState extends State<HomeWithBottomNavigation> {
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         backgroundColor: Colors.white,
-        selectedItemColor: Colors.pink[300],
+        selectedItemColor: primaryColor,
         unselectedItemColor: Colors.grey[600],
         currentIndex: _selectedIndex,
         onTap: (index) {

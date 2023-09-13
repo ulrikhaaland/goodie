@@ -19,8 +19,9 @@ class RestaurantReviewSummaryPage extends StatefulWidget {
 }
 
 class _RestaurantReviewSummaryPageState
-    extends State<RestaurantReviewSummaryPage> {
+    extends State<RestaurantReviewSummaryPage> with WidgetsBindingObserver {
   final TextEditingController _commentController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
 
   RestaurantReviewProvider get provider => widget.reviewProvider;
 
@@ -28,28 +29,48 @@ class _RestaurantReviewSummaryPageState
 
   @override
   void initState() {
+    super.initState();
+
     _commentController.text = review.description ?? "";
     _commentController.addListener(() {
       review.description = _commentController.text;
     });
-    super.initState();
+
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void didChangeMetrics() {
+    _scrollToBottom();
+  }
+
+  void _scrollToBottom() {
+    _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
   }
 
   @override
   void dispose() {
     _commentController.dispose();
+    _scrollController.dispose();
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
+      controller: _scrollController,
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.only(
+          left: 16.0,
+          right: 16.0,
+          bottom: 84.0,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             widget.listItem,
+            const SizedBox(height: 1),
             // Display selected images
             if (provider.selectedAssetsNotifier.value.isNotEmpty) ...[
               SizedBox(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:goodie/main.dart';
 
 import '../model/review.dart';
 
@@ -143,7 +144,7 @@ class _HomePageState extends State<HomePage>
     super.build(context);
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.pink[300],
+        // backgroundColor: Colors.pink[300],
         title: const Text(
           'Goodie',
           style: TextStyle(
@@ -186,8 +187,9 @@ class _HomePageState extends State<HomePage>
                             const SizedBox(width: 10),
                             Text(
                               post.username,
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.bold),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ],
                         ),
@@ -224,12 +226,16 @@ class _HomePageState extends State<HomePage>
                             Text(
                               post.restaurantName,
                               style: const TextStyle(
-                                  fontWeight: FontWeight.bold, fontSize: 18),
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                              ),
                             ),
                             Text(
                               '${post.rating}/10',
                               style: const TextStyle(
-                                  color: Colors.orange, fontSize: 16),
+                                  color: accent1Color,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500),
                             ),
                           ],
                         ),

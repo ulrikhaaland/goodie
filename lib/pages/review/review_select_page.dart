@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:goodie/main.dart';
 import 'package:provider/provider.dart';
 
 import '../../../model/restaurant.dart';
@@ -135,7 +136,7 @@ class _ResturantReviewSelectPageState extends State<ResturantReviewSelectPage>
                 width: 1.0,
               ),
             ),
-            margin: EdgeInsets.symmetric(vertical: 4.0),
+            margin: const EdgeInsets.symmetric(vertical: 4.0),
             color: Colors.grey[50], // subtle off-white
             child: _listTileContent(restaurant),
           )
@@ -197,8 +198,7 @@ class _ResturantReviewSelectPageState extends State<ResturantReviewSelectPage>
                             (restaurant.categories.first == category
                                 ? ", "
                                 : ""),
-                        style: const TextStyle(
-                            fontSize: 12, color: Colors.blueAccent),
+                        style: const TextStyle(fontSize: 12, color: textColor),
                       ))
                   .toList(),
             ],

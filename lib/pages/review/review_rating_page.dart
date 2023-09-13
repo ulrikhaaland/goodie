@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:goodie/main.dart';
 import 'package:provider/provider.dart';
 
 import '../../bloc/auth.dart';
@@ -34,12 +35,13 @@ class _RestaurantReviewReviewState extends State<RestaurantReviewRatingPage> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(top: 16, left: 16, right: 16, bottom: 64),
+      padding: const EdgeInsets.only(left: 16, right: 16, bottom: 64),
       child: SizedBox(
         height: MediaQuery.of(context).size.height - 136,
         child: Column(
           children: [
             widget.listItem,
+            const SizedBox(height: 6),
             _buildDineInOrTakeout(),
             const SizedBox(height: 20),
             Flexible(
@@ -168,9 +170,7 @@ class _RestaurantReviewReviewState extends State<RestaurantReviewRatingPage> {
                     ),
                   ),
                   backgroundColor: MaterialStateProperty.all(
-                    review.dineIn
-                        ? Theme.of(context).primaryColor
-                        : Colors.grey[200],
+                    review.dineIn ? accent1Color : Colors.grey[200],
                   ),
                 ),
                 onPressed: () {
@@ -199,9 +199,7 @@ class _RestaurantReviewReviewState extends State<RestaurantReviewRatingPage> {
                     ),
                   ),
                   backgroundColor: MaterialStateProperty.all(
-                    !review.dineIn
-                        ? Theme.of(context).primaryColor
-                        : Colors.grey[200],
+                    !review.dineIn ? accent1Color : Colors.grey[200],
                   ),
                 ),
                 onPressed: () {
@@ -239,7 +237,7 @@ class _RestaurantReviewReviewState extends State<RestaurantReviewRatingPage> {
           review.ratingPackaging != null;
     }
 
-    if (_canSubmit != canSubmit) widget.onCanSubmit(canSubmit);
+    widget.onCanSubmit(canSubmit);
 
     if (canSubmit) {
       review.ratingOverall = _computeOverallRating();

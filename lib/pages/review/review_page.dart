@@ -69,8 +69,7 @@ class _RestaurantReviewPageState extends State<RestaurantReviewPage>
         PageView(
           key: const Key("pageview"),
           controller: _pageController,
-          physics:
-              const NeverScrollableScrollPhysics(), // so users can't swipe between them
+          physics: const NeverScrollableScrollPhysics(),
           children: [
             RestaurantReviewPhotoPage(
               key: Key(_selectedRestaurant?.id ?? "picker"),
@@ -100,28 +99,33 @@ class _RestaurantReviewPageState extends State<RestaurantReviewPage>
               key: Key(_selectedRestaurant?.id ?? "summary"),
               reviewProvider: _reviewProvider,
               listItem: _buildRestaurantListItem(context),
+              onShareReview: () {
+                _handleOnReview();
+              },
             ),
           ],
         ),
-        Positioned(
-          bottom: 0,
-          left: 0,
-          right: 0,
-          child: ReviewPageButtons(
-            isSubmit: _pageIndex == 2,
-            canSubmit: _pageIndex == 2 ? _canSubmit : true,
-            rightButtonText: _getRightButtonText(),
-            hideLeftButton: _pageIndex == 0,
-            hideRightButton: _pageIndex == 1 &&
-                (_selectedRestaurant == null || hasSelectedRestaurant == false),
-            onLeftPressed: () {
-              _handleOnLeftPressed();
-            },
-            onRightPressed: () {
-              _handleOnRightPressed();
-            },
+        if (!isKeyboardVisible(context))
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: ReviewPageButtons(
+              isSubmit: _pageIndex == 2,
+              canSubmit: _pageIndex == 2 ? _canSubmit : true,
+              rightButtonText: _getRightButtonText(),
+              hideLeftButton: _pageIndex == 0,
+              hideRightButton: _pageIndex == 1 &&
+                  (_selectedRestaurant == null ||
+                      hasSelectedRestaurant == false),
+              onLeftPressed: () {
+                _handleOnLeftPressed();
+              },
+              onRightPressed: () {
+                _handleOnRightPressed();
+              },
+            ),
           ),
-        ),
       ]),
     );
   }
@@ -147,7 +151,9 @@ class _RestaurantReviewPageState extends State<RestaurantReviewPage>
     setState(() {
       _pageIndex = _pageIndex + 1;
 
-      if (_pageIndex == 1 && _reviewProvider.selectedRestaurant != null) {
+      if (_pageIndex == 1 &&
+          _reviewProvider.selectedRestaurant != null &&
+          !hasSelectedRestaurant) {
         _pageController.jumpToPage(2);
       } else {
         _pageController.nextPage(
@@ -234,7 +240,9 @@ class _RestaurantReviewPageState extends State<RestaurantReviewPage>
     );
   }
 
-  void _handleOnReview() {}
+  void _handleOnReview() {
+    print("Review");
+  }
 
   void _handleOnCanSubmit(bool canSubmit) {
     setState(() {
@@ -253,6 +261,10 @@ class _RestaurantReviewPageState extends State<RestaurantReviewPage>
       return "Del";
     }
     return "Neste";
+  }
+
+  bool isKeyboardVisible(BuildContext context) {
+    return MediaQuery.of(context).viewInsets.bottom > 0;
   }
 }
 

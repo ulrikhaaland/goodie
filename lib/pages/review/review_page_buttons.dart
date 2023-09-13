@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:goodie/main.dart';
 
 class ReviewPageButtons extends StatefulWidget {
   final VoidCallback onLeftPressed;
@@ -72,9 +73,7 @@ class _ReviewPageButtonsState extends State<ReviewPageButtons> {
           if (widget.canSubmit == false) {
             return Colors.grey.shade300; // Disabled color
           } else {
-            return Theme.of(context)
-                .colorScheme
-                .secondary; // Use secondary color from colorScheme
+            return primaryColor; // Regular color
           }
         },
       ),
@@ -108,7 +107,7 @@ class _ReviewPageButtonsState extends State<ReviewPageButtons> {
       shape: MaterialStateProperty.all(
         RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
-          side: const BorderSide(color: Colors.black),
+          side: const BorderSide(color: textColor, width: 2),
         ),
       ),
       backgroundColor: MaterialStateProperty.all(Colors.white),

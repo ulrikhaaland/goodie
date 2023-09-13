@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../main.dart';
+
 class RatingWidget extends StatelessWidget {
   final num? rating;
   final Function(int) onRatingSelected;
@@ -16,17 +18,19 @@ class RatingWidget extends StatelessWidget {
       children: [
         Row(
           children: List.generate(
-              5,
-              (index) => Padding(
-                    padding: const EdgeInsets.only(left: 2.0),
-                    child: _buildCircle(index + 1),
-                  )),
+            5,
+            (index) => Padding(
+              padding: const EdgeInsets.only(left: 2.0),
+              child: _buildCircle(index + 1),
+            ),
+          ),
         ),
         const SizedBox(width: 8),
         Text(
           (_getRatingData(rating?.toDouble())['description'] ?? ''),
           style: const TextStyle(
             fontWeight: FontWeight.normal,
+            color: textColor, // Use our textColor
           ),
         )
       ],
@@ -43,12 +47,18 @@ class RatingWidget extends StatelessWidget {
     }
 
     Color getCircleColor(num? rating) {
-      if (rating == null) return Colors.grey.shade300;
-      if (rating < 2) return Colors.red;
-      if (rating < 3) return Colors.orange;
-      if (rating < 4) return Colors.yellow;
-      if (rating < 5) return Colors.lightGreen;
-      return Colors.green;
+      if (rating == null) return bgColor; // Use bgColor for null rating
+      if (rating < 2) {
+        return highlightColor; // Use highlightColor for low rating
+      }
+      if (rating < 3) {
+        return secondaryColor; // Use secondaryColor for medium-low rating
+      }
+      if (rating < 4) return accent1Color; // Use accent1Color for medium rating
+      if (rating < 5) {
+        return primaryColor; // Use accent2Color for medium-high rating
+      }
+      return accent2Color; // Use primaryColor for high rating
     }
 
     double circleSize =

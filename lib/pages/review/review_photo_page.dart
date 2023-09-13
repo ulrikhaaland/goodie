@@ -34,9 +34,8 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage> {
   ValueNotifier<GoodieAsset?> get _selectedAssetNotifier =>
       widget.reviewProvider.selectedAssetNotifier;
 
-  ValueNotifier<List<GoodieAsset>> get _selectedAssetsNotifier => widget
-      .reviewProvider
-      .selectedAssetsNotifier; //widget.reviewProvider.selectedAssetsNotifier;
+  ValueNotifier<List<GoodieAsset>> get _selectedAssetsNotifier =>
+      widget.reviewProvider.selectedAssetsNotifier;
 
   Map<GoodieAsset, Uint8List> get _thumbnailCache =>
       widget.reviewProvider.thumbnailCache;
@@ -83,21 +82,22 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage> {
               backgroundColor: Colors.transparent,
               elevation: 0,
               floating: true, // Add this line
-              expandedHeight: 78,
+              expandedHeight: 76,
               flexibleSpace: FlexibleSpaceBar(
-                  background: Column(
-                children: [
-                  SizedBox(height: 24.0),
-                  Text(
-                    'Legg til bilder fra besøket',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
+                background: Column(
+                  children: [
+                    SizedBox(height: 24.0),
+                    Text(
+                      'Legg til bilder fra besøket',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                  SizedBox(height: 24.0),
-                ],
-              )),
+                    SizedBox(height: 24.0),
+                  ],
+                ),
+              ),
             ),
             SliverPersistentHeader(
               pinned: true,
