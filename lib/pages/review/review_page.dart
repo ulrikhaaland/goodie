@@ -99,9 +99,6 @@ class _RestaurantReviewPageState extends State<RestaurantReviewPage>
               key: Key(_selectedRestaurant?.id ?? "summary"),
               reviewProvider: _reviewProvider,
               listItem: _buildRestaurantListItem(context),
-              onShareReview: () {
-                _handleOnReview();
-              },
             ),
           ],
         ),
@@ -141,6 +138,7 @@ class _RestaurantReviewPageState extends State<RestaurantReviewPage>
 
   void _handleOnRightPressed() {
     if (_pageIndex == 3) {
+      _reviewProvider.onShareReview();
       return;
     }
 
