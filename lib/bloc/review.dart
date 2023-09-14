@@ -1,10 +1,12 @@
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:exif/exif.dart';
 import 'package:flutter/material.dart';
 import 'package:photo_manager/photo_manager.dart';
 import '../model/restaurant.dart';
 import '../utils/distance.dart';
+import '../utils/image.dart';
 
 class RestaurantReviewProvider with ChangeNotifier {
   Restaurant? selectedRestaurant;
@@ -63,8 +65,6 @@ class RestaurantReviewProvider with ChangeNotifier {
     });
   }
 
-  void onShareReview() {}
-
   Future<void> _handleSelectedRestaurant() async {
     final assets = selectedAssetsNotifier.value;
 
@@ -111,10 +111,8 @@ class RestaurantReviewProvider with ChangeNotifier {
               ? value
               : element);
       selectedRestaurant = restaurant;
-    } else if (assets.isNotEmpty) {
+    } else if (assets.isNotEmpty && assets.first.restaurant != null) {
       selectedRestaurant = assets.first.restaurant;
-    } else {
-      selectedRestaurant = null;
     }
   }
 
@@ -161,6 +159,59 @@ class RestaurantReviewProvider with ChangeNotifier {
     }
 
     return res;
+  }
+
+  void onShareReview() async {
+    if (review == null) {
+      print("Review is null. Cannot upload to Firestore.");
+      return;
+    }
+
+    List<String> imageUrls = [];
+
+    // Upload images to Firebase Storage from selectedAssetsNotifier
+    for (GoodieAsset asset in selectedAssetsNotifier.value) {
+      // Get the File from the GoodieAsset
+      File imageFile = (asset.imageFile ?? await asset.asset.file)!;
+
+      // Generate a unique path for the image
+      String path =
+          'reviews/${review!.restaurantId}/${DateTime.now().millisecondsSinceEpoch}.jpg';
+
+      // Upload the image and get the download URL
+      String imageUrl = await uploadImageToFirebaseStorage(imageFile, path);
+      imageUrls.add(imageUrl);
+    }
+
+    // Convert the RestaurantReview object to a Map
+    Map<String, dynamic> reviewMap = {
+      'restaurantId': review!.restaurantId,
+      'userId': review!.userId,
+      'dineIn': review!.dineIn,
+      'ratingFood': review!.ratingFood,
+      'ratingService': review!.ratingService,
+      'ratingPrice': review!.ratingPrice,
+      'ratingAtmosphere': review!.ratingAtmosphere,
+      'ratingCleanliness': review!.ratingCleanliness,
+      'ratingPackaging': review!.ratingPackaging,
+      'ratingOverall': review!.ratingOverall,
+      'description': review!.description,
+      'timestamp': review!.timestamp,
+      'images': imageUrls, // Store the image URLs in the review document
+    };
+
+    // Upload to Firestore
+    CollectionReference reviews =
+        FirebaseFirestore.instance.collection('reviews');
+    if (review!.id == null) {
+      // If the review doesn't have an ID, add a new document
+      await reviews.add(reviewMap);
+    } else {
+      // If the review has an ID, update the existing document
+      await reviews.doc(review!.id).set(reviewMap);
+    }
+
+    print("Review and images uploaded to Firestore and Firebase Storage.");
   }
 }
 

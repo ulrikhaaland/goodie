@@ -1,13 +1,12 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
-import 'package:exif/exif.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:photo_view/photo_view.dart';
+// ignore: depend_on_referenced_packages
 import 'package:collection/collection.dart';
-
 import '../../bloc/review.dart';
 
 // ignore: must_be_immutable
@@ -28,7 +27,8 @@ class RestaurantReviewPhotoPage extends StatefulWidget {
       _RestaurantReviewPhotoPageState();
 }
 
-class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage> {
+class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
+    with AutomaticKeepAliveClientMixin {
   bool showListItem = false;
 
   ValueNotifier<GoodieAsset?> get _selectedAssetNotifier =>
@@ -43,6 +43,9 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage> {
   List<GoodieAsset> get _recentImages => widget.reviewProvider.recentImages;
 
   bool _scrollable = true;
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
@@ -63,6 +66,7 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
     final thumbnailSize = (screenWidth / 2.5).floor();
@@ -79,7 +83,7 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage> {
               : const NeverScrollableScrollPhysics(),
           slivers: [
             const SliverAppBar(
-              backgroundColor: Colors.transparent,
+              backgroundColor: Colors.white,
               elevation: 0,
               floating: true, // Add this line
               expandedHeight: 76,
