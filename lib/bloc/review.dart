@@ -75,19 +75,20 @@ class RestaurantReviewProvider with ChangeNotifier {
 
     final assetsCopy = List.from(assets);
 
+    Map<DateTime, int> dateCounts = {};
+    DateTime? mostCommonDate;
+
     for (var asset
         in assetsCopy.where((element) => element.restaurant == null)) {
       final assetss = asset;
       final image = assetss.imageFile ?? await assetss.file;
 
-      final location = await extractLocation(image!);
-      if (location != null &&
-          location['latitude'] != 0 &&
-          location['longitude'] != 0) {
+      final data = await extractLocationAndDate(image!);
+      if (data?['latitude'] != null && data?['longitude'] != null) {
         int? distance;
 
         restaurants.where((e) => e.position != null).forEach((restaurant) {
-          int dist = getDistance(location['latitude']!, location['longitude']!,
+          int dist = getDistance(data?['latitude'], data?['longitude'],
                   restaurant.position!.latitude, restaurant.position!.longitude)
               .toInt();
 
@@ -98,8 +99,19 @@ class RestaurantReviewProvider with ChangeNotifier {
             asset.restaurant = restaurant;
           }
         });
-      } else {
-        continue;
+      }
+
+      DateTime? date = data?['date'];
+      if (date != null) {
+        // Check if the date is within the last 24 months
+        if (date.isAfter(DateTime.now().subtract(const Duration(days: 730)))) {
+          dateCounts.update(date, (count) => count + 1, ifAbsent: () => 1);
+
+          if (mostCommonDate == null ||
+              dateCounts[date]! > dateCounts[mostCommonDate]!) {
+            mostCommonDate = date;
+          }
+        }
       }
     }
 
@@ -114,17 +126,33 @@ class RestaurantReviewProvider with ChangeNotifier {
     } else if (assets.isNotEmpty && assets.first.restaurant != null) {
       selectedRestaurant = assets.first.restaurant;
     }
+
+    if (mostCommonDate != null) {
+      review!.timestamp = mostCommonDate;
+    }
   }
 
-  Future<Map<String, double>?> extractLocation(File imageFile) async {
+  Future<Map<String, dynamic>?> extractLocationAndDate(File imageFile) async {
     final Map<String, IfdTag> data =
         await readExifFromBytes(await imageFile.readAsBytes());
 
-    if (data.isEmpty ||
-        !data.containsKey('GPS GPSLatitude') ||
-        !data.containsKey('GPS GPSLongitude')) {
+    if (data.isEmpty) {
       print("No EXIF information found");
       return null;
+    }
+
+    DateTime? date;
+    if (data.containsKey('Image DateTime')) {
+      try {
+        date = DateTime.parse(data['Image DateTime']!.printable);
+      } catch (e) {
+        print("Error parsing date: $e");
+      }
+    }
+
+    if (!data.containsKey('GPS GPSLatitude') ||
+        !data.containsKey('GPS GPSLongitude')) {
+      return {'date': date};
     }
 
     final lat = _convertToDecimal(
@@ -132,7 +160,7 @@ class RestaurantReviewProvider with ChangeNotifier {
     final lon = _convertToDecimal(data['GPS GPSLongitude']!.values,
         data['GPS GPSLongitudeRef']!.printable);
 
-    return {'latitude': lat, 'longitude': lon};
+    return {'latitude': lat, 'longitude': lon, 'date': date};
   }
 
   double _convertToDecimal(IfdValues idf, String ref) {

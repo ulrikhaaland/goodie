@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:goodie/main.dart';
+import 'package:intl/intl.dart'; // Import for DateFormat
 import 'package:goodie/bloc/review.dart';
 import 'package:goodie/model/restaurant.dart';
 import 'package:goodie/pages/review/review_rate.dart';
@@ -23,6 +25,7 @@ class _RestaurantReviewSummaryPageState
   final TextEditingController _commentController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final FocusNode _commentFocusNode = FocusNode();
+  DateTime? _selectedDate;
 
   RestaurantReviewProvider get provider => widget.reviewProvider;
 
@@ -32,12 +35,40 @@ class _RestaurantReviewSummaryPageState
   void initState() {
     super.initState();
 
+    _selectedDate = review.timestamp;
     _commentController.text = review.description ?? "";
     _commentController.addListener(() {
       review.description = _commentController.text;
     });
 
     WidgetsBinding.instance.addObserver(this);
+  }
+
+  Future<void> _selectDate(BuildContext context) async {
+    DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate ?? DateTime.now(),
+      firstDate: DateTime.now().subtract(const Duration(days: (365 * 2))),
+      lastDate: DateTime.now(),
+      builder: (BuildContext context, Widget? child) {
+        return Theme(
+          data: ThemeData.light().copyWith(
+            primaryColor: primaryColor,
+            colorScheme: const ColorScheme.light(primary: primaryColor),
+            buttonTheme:
+                const ButtonThemeData(textTheme: ButtonTextTheme.primary),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (pickedDate != null && pickedDate != _selectedDate) {
+      setState(() {
+        _selectedDate = pickedDate;
+        review.timestamp = pickedDate;
+      });
+    }
   }
 
   @override
@@ -76,7 +107,6 @@ class _RestaurantReviewSummaryPageState
             children: [
               widget.listItem,
               const SizedBox(height: 1),
-              // Display selected images
               if (provider.selectedAssetsNotifier.value.isNotEmpty) ...[
                 SizedBox(
                   height: 200,
@@ -98,24 +128,38 @@ class _RestaurantReviewSummaryPageState
                 ),
                 const SizedBox(height: 20),
               ],
-
-              // Display overall rating
               Text(
                 "Total Rating: ${review.ratingOverall!.toStringAsPrecision(2)}",
                 style:
                     const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
               ),
               const SizedBox(height: 8),
-              // You can use your RatingWidget here
               RatingWidget(
                 rating: review.ratingOverall,
                 onRatingSelected: (rating) {},
                 isTotalRating: true,
               ),
-
               const SizedBox(height: 20),
-
-              // Comment field
+              ListTile(
+                title: Text(
+                  _selectedDate != null
+                      ? DateFormat.yMMMd().format(_selectedDate!)
+                      : "Select a date",
+                  style: TextStyle(
+                    color: _selectedDate != null ? Colors.black : Colors.grey,
+                    fontSize: 16,
+                  ),
+                ),
+                subtitle: _selectedDate == null
+                    ? const Text(
+                        "A date must be selected.",
+                        style: TextStyle(color: Colors.redAccent),
+                      )
+                    : null,
+                trailing: const Icon(Icons.calendar_today),
+                onTap: () => _selectDate(context),
+              ),
+              const SizedBox(height: 20),
               const Row(
                 children: [
                   Text(
