@@ -8,6 +8,7 @@ import 'package:photo_view/photo_view.dart';
 // ignore: depend_on_referenced_packages
 import 'package:collection/collection.dart';
 import '../../bloc/review.dart';
+import 'dart:ui' as ui;
 
 // ignore: must_be_immutable
 
@@ -86,7 +87,7 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
               backgroundColor: Colors.white,
               elevation: 0,
               floating: true, // Add this line
-              expandedHeight: 76,
+              expandedHeight: 78,
               flexibleSpace: FlexibleSpaceBar(
                 background: Column(
                   children: [
@@ -442,6 +443,7 @@ class _AssetThumbnailState extends State<AssetThumbnail> {
 
   MemoryImage? createMemoryImage(Uint8List data) {
     try {
+      print("Image byte length: ${data.length}");
       return MemoryImage(data);
     } catch (e) {
       print("Error creating MemoryImage: $e");
@@ -454,6 +456,8 @@ class _AssetThumbnailState extends State<AssetThumbnail> {
     Uint8List imageBytes,
   ) {
     if (widget.fullResolution) {
+      final cache = widget.cache[widget.asset];
+      final bytes = cache ?? imageBytes;
       return SizedBox(
         width: widget.width!.toDouble(),
         height: widget.height!.toDouble(),
@@ -461,8 +465,7 @@ class _AssetThumbnailState extends State<AssetThumbnail> {
           child: PhotoView(
             key: Key(widget.asset.id),
             controller: controller!,
-            imageProvider:
-                createMemoryImage(widget.cache[widget.asset] ?? imageBytes),
+            imageProvider: createMemoryImage(bytes),
             minScale: PhotoViewComputedScale.covered,
             maxScale: PhotoViewComputedScale.covered * 2,
             initialScale: widget.asset.scale,
@@ -478,12 +481,17 @@ class _AssetThumbnailState extends State<AssetThumbnail> {
         ),
       );
     } else {
-      return Image.memory(
-        widget.cache[widget.asset] ?? imageBytes,
-        width: widget.width?.toDouble() ?? screenWidth / 4.35,
-        height: widget.height?.toDouble() ?? 100,
-        fit: BoxFit.cover,
-      );
+      try {
+        return Image.memory(
+          widget.cache[widget.asset] ?? imageBytes,
+          width: widget.width?.toDouble() ?? screenWidth / 4.35,
+          height: widget.height?.toDouble() ?? 100,
+          fit: BoxFit.cover,
+        );
+      } catch (e) {
+        print("Error creating Image.memory: $e");
+        return Container();
+      }
     }
   }
 
@@ -497,13 +505,27 @@ class _AssetThumbnailState extends State<AssetThumbnail> {
           // widget.asset.originBytes.then((value) {
           widget.cache[widget.asset] = snapshot.data!;
           if (widget.fullResolution) {
-            // setState(() {});
+            final isValid = isValidImageData(snapshot.data!);
+            print("stop");
           }
-          // });
-          return _buildCachedImage(screenWidth, snapshot.data!);
+          try {
+            return _buildCachedImage(screenWidth, snapshot.data!);
+          } catch (e) {
+            print("Error creating Image.memory: $e");
+            return Container();
+          }
         }
         return const Center(child: CircularProgressIndicator());
       },
     );
+  }
+
+  Future<bool> isValidImageData(Uint8List bytes) async {
+    try {
+      final ui.Codec codec = await ui.instantiateImageCodec(bytes);
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 }

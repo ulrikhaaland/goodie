@@ -42,27 +42,31 @@ class RestaurantReviewProvider with ChangeNotifier {
   }
 
   Future<void> loadRecentImages() async {
-    final List<AssetPathEntity> paths =
-        await PhotoManager.getAssetPathList(onlyAll: true);
-    final AssetPathEntity recentPath = paths.first;
-    recentPath.getAssetListRange(start: 0, end: 100).then((value) {
-      recentImages = value
-          .map((e) => GoodieAsset(
-                asset: e,
-              ))
-          .toList();
-      selectedAssetNotifier.value = recentImages.first;
+    try {
+      final List<AssetPathEntity> paths =
+          await PhotoManager.getAssetPathList(onlyAll: true);
+      final AssetPathEntity recentPath = paths.first;
+      recentPath.getAssetListRange(start: 0, end: 100).then((value) {
+        recentImages = value
+            .map((e) => GoodieAsset(
+                  asset: e,
+                ))
+            .toList();
+        selectedAssetNotifier.value = recentImages.first;
 
-      recentImages.forEach((element) async {
-        element.originFile.then((value) {
-          if (value != null) {
-            value.readAsBytes().then((value) {
-              element.byteLength = value.lengthInBytes;
-            });
-          }
+        recentImages.forEach((element) async {
+          element.originFile.then((value) {
+            if (value != null) {
+              value.readAsBytes().then((value) {
+                element.byteLength = value.lengthInBytes;
+              });
+            }
+          });
         });
       });
-    });
+    } catch (e) {
+      print("Error loading recent images: $e");
+    }
   }
 
   Future<void> _handleSelectedRestaurant() async {

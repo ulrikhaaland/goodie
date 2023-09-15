@@ -102,27 +102,25 @@ class _RestaurantReviewPageState extends State<RestaurantReviewPage>
             ),
           ],
         ),
-        if (!isKeyboardVisible(context))
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: ReviewPageButtons(
-              isSubmit: _pageIndex == 2,
-              canSubmit: _pageIndex == 2 ? _canSubmit : true,
-              rightButtonText: _getRightButtonText(),
-              hideLeftButton: _pageIndex == 0,
-              hideRightButton: _pageIndex == 1 &&
-                  (_selectedRestaurant == null ||
-                      hasSelectedRestaurant == false),
-              onLeftPressed: () {
-                _handleOnLeftPressed();
-              },
-              onRightPressed: () {
-                _handleOnRightPressed();
-              },
-            ),
+        Positioned(
+          bottom: 0,
+          left: 0,
+          right: 0,
+          child: ReviewPageButtons(
+            isSubmit: _pageIndex == 2,
+            canSubmit: _pageIndex == 2 ? _canSubmit : true,
+            rightButtonText: _getRightButtonText(),
+            hideLeftButton: _pageIndex == 0,
+            hideRightButton: _pageIndex == 1 &&
+                (_selectedRestaurant == null || hasSelectedRestaurant == false),
+            onLeftPressed: () {
+              _handleOnLeftPressed();
+            },
+            onRightPressed: () {
+              _handleOnRightPressed();
+            },
           ),
+        ),
       ]),
     );
   }
@@ -259,10 +257,6 @@ class _RestaurantReviewPageState extends State<RestaurantReviewPage>
       return "Del";
     }
     return "Neste";
-  }
-
-  bool isKeyboardVisible(BuildContext context) {
-    return MediaQuery.of(context).viewInsets.bottom > 0;
   }
 }
 
