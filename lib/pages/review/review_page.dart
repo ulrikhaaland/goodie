@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:goodie/bloc/restaurants.dart';
 import 'package:goodie/pages/review/review_select_page.dart';
 import 'package:goodie/pages/review/review_page_buttons.dart';
-import 'package:goodie/pages/review/review_photo_page.dart';
+import 'package:goodie/pages/review/photo/review_photo_page.dart';
 import 'package:goodie/pages/review/review_progress_bar.dart';
 import 'package:goodie/pages/review/review_rating_page.dart';
 import 'package:goodie/pages/review/review_summary_page.dart';

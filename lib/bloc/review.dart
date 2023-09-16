@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:exif/exif.dart';
 import 'package:flutter/material.dart';
 import 'package:photo_manager/photo_manager.dart';
+import 'package:video_player/video_player.dart';
 import '../model/restaurant.dart';
 import '../utils/distance.dart';
 import '../utils/image.dart';
@@ -255,10 +256,12 @@ class GoodieAsset extends AssetEntity {
   int? byteLength;
   File? imageFile;
   Restaurant? restaurant;
+  VideoPlayerController? videoPlayerController;
 
   GoodieAsset({
     required this.asset,
     this.imageFile,
+    this.videoPlayerController,
   }) : super(
             id: asset.id,
             typeInt: asset.typeInt,
