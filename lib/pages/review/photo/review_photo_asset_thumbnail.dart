@@ -55,9 +55,12 @@ class _AssetThumbnailState extends State<AssetThumbnail> {
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
 
-    return widget.cache.containsKey(widget.asset)
-        ? _buildCachedImage(screenWidth, widget.cache[widget.asset]!)
-        : _buildFutureImage(screenWidth);
+    return Padding(
+      padding: const EdgeInsets.all(0.5),
+      child: widget.cache.containsKey(widget.asset)
+          ? _buildCachedImage(screenWidth, widget.cache[widget.asset]!)
+          : _buildFutureImage(screenWidth),
+    );
   }
 
   MemoryImage? createMemoryImage(Uint8List data) {
@@ -75,20 +78,16 @@ class _AssetThumbnailState extends State<AssetThumbnail> {
         widget.fullResolution) {
       return GestureDetector(
         onTap: _toggleVideoPlayback,
-        child: SizedBox(
+        child: Container(
           width: widget.width!.toDouble(),
           height: widget.height!.toDouble(),
           child: ClipRect(
             child: Stack(
               children: [
-                FittedBox(
-                  fit: BoxFit.cover,
-                  child: SizedBox(
-                    width: widget.asset.videoPlayerController!.value.size.width,
-                    height:
-                        widget.asset.videoPlayerController!.value.size.height,
-                    child: VideoPlayer(widget.asset.videoPlayerController!),
-                  ),
+                VideoWithScaling(
+                  videoPlayerController: widget.asset.videoPlayerController!,
+                  width: widget.width!.toDouble(),
+                  height: widget.height!.toDouble(),
                 ),
                 if (!widget.asset.videoPlayerController!.value.isPlaying)
                   const Center(
@@ -194,5 +193,83 @@ class _AssetThumbnailState extends State<AssetThumbnail> {
       widget.asset.videoPlayerController!.play();
     }
     setState(() {}); // This will trigger a rebuild to update the UI.
+  }
+}
+
+class VideoWithScaling extends StatefulWidget {
+  final VideoPlayerController videoPlayerController;
+  final double width;
+  final double height;
+
+  const VideoWithScaling({
+    Key? key,
+    required this.videoPlayerController,
+    required this.width,
+    required this.height,
+  }) : super(key: key);
+
+  @override
+  _VideoWithScalingState createState() => _VideoWithScalingState();
+}
+
+class _VideoWithScalingState extends State<VideoWithScaling> {
+  double scale = 1.0;
+  Offset offset = Offset.zero;
+
+  Size getProportionalSize(Size originalSize, Size minSize) {
+    final double originalWidth = originalSize.width;
+    final double originalHeight = originalSize.height;
+    final double minWidth = minSize.width;
+    final double minHeight = minSize.height;
+
+    double width = originalWidth;
+    double height = originalHeight;
+
+    final double widthRatio = minWidth / originalWidth;
+    final double heightRatio = minHeight / originalHeight;
+
+    if (widthRatio > heightRatio) {
+      width = minWidth;
+      height = originalHeight * widthRatio;
+    } else {
+      height = minHeight;
+      width = originalWidth * heightRatio;
+    }
+
+    return Size(width, height);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final videoSize = widget.videoPlayerController.value.size;
+    final scaledSize = getProportionalSize(
+      videoSize,
+      Size(widget.width + 88, widget.height),
+    );
+
+    return GestureDetector(
+      onScaleUpdate: (details) {
+        setState(() {
+          scale = details.scale.clamp(1.0, 3.0); // You can set your own limits
+          offset = details.localFocalPoint;
+        });
+      },
+      child: SizedBox(
+        width: widget.width,
+        height: widget.height,
+        child: OverflowBox(
+          minWidth: 0.0,
+          minHeight: 0.0,
+          maxWidth: scaledSize.width,
+          maxHeight: scaledSize.height,
+          child: Transform(
+            transform: Matrix4.identity()
+              ..translate(offset.dx, offset.dy)
+              ..scale(scale),
+            child: VideoPlayer(widget.videoPlayerController),
+          ),
+        ),
+      ),
+    );
   }
 }
