@@ -38,7 +38,7 @@ class _AssetThumbnailState extends State<AssetThumbnail> {
 
   @override
   void initState() {
-    if (widget.fullResolution) {
+    if (widget.fullResolution && widget.asset.type == AssetType.image) {
       controller = PhotoViewController(
           initialPosition: widget.asset.offset ?? Offset.zero,
           initialScale: widget.asset.scale ?? 1.0);
@@ -132,40 +132,21 @@ class _AssetThumbnailState extends State<AssetThumbnail> {
 
   Widget _buildFutureImage(double screenWidth) {
     if (widget.asset.type == AssetType.video) {
-      return FutureBuilder<File?>(
-        future: widget.asset.file,
-        builder: (context, fileSnapshot) {
-          if (fileSnapshot.connectionState == ConnectionState.done &&
-              fileSnapshot.data != null) {
-            widget.asset.videoPlayerController ??=
-                VideoPlayerController.file(fileSnapshot.data!)
-                  ..initialize().then((_) {
-                    if (mounted) setState(() {});
-                  });
-            return FutureBuilder<Uint8List?>(
-              future: VideoThumbnail.thumbnailData(
-                video: fileSnapshot.data!.path,
-                imageFormat: ImageFormat.JPEG,
-                maxWidth: (widget.width?.toInt() ?? screenWidth.toInt()),
-                maxHeight:
-                    (widget.height?.toInt() ?? screenWidth * 0.75).toInt(),
-                quality: 100,
-              ),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.done &&
-                    snapshot.data != null) {
-                  widget.cache[widget.asset] = snapshot.data!;
-                  return _buildCachedImage(screenWidth, snapshot.data!);
-                } else {
-                  return const Center(child: CircularProgressIndicator());
-                }
-              },
-            );
-          } else {
-            return const Center(child: CircularProgressIndicator());
-          }
-        },
-      );
+      if (widget.asset.imageFile != null) {
+        return buildVideoView(widget.asset.imageFile!, screenWidth);
+      } else {
+        return FutureBuilder<File?>(
+          future: widget.asset.file,
+          builder: (context, fileSnapshot) {
+            if (fileSnapshot.connectionState == ConnectionState.done &&
+                fileSnapshot.data != null) {
+              return buildVideoView(fileSnapshot.data!, screenWidth);
+            } else {
+              return const Center(child: CircularProgressIndicator());
+            }
+          },
+        );
+      }
     } else {
       return FutureBuilder<Uint8List?>(
         future:
@@ -180,5 +161,30 @@ class _AssetThumbnailState extends State<AssetThumbnail> {
         },
       );
     }
+  }
+
+  Widget buildVideoView(File file, double screenWidth) {
+    widget.asset.videoPlayerController ??= VideoPlayerController.file(file)
+      ..initialize().then((_) {
+        if (mounted) setState(() {});
+      });
+    return FutureBuilder<Uint8List?>(
+      future: VideoThumbnail.thumbnailData(
+        video: file.path,
+        imageFormat: ImageFormat.JPEG,
+        maxWidth: (widget.width?.toInt() ?? screenWidth.toInt()),
+        maxHeight: (widget.height?.toInt() ?? screenWidth * 0.75).toInt(),
+        quality: 100,
+      ),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.done &&
+            snapshot.data != null) {
+          widget.cache[widget.asset] = snapshot.data!;
+          return _buildCachedImage(screenWidth, snapshot.data!);
+        } else {
+          return const Center(child: CircularProgressIndicator());
+        }
+      },
+    );
   }
 }

@@ -304,9 +304,28 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
   }
 
   GoodieAsset xFileToAssetEntity(XFile file) {
+    String filePath = file.path;
+    String fileExtension = filePath.split('.').last;
+
+    AssetType assetType;
+
+    // List of video extensions can be extended as needed
+    if (['mov', 'mp4', 'avi'].contains(fileExtension.toLowerCase())) {
+      assetType = AssetType.video;
+    }
+    // List of image extensions can be extended as needed
+    else if (['jpg', 'jpeg', 'png', 'gif']
+        .contains(fileExtension.toLowerCase())) {
+      assetType = AssetType.image;
+    } else {
+      assetType = AssetType.other; // Handle other types as you see fit
+    }
+
     AssetEntity asset = AssetEntity(
         id: file.name,
-        typeInt: 1,
+        typeInt: assetType == AssetType.video
+            ? 2
+            : 1, // Assuming 1 is for images, 2 is for videos in your enum
         width: 1,
         height: 1,
         relativePath: file.path);
