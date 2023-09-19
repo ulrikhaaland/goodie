@@ -230,10 +230,7 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
           _selectedAssetNotifier.value = asset;
         });
         if (asset.type == AssetType.video &&
-            asset.videoPlayerController != null) {
-          await asset.videoPlayerController!.initialize();
-          asset.videoPlayerController!.play();
-        }
+            asset.videoPlayerController != null) {}
 
         return;
       }
@@ -254,10 +251,7 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
     _selectedAssetsNotifier.value =
         List.from(_selectedAssetsNotifier.value); // to trigger a rebuild
 
-    if (asset.type == AssetType.video && asset.videoPlayerController != null) {
-      await asset.videoPlayerController!.initialize();
-      asset.videoPlayerController!.play();
-    }
+    if (asset.type == AssetType.video && asset.videoPlayerController != null) {}
   }
 
   Widget _buildPickImage() {

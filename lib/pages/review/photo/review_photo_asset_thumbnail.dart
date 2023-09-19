@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter_video_view/flutter_video_view.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:video_player/video_player.dart';
@@ -63,37 +64,32 @@ class _AssetThumbnailState extends State<AssetThumbnail> {
     );
   }
 
-  MemoryImage? createMemoryImage(Uint8List data) {
-    try {
-      return MemoryImage(data);
-    } catch (e) {
-      print("Error creating MemoryImage: $e");
-      return null;
-    }
-  }
-
   Widget _buildCachedImage(double screenWidth, Uint8List imageBytes) {
     if (widget.asset.type == AssetType.video &&
         widget.asset.videoPlayerController != null &&
         widget.fullResolution) {
-      return GestureDetector(
-        onTap: _toggleVideoPlayback,
-        child: Container(
-          width: widget.width!.toDouble(),
-          height: widget.height!.toDouble(),
-          child: ClipRect(
-            child: Stack(
-              children: [
-                VideoWithScaling(
-                  videoPlayerController: widget.asset.videoPlayerController!,
-                  width: widget.width!.toDouble(),
-                  height: widget.height!.toDouble(),
-                ),
-                if (!widget.asset.videoPlayerController!.value.isPlaying)
-                  const Center(
-                    child: Icon(Icons.play_circle_fill,
-                        color: Colors.white, size: 50),
-                  ),
+      return SizedBox(
+        width: widget.width!.toDouble(),
+        height: widget.height!.toDouble(),
+        child: VideoView(
+          controller: VideoController(
+            videoPlayerController: widget.asset.videoPlayerController!,
+            videoConfig: VideoConfig(
+              width: widget.width!.toDouble() + 100,
+              height: widget.height!.toDouble() + 20,
+              canChangeVolumeOrBrightness: false,
+              useRootNavigator: false,
+              panEnabled: true,
+              scaleEnabled: true,
+              volume: 0.3,
+              canBack: false,
+              minScale: 2.0,
+              autoPlay: true,
+              showControls: (context, isFullScreen) => false,
+              aspectRatio:
+                  widget.asset.videoPlayerController!.value.aspectRatio,
+              topActionsBuilder: (context, isFullScreen) => [
+                const SizedBox(),
               ],
             ),
           ),
@@ -108,7 +104,7 @@ class _AssetThumbnailState extends State<AssetThumbnail> {
             child: PhotoView(
               key: Key(widget.asset.id),
               controller: controller!,
-              imageProvider: createMemoryImage(imageBytes),
+              imageProvider: MemoryImage(imageBytes),
               minScale: PhotoViewComputedScale.covered,
               maxScale: PhotoViewComputedScale.covered * 2,
               initialScale: widget.asset.scale,
@@ -184,92 +180,5 @@ class _AssetThumbnailState extends State<AssetThumbnail> {
         },
       );
     }
-  }
-
-  void _toggleVideoPlayback() {
-    if (widget.asset.videoPlayerController!.value.isPlaying) {
-      widget.asset.videoPlayerController!.pause();
-    } else {
-      widget.asset.videoPlayerController!.play();
-    }
-    setState(() {}); // This will trigger a rebuild to update the UI.
-  }
-}
-
-class VideoWithScaling extends StatefulWidget {
-  final VideoPlayerController videoPlayerController;
-  final double width;
-  final double height;
-
-  const VideoWithScaling({
-    Key? key,
-    required this.videoPlayerController,
-    required this.width,
-    required this.height,
-  }) : super(key: key);
-
-  @override
-  _VideoWithScalingState createState() => _VideoWithScalingState();
-}
-
-class _VideoWithScalingState extends State<VideoWithScaling> {
-  double scale = 1.0;
-  Offset offset = Offset.zero;
-
-  Size getProportionalSize(Size originalSize, Size minSize) {
-    final double originalWidth = originalSize.width;
-    final double originalHeight = originalSize.height;
-    final double minWidth = minSize.width;
-    final double minHeight = minSize.height;
-
-    double width = originalWidth;
-    double height = originalHeight;
-
-    final double widthRatio = minWidth / originalWidth;
-    final double heightRatio = minHeight / originalHeight;
-
-    if (widthRatio > heightRatio) {
-      width = minWidth;
-      height = originalHeight * widthRatio;
-    } else {
-      height = minHeight;
-      width = originalWidth * heightRatio;
-    }
-
-    return Size(width, height);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final videoSize = widget.videoPlayerController.value.size;
-    final scaledSize = getProportionalSize(
-      videoSize,
-      Size(widget.width + 88, widget.height),
-    );
-
-    return GestureDetector(
-      onScaleUpdate: (details) {
-        setState(() {
-          scale = details.scale.clamp(1.0, 3.0); // You can set your own limits
-          offset = details.localFocalPoint;
-        });
-      },
-      child: SizedBox(
-        width: widget.width,
-        height: widget.height,
-        child: OverflowBox(
-          minWidth: 0.0,
-          minHeight: 0.0,
-          maxWidth: scaledSize.width,
-          maxHeight: scaledSize.height,
-          child: Transform(
-            transform: Matrix4.identity()
-              ..translate(offset.dx, offset.dy)
-              ..scale(scale),
-            child: VideoPlayer(widget.videoPlayerController),
-          ),
-        ),
-      ),
-    );
   }
 }
