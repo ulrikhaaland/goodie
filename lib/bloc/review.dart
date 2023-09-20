@@ -83,7 +83,7 @@ class RestaurantReviewProvider with ChangeNotifier {
     Map<DateTime, int> dateCounts = {};
     DateTime? mostCommonDate;
 
-    for (var asset
+    for (GoodieAsset asset
         in assetsCopy.where((element) => element.restaurant == null)) {
       final assetss = asset;
       final image = assetss.imageFile ?? await assetss.file;
@@ -106,7 +106,7 @@ class RestaurantReviewProvider with ChangeNotifier {
         });
       }
 
-      DateTime? date = data?['date'];
+      DateTime? date = data?['date'] ?? asset.asset.createDateTime;
       if (date != null) {
         // Check if the date is within the last 24 months
         if (date.isAfter(DateTime.now().subtract(const Duration(days: 730)))) {
