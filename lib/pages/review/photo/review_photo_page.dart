@@ -260,14 +260,13 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
         final List<XFile> pickedFiles = await ImagePicker().pickMultipleMedia();
         if (pickedFiles.isNotEmpty) {
           for (var file in pickedFiles) {
-            final Uint8List pickedImageDataTemp = await file.readAsBytes();
-
-            final byteLength = pickedImageDataTemp.lengthInBytes;
+            print(_recentImages[4].asset.title);
 
             GoodieAsset? asset;
 
             asset = _recentImages.firstWhereOrNull((element) =>
-                element.byteLength != null && element.byteLength == byteLength);
+                element.asset.title != null &&
+                element.asset.title == file.name);
 
             bool isRecent = asset != null;
 
@@ -275,7 +274,7 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
               asset = xFileToAssetEntity(file);
             } else {
               final isSelected = _selectedAssetsNotifier.value.firstWhereOrNull(
-                    (element) => element.byteLength == byteLength,
+                    (element) => element.asset.title == file.name,
                   ) !=
                   null;
 

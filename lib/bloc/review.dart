@@ -44,8 +44,8 @@ class RestaurantReviewProvider with ChangeNotifier {
 
   Future<void> loadRecentImages() async {
     try {
-      final List<AssetPathEntity> paths =
-          await PhotoManager.getAssetPathList(onlyAll: true);
+      final List<AssetPathEntity> paths = await PhotoManager.getAssetPathList(
+          onlyAll: true, pathFilterOption: PMPathFilter());
       final AssetPathEntity recentPath = paths.first;
       recentPath.getAssetListRange(start: 0, end: 100).then((value) {
         recentImages = value
@@ -263,8 +263,10 @@ class GoodieAsset extends AssetEntity {
     this.imageFile,
     this.videoPlayerController,
   }) : super(
-            id: asset.id,
-            typeInt: asset.typeInt,
-            width: asset.width,
-            height: asset.height);
+          id: asset.id,
+          typeInt: asset.typeInt,
+          width: asset.width,
+          height: asset.height,
+          duration: asset.duration,
+        );
 }
