@@ -72,7 +72,7 @@ class _RestaurantReviewPageState extends State<RestaurantReviewPage>
           physics: const NeverScrollableScrollPhysics(),
           children: [
             RestaurantReviewPhotoPage(
-              key: Key(_selectedRestaurant?.id ?? "picker"),
+              key: const Key("picker"),
               restaurantListItem: _buildRestaurantListItem(context),
               reviewProvider: _reviewProvider,
             ),
@@ -92,7 +92,7 @@ class _RestaurantReviewPageState extends State<RestaurantReviewPage>
               onCanSubmit: (canSubmit) {
                 _handleOnCanSubmit(canSubmit);
               },
-              review: _reviewProvider.getReview(),
+              review: _reviewProvider.review,
               listItem: _buildRestaurantListItem(context),
             ),
             RestaurantReviewSummaryPage(

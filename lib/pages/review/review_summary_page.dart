@@ -29,7 +29,7 @@ class _RestaurantReviewSummaryPageState
 
   RestaurantReviewProvider get provider => widget.reviewProvider;
 
-  RestaurantReview get review => provider.getReview()!;
+  RestaurantReview get review => provider.review;
 
   @override
   void initState() {

@@ -4,15 +4,20 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:exif/exif.dart';
 import 'package:flutter/material.dart';
 import 'package:photo_manager/photo_manager.dart';
+// ignore: depend_on_referenced_packages
 import 'package:video_player/video_player.dart';
 import '../model/restaurant.dart';
 import '../utils/distance.dart';
 import '../utils/image.dart';
 
 class RestaurantReviewProvider with ChangeNotifier {
-  Restaurant? selectedRestaurant;
+  Restaurant? _selectedRestaurant;
   List<Restaurant> restaurants = [];
-  RestaurantReview? review;
+  RestaurantReview review = RestaurantReview(
+    restaurantId: "",
+    userId: "test",
+    dineIn: true,
+  );
   List<GoodieAsset> recentImages = [];
   final ValueNotifier<List<GoodieAsset>> selectedAssetsNotifier =
       ValueNotifier<List<GoodieAsset>>([]);
@@ -26,26 +31,23 @@ class RestaurantReviewProvider with ChangeNotifier {
     });
   }
 
-  RestaurantReview? getReview() {
-    if (selectedRestaurant == null) {
-      return null;
-    } else if (review != null) {
-      return review!;
-    } else {
-      review = RestaurantReview(
-        restaurantId: selectedRestaurant!.id,
-        userId: "test",
-        images: [],
-        dineIn: true,
-      );
-      return review;
-    }
+  set selectedRestaurant(Restaurant? restaurant) {
+    _selectedRestaurant = restaurant;
+
+    review = RestaurantReview(
+      restaurantId: selectedRestaurant!.id,
+      userId: "test",
+      dineIn: true,
+      timestamp: review.timestamp,
+    );
   }
+
+  Restaurant? get selectedRestaurant => _selectedRestaurant;
 
   Future<void> loadRecentImages() async {
     try {
-      final List<AssetPathEntity> paths = await PhotoManager.getAssetPathList(
-          onlyAll: true, pathFilterOption: PMPathFilter());
+      final List<AssetPathEntity> paths =
+          await PhotoManager.getAssetPathList(onlyAll: true);
       final AssetPathEntity recentPath = paths.first;
       recentPath.getAssetListRange(start: 0, end: 100).then((value) {
         recentImages = value
@@ -195,11 +197,6 @@ class RestaurantReviewProvider with ChangeNotifier {
   }
 
   void onShareReview() async {
-    if (review == null) {
-      print("Review is null. Cannot upload to Firestore.");
-      return;
-    }
-
     List<String> imageUrls = [];
 
     // Upload images to Firebase Storage from selectedAssetsNotifier
@@ -209,7 +206,7 @@ class RestaurantReviewProvider with ChangeNotifier {
 
       // Generate a unique path for the image
       String path =
-          'reviews/${review!.restaurantId}/${DateTime.now().millisecondsSinceEpoch}.jpg';
+          'reviews/${review.restaurantId}/${DateTime.now().millisecondsSinceEpoch}.jpg';
 
       // Upload the image and get the download URL
       String imageUrl = await uploadImageToFirebaseStorage(imageFile, path);
@@ -218,31 +215,37 @@ class RestaurantReviewProvider with ChangeNotifier {
 
     // Convert the RestaurantReview object to a Map
     Map<String, dynamic> reviewMap = {
-      'restaurantId': review!.restaurantId,
-      'userId': review!.userId,
-      'dineIn': review!.dineIn,
-      'ratingFood': review!.ratingFood,
-      'ratingService': review!.ratingService,
-      'ratingPrice': review!.ratingPrice,
-      'ratingAtmosphere': review!.ratingAtmosphere,
-      'ratingCleanliness': review!.ratingCleanliness,
-      'ratingPackaging': review!.ratingPackaging,
-      'ratingOverall': review!.ratingOverall,
-      'description': review!.description,
-      'timestamp': review!.timestamp,
+      'restaurantId': review.restaurantId,
+      'userId': review.userId,
+      'dineIn': review.dineIn,
+      'ratingFood': review.ratingFood,
+      'ratingService': review.ratingService,
+      'ratingPrice': review.ratingPrice,
+      'ratingAtmosphere': review.ratingAtmosphere,
+      'ratingCleanliness': review.ratingCleanliness,
+      'ratingPackaging': review.ratingPackaging,
+      'ratingOverall': review.ratingOverall,
+      'description': review.description,
+      'timestamp': review.timestamp,
       'images': imageUrls, // Store the image URLs in the review document
     };
 
     // Upload to Firestore
     CollectionReference reviews =
         FirebaseFirestore.instance.collection('reviews');
-    if (review!.id == null) {
+    if (review.id == null) {
       // If the review doesn't have an ID, add a new document
       await reviews.add(reviewMap);
     } else {
       // If the review has an ID, update the existing document
-      await reviews.doc(review!.id).set(reviewMap);
+      await reviews.doc(review.id).set(reviewMap);
     }
+
+    review = RestaurantReview(
+      restaurantId: "",
+      userId: "test",
+      dineIn: true,
+    );
 
     print("Review and images uploaded to Firestore and Firebase Storage.");
   }
