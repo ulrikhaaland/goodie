@@ -7,11 +7,7 @@ class LocationProvider with ChangeNotifier {
 
   LocationData? get currentLocation => _currentLocation;
 
-  LocationProvider() {
-    _initializeLocation();
-  }
-
-  Future<void> _initializeLocation() async {
+  Future<void> initializeLocation() async {
     bool serviceEnabled;
     PermissionStatus permissionGranted;
 

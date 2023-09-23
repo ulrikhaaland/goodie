@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../bloc/auth.dart';
 import '../../model/restaurant.dart';
+import '../../utils/rating.dart';
 import 'review_rate.dart';
 
 class RestaurantReviewRatingPage extends StatefulWidget {
@@ -124,28 +125,51 @@ class _RestaurantReviewReviewState extends State<RestaurantReviewRatingPage> {
     num? currentRating,
     bool isTotal = false,
   }) {
-    return Column(
-      children: [
-        Align(
-            alignment: Alignment.topLeft,
-            child: Text(
-              label,
-              style: TextStyle(
-                fontSize: isTotal ? 20 : 16,
-                fontWeight: FontWeight.w500,
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Align(
+                      alignment: Alignment.topLeft,
+                      child: Text(
+                        "$label:",
+                        style: TextStyle(
+                          fontSize: isTotal ? 20 : 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      )),
+                  Text(
+                    ' ' +
+                        (getRatingData(
+                                currentRating?.toDouble())['description'] ??
+                            ''),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.normal,
+                      color: Colors.grey, // Use our textColor
+                    ),
+                  ),
+                ],
               ),
-            )),
-        const SizedBox(height: 16),
-        RatingWidget(
-          key: Key(label),
-          rating: currentRating,
-          onRatingSelected: (selectedRating) {
-            onRatingChanged(selectedRating.toDouble());
-          },
-          isTotalRating: isTotal,
-        ),
-        const SizedBox(height: 20),
-      ],
+              RatingWidget(
+                key: Key(label),
+                rating: currentRating,
+                onRatingSelected: (selectedRating) {
+                  onRatingChanged(selectedRating.toDouble());
+                },
+                isTotalRating: isTotal,
+              ),
+            ],
+          ),
+          const Divider(),
+        ],
+      ),
     );
   }
 

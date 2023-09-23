@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../main.dart';
+import '../../utils/rating.dart';
 
 class RatingWidget extends StatelessWidget {
   final num? rating;
@@ -15,25 +16,13 @@ class RatingWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-      children: [
-        Row(
-          children: List.generate(
-            5,
-            (index) => Padding(
-              padding: const EdgeInsets.only(left: 2.0),
-              child: _buildCircle(index + 1),
-            ),
-          ),
+      children: List.generate(
+        5,
+        (index) => Padding(
+          padding: const EdgeInsets.only(left: 2.0),
+          child: _buildCircle(index + 1),
         ),
-        const SizedBox(width: 8),
-        Text(
-          (_getRatingData(rating?.toDouble())['description'] ?? ''),
-          style: const TextStyle(
-            fontWeight: FontWeight.normal,
-            color: textColor, // Use our textColor
-          ),
-        )
-      ],
+      ),
     );
   }
 
@@ -76,7 +65,7 @@ class RatingWidget extends StatelessWidget {
         child: isSelected
             ? Center(
                 child: Icon(
-                  _getRatingData(circleRating.toDouble())['icon'],
+                  getRatingData(circleRating.toDouble())['icon'],
                   color: Colors.white,
                   size: isTotalRating ? 20 : 15, // Adjust icon size
                 ),
@@ -84,29 +73,5 @@ class RatingWidget extends StatelessWidget {
             : null,
       ),
     );
-  }
-
-  Map<String, dynamic> _getRatingData(num? rating) {
-    if (rating == null) {
-      return {}; // Empty map for null rating
-    }
-
-    if (rating < 2) {
-      return {
-        'description': 'Dårlig',
-        'icon': Icons.sentiment_very_dissatisfied_sharp
-      };
-    } else if (rating < 3) {
-      return {'description': 'Meh', 'icon': Icons.sentiment_dissatisfied_sharp};
-    } else if (rating < 4) {
-      return {'description': 'Ok', 'icon': Icons.sentiment_neutral_rounded};
-    } else if (rating < 5) {
-      return {'description': 'Bra', 'icon': Icons.sentiment_satisfied_sharp};
-    } else {
-      return {
-        'description': 'Fantastisk',
-        'icon': Icons.sentiment_very_satisfied_sharp
-      };
-    }
   }
 }

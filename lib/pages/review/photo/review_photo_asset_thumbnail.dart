@@ -68,35 +68,23 @@ class _AssetThumbnailState extends State<AssetThumbnail> {
     if (widget.asset.type == AssetType.video &&
         widget.asset.videoPlayerController != null &&
         widget.fullResolution) {
-      return SizedBox(
-        width: widget.width!.toDouble(),
-        height: widget.height!.toDouble(),
-        child: VideoView(
-          controller: VideoController(
-            videoPlayerController: widget.asset.videoPlayerController!,
-            videoConfig: VideoConfig(
-              width: widget.width!.toDouble() + 100,
-              height: widget.height!.toDouble() + 20,
-              canChangeVolumeOrBrightness: false,
-              useRootNavigator: false,
-              panEnabled: true,
-              scaleEnabled: true,
-              volume: 0.3,
-              canBack: false,
-              minScale: 2.0,
-              autoPlay: true,
-              showControls: (context, isFullScreen) => false,
-              aspectRatio:
-                  widget.asset.videoPlayerController!.value.aspectRatio,
-              topActionsBuilder: (context, isFullScreen) => [
-                const SizedBox(),
-              ],
+      return ClipRect(
+        child: OverflowBox(
+          maxWidth: widget.width!.toDouble() * 1.63, // 1.5 is the zoom factor
+          child: Transform.scale(
+            scale: 1.63, // 1.5 is the zoom factor
+            child: VideoView(
+              key: Key(widget.asset.id),
+              controller: widget.asset.videoPlayerController!,
             ),
           ),
         ),
       );
     } else {
       if (widget.fullResolution) {
+        final maxScale = PhotoViewComputedScale.covered * 2;
+        const minScale = PhotoViewComputedScale.covered;
+
         return SizedBox(
           width: widget.width!.toDouble(),
           height: widget.height!.toDouble(),
@@ -105,8 +93,8 @@ class _AssetThumbnailState extends State<AssetThumbnail> {
               key: Key(widget.asset.id),
               controller: controller!,
               imageProvider: MemoryImage(imageBytes),
-              minScale: PhotoViewComputedScale.covered,
-              maxScale: PhotoViewComputedScale.covered * 2,
+              minScale: minScale,
+              maxScale: maxScale,
               initialScale: widget.asset.scale,
               backgroundDecoration: const BoxDecoration(
                 color: Colors.transparent,
@@ -164,10 +152,6 @@ class _AssetThumbnailState extends State<AssetThumbnail> {
   }
 
   Widget buildVideoView(File file, double screenWidth) {
-    widget.asset.videoPlayerController ??= VideoPlayerController.file(file)
-      ..initialize().then((_) {
-        if (mounted) setState(() {});
-      });
     return FutureBuilder<Uint8List?>(
       future: VideoThumbnail.thumbnailData(
         video: file.path,
@@ -185,6 +169,50 @@ class _AssetThumbnailState extends State<AssetThumbnail> {
           return const Center(child: CircularProgressIndicator());
         }
       },
+    );
+  }
+}
+
+class VideoWithPanAndZoom extends StatefulWidget {
+  final Widget videoView; // Replace this with your VideoView widget
+
+  VideoWithPanAndZoom({required this.videoView});
+
+  @override
+  _VideoWithPanAndZoomState createState() => _VideoWithPanAndZoomState();
+}
+
+class _VideoWithPanAndZoomState extends State<VideoWithPanAndZoom> {
+  Offset offset = Offset.zero;
+  double scale = 1.0;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        Transform(
+          transform: Matrix4.identity()
+            ..translate(offset.dx, offset.dy)
+            ..scale(scale),
+          child: widget.videoView,
+        ),
+        Positioned.fill(
+          child: GestureDetector(
+            onScaleUpdate: (details) {
+              setState(() {
+                scale = scale * details.scale;
+                scale = scale.clamp(
+                    1.0, 2.0); // Replace with your min and max scale
+
+                // Update the offset for panning
+                offset = offset +
+                    details.focalPoint -
+                    Offset(context.size!.width / 2, context.size!.height / 2);
+              });
+            },
+          ),
+        ),
+      ],
     );
   }
 }

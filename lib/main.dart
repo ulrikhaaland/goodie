@@ -18,7 +18,6 @@ void main() async {
   final authProvider = AuthProvider(); // Create instance
   final restaurantProvider = RestaurantProvider(); // Create instance
   final filterProvider = FilterProvider();
-  final locationProvider = LocationProvider();
 
   // Move restaurant fetching to a method that can be called on auth changes.
   void fetchRestaurants() async {
@@ -46,11 +45,8 @@ void main() async {
         ChangeNotifierProvider.value(
           value: filterProvider,
         ),
-        ChangeNotifierProvider.value(
-          value: locationProvider,
-        )
       ],
-      child: const MainApp(),
+      child: MainApp(authProvider: authProvider),
     ),
   );
 }
@@ -63,13 +59,39 @@ const bgColor = Color(0xFFFFF2F2); // Very light shade for background
 const textColor = Color(0xFF7B3F3F); // Dark shade for text
 const highlightColor = Color(0xFFFFB9B9); // Pastel shade for highlights
 
-class MainApp extends StatelessWidget {
-  const MainApp({super.key});
+class MainApp extends StatefulWidget {
+  final AuthProvider authProvider;
+
+  const MainApp({super.key, required this.authProvider});
+
+  @override
+  State<MainApp> createState() => _MainAppState();
+}
+
+class _MainAppState extends State<MainApp> {
+  LocationProvider? _locationProvider;
+  bool loggedIn = false;
+
+  @override
+  void initState() {
+    if (widget.authProvider.firebaseUser != null) {
+      _locationProvider = LocationProvider();
+      _locationProvider!.initializeLocation();
+      loggedIn = true;
+    } else {
+      widget.authProvider.addListener(_handleOnLogin);
+    }
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    widget.authProvider.removeListener(_handleOnLogin);
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final authProvider = Provider.of<AuthProvider>(context);
-
     // Create a custom theme using the defined colors
     final customTheme = ThemeData(
       primaryColor: primaryColor,
@@ -91,10 +113,22 @@ class MainApp extends StatelessWidget {
 
     return MaterialApp(
       theme: customTheme,
-      home: authProvider.firebaseUser != null
-          ? const HomeWithBottomNavigation()
+      home: loggedIn
+          ? ChangeNotifierProvider.value(
+              value: _locationProvider!,
+              child: const HomeWithBottomNavigation())
           : const LoginPage(),
     );
+  }
+
+  _handleOnLogin() async {
+    if (widget.authProvider.firebaseUser != null) {
+      _locationProvider = LocationProvider();
+      await _locationProvider!.initializeLocation();
+      setState(() {
+        loggedIn = true;
+      });
+    }
   }
 }
 

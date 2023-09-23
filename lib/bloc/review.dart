@@ -3,12 +3,32 @@ import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:exif/exif.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_video_view/flutter_video_view.dart';
 import 'package:photo_manager/photo_manager.dart';
 // ignore: depend_on_referenced_packages
-import 'package:video_player/video_player.dart';
 import '../model/restaurant.dart';
 import '../utils/distance.dart';
 import '../utils/image.dart';
+
+final _videoConfig = VideoConfig(
+  autoInitialize: true,
+  canChangeVolumeOrBrightness: false,
+  useRootNavigator: false,
+  panEnabled: true,
+  scaleEnabled: true,
+  volume: 0.3,
+  minScale: 1,
+  maxScale: 3,
+  // canBack: false,
+  canChangeProgress: false,
+  // // autoPlay: true,
+  // showControls: (context, isFullScreen) => false,
+  // aspectRatio:
+  //     widget.asset.videoPlayerController!.value.aspectRatio,
+  // topActionsBuilder: (context, isFullScreen) => [
+  //   const SizedBox(),
+  // ],
+);
 
 class RestaurantReviewProvider with ChangeNotifier {
   Restaurant? _selectedRestaurant;
@@ -57,13 +77,15 @@ class RestaurantReviewProvider with ChangeNotifier {
             .toList();
         selectedAssetNotifier.value = recentImages.first;
 
-        recentImages.forEach((element) async {
-          element.originFile.then((value) {
-            if (value != null) {
-              value.readAsBytes().then((value) {
-                element.byteLength = value.lengthInBytes;
-              });
-            }
+        recentImages
+            .where((media) => media.asset.type == AssetType.video)
+            .forEach((video) async {
+          video.originFile.then((value) {
+            video.videoPlayerController = VideoController(
+              videoPlayerController: VideoPlayerController.file(value!),
+              videoConfig: _videoConfig,
+            );
+            video.videoPlayerController!.initialize();
           });
         });
       });
@@ -135,7 +157,7 @@ class RestaurantReviewProvider with ChangeNotifier {
     }
 
     if (mostCommonDate != null) {
-      review!.timestamp = mostCommonDate;
+      review.timestamp = mostCommonDate;
     }
   }
 
@@ -256,10 +278,9 @@ class GoodieAsset extends AssetEntity {
   AssetEntity asset;
   double? scale;
   Offset? offset;
-  int? byteLength;
   File? imageFile;
   Restaurant? restaurant;
-  VideoPlayerController? videoPlayerController;
+  VideoController? videoPlayerController;
 
   GoodieAsset({
     required this.asset,

@@ -9,7 +9,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:photo_manager/photo_manager.dart';
 // ignore: depend_on_referenced_packages
 import 'package:collection/collection.dart';
-import 'package:video_player/video_player.dart';
 import '../../../bloc/review.dart';
 
 // ignore: must_be_immutable
@@ -116,38 +115,26 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
                   builder: (context, selectedAsset, child) {
                     if (selectedAsset == null) return const SizedBox.shrink();
 
-                    if (selectedAsset.type == AssetType.video &&
-                        selectedAsset.videoPlayerController != null) {
-                      return AssetThumbnail(
+                    return Listener(
+                      onPointerDown: (_) {
+                        setState(() {
+                          _scrollable = false;
+                        });
+                      },
+                      onPointerUp: (_) {
+                        setState(() {
+                          _scrollable = true;
+                        });
+                      },
+                      child: AssetThumbnail(
                         key: Key("${selectedAsset.id}full"),
                         asset: selectedAsset,
                         width: selectedAssetWidth,
                         height: selectedAssetHeight,
                         cache: _thumbnailCache,
                         fullResolution: true,
-                      );
-                    } else {
-                      return Listener(
-                        onPointerDown: (_) {
-                          setState(() {
-                            _scrollable = false;
-                          });
-                        },
-                        onPointerUp: (_) {
-                          setState(() {
-                            _scrollable = true;
-                          });
-                        },
-                        child: AssetThumbnail(
-                          key: Key("${selectedAsset.id}full"),
-                          asset: selectedAsset,
-                          width: selectedAssetWidth,
-                          height: selectedAssetHeight,
-                          cache: _thumbnailCache,
-                          fullResolution: true,
-                        ),
-                      );
-                    }
+                      ),
+                    );
                   },
                 ),
               ),
@@ -229,8 +216,6 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
         setState(() {
           _selectedAssetNotifier.value = asset;
         });
-        if (asset.type == AssetType.video &&
-            asset.videoPlayerController != null) {}
 
         return;
       }
@@ -250,8 +235,6 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
 
     _selectedAssetsNotifier.value =
         List.from(_selectedAssetsNotifier.value); // to trigger a rebuild
-
-    if (asset.type == AssetType.video && asset.videoPlayerController != null) {}
   }
 
   Widget _buildPickImage() {
@@ -260,8 +243,6 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
         final List<XFile> pickedFiles = await ImagePicker().pickMultipleMedia();
         if (pickedFiles.isNotEmpty) {
           for (var file in pickedFiles) {
-            print(_recentImages[4].asset.title);
-
             GoodieAsset? asset;
 
             asset = _recentImages.firstWhereOrNull((element) =>
