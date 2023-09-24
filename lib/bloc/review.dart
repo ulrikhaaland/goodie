@@ -219,55 +219,62 @@ class RestaurantReviewProvider with ChangeNotifier {
   }
 
   void onShareReview() async {
-    List<String> imageUrls = [];
-
-    // Upload images to Firebase Storage from selectedAssetsNotifier
-    for (GoodieAsset asset in selectedAssetsNotifier.value) {
-      // Get the File from the GoodieAsset
-      File imageFile = (asset.imageFile ?? await asset.asset.file)!;
-
-      // Generate a unique path for the image
-      String path =
-          'reviews/${review.restaurantId}/${DateTime.now().millisecondsSinceEpoch}.jpg';
-
-      // Upload the image and get the download URL
-      String imageUrl = await uploadImageToFirebaseStorage(imageFile, path);
-      imageUrls.add(imageUrl);
-    }
-
-    // Convert the RestaurantReview object to a Map
-    Map<String, dynamic> reviewMap = {
-      'restaurantId': review.restaurantId,
-      'userId': review.userId,
-      'dineIn': review.dineIn,
-      'ratingFood': review.ratingFood,
-      'ratingService': review.ratingService,
-      'ratingPrice': review.ratingPrice,
-      'ratingAtmosphere': review.ratingAtmosphere,
-      'ratingCleanliness': review.ratingCleanliness,
-      'ratingPackaging': review.ratingPackaging,
-      'ratingOverall': review.ratingOverall,
-      'description': review.description,
-      'timestamp': review.timestamp,
-      'images': imageUrls, // Store the image URLs in the review document
-    };
-
-    // Upload to Firestore
-    CollectionReference reviews =
-        FirebaseFirestore.instance.collection('reviews');
-    if (review.id == null) {
-      // If the review doesn't have an ID, add a new document
-      await reviews.add(reviewMap);
-    } else {
-      // If the review has an ID, update the existing document
-      await reviews.doc(review.id).set(reviewMap);
-    }
-
+    RestaurantReview shareReview = review;
+    // reset assets
+    selectedAssetsNotifier.value = [];
+    selectedAssetNotifier.value = recentImages.first;
     review = RestaurantReview(
       restaurantId: "",
       userId: "test",
       dineIn: true,
     );
+
+    List<String> assetUrls = [];
+
+    // Upload assets to Firebase Storage from selectedAssetsNotifier
+    for (GoodieAsset asset in selectedAssetsNotifier.value) {
+      // Get the File from the GoodieAsset
+      File assetFile = (asset.imageFile ?? await asset.asset.file)!;
+
+      // Determine the file extension
+      String fileExtension = asset.type == AssetType.video ? '.mp4' : '.jpg';
+
+      // Generate a unique path for the asset
+      String path =
+          'reviews/${shareReview.restaurantId}/${DateTime.now().millisecondsSinceEpoch}$fileExtension';
+
+      // Upload the asset and get the download URL
+      String assetUrl = await uploadAssetToFirebaseStorage(assetFile, path);
+      assetUrls.add(assetUrl);
+    }
+
+    // Convert the RestaurantReview object to a Map
+    Map<String, dynamic> reviewMap = {
+      'restaurantId': shareReview.restaurantId,
+      'userId': shareReview.userId,
+      'dineIn': shareReview.dineIn,
+      'ratingFood': shareReview.ratingFood,
+      'ratingService': shareReview.ratingService,
+      'ratingPrice': shareReview.ratingPrice,
+      'ratingAtmosphere': shareReview.ratingAtmosphere,
+      'ratingCleanliness': shareReview.ratingCleanliness,
+      'ratingPackaging': shareReview.ratingPackaging,
+      'ratingOverall': shareReview.ratingOverall,
+      'description': shareReview.description,
+      'timestamp': shareReview.timestamp,
+      'images': assetUrls, // Store the image URLs in the review document
+    };
+
+    // Upload to Firestore
+    CollectionReference reviews =
+        FirebaseFirestore.instance.collection('reviews');
+    if (shareReview.id == null) {
+      // If the review doesn't have an ID, add a new document
+      await reviews.add(reviewMap);
+    } else {
+      // If the review has an ID, update the existing document
+      await reviews.doc(shareReview.id).set(reviewMap);
+    }
 
     print("Review and images uploaded to Firestore and Firebase Storage.");
   }

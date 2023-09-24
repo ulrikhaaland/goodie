@@ -241,6 +241,9 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
     return GestureDetector(
       onTap: () async {
         final List<XFile> pickedFiles = await ImagePicker().pickMultipleMedia();
+
+        final List<GoodieAsset> pickedAssets = [];
+
         if (pickedFiles.isNotEmpty) {
           for (var file in pickedFiles) {
             GoodieAsset? asset;
@@ -266,9 +269,24 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
             if (!isRecent) {
               _recentImages.insert(0, asset);
             }
-            _selectedAssetNotifier.value = asset;
+
+            pickedAssets.add(asset);
+          }
+          if (pickedAssets.isNotEmpty) {
+            _selectedAssetNotifier.value = pickedAssets.first;
             final oldList = _selectedAssetsNotifier.value;
-            final newList = List<GoodieAsset>.from(oldList)..add(asset);
+            final newList = List<GoodieAsset>.from(oldList);
+
+            for (final asset in pickedAssets) {
+              if (newList.contains(asset)) {
+                continue;
+              }
+              newList.add(asset);
+              if (newList.length > 10) {
+                newList.removeAt(0);
+              }
+            }
+
             _selectedAssetsNotifier.value = newList;
           }
         }
@@ -303,6 +321,7 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
 
     AssetEntity asset = AssetEntity(
         id: file.name,
+        title: file.name,
         typeInt: assetType == AssetType.video
             ? 2
             : 1, // Assuming 1 is for images, 2 is for videos in your enum

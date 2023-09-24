@@ -125,52 +125,101 @@ class _RestaurantReviewReviewState extends State<RestaurantReviewRatingPage> {
     num? currentRating,
     bool isTotal = false,
   }) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Align(
-                      alignment: Alignment.topLeft,
-                      child: Text(
-                        "$label:",
-                        style: TextStyle(
-                          fontSize: isTotal ? 20 : 16,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      )),
-                  Text(
-                    ' ' +
-                        (getRatingData(
-                                currentRating?.toDouble())['description'] ??
-                            ''),
-                    style: const TextStyle(
-                      fontWeight: FontWeight.normal,
-                      color: Colors.grey, // Use our textColor
+    if (!isTotal) {
+      return Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Align(
+                        alignment: Alignment.topLeft,
+                        child: Text(
+                          label +
+                              (isTotal && currentRating != null ? '—' : ":"),
+                          style: TextStyle(
+                            fontSize: isTotal ? 20 : 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        )),
+                    Text(
+                      // ignore: prefer_interpolation_to_compose_strings
+                      ' ' +
+                          (getRatingData(
+                                  currentRating?.toDouble())['description'] ??
+                              ''),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.normal,
+                        color: Colors.grey, // Use our textColor
+                      ),
                     ),
-                  ),
-                ],
-              ),
-              RatingWidget(
-                key: Key(label),
-                rating: currentRating,
-                onRatingSelected: (selectedRating) {
-                  onRatingChanged(selectedRating.toDouble());
-                },
-                isTotalRating: isTotal,
-              ),
-            ],
-          ),
-          const Divider(),
-        ],
-      ),
-    );
+                  ],
+                ),
+                RatingWidget(
+                  key: Key(label),
+                  rating: currentRating,
+                  onRatingSelected: (selectedRating) {
+                    onRatingChanged(selectedRating.toDouble());
+                  },
+                  isTotalRating: isTotal,
+                ),
+              ],
+            ),
+            const Divider(),
+          ],
+        ),
+      );
+    } else {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Text(
+                      label,
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    if (currentRating != null) ...[
+                      const Text(
+                        " — ",
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        (getRatingData(currentRating.toDouble(),
+                            isTotalRating: true)['description']),
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.normal,
+                          color: Colors.grey[600], // Use our textColor
+                        ),
+                      ),
+                    ]
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+          ],
+        ),
+      );
+    }
   }
 
   Widget _buildDineInOrTakeout() {
@@ -296,6 +345,8 @@ class _RestaurantReviewReviewState extends State<RestaurantReviewRatingPage> {
             3;
       }
     }
-    return rating; // Return null if not all required ratings are provided
+    return (rating != null
+        ? rating * 2
+        : null); // Return null if not all required ratings are provided
   }
 }

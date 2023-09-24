@@ -3,7 +3,9 @@ import 'package:goodie/main.dart';
 import 'package:intl/intl.dart'; // Import for DateFormat
 import 'package:goodie/bloc/review.dart';
 import 'package:goodie/model/restaurant.dart';
-import 'package:goodie/pages/review/review_rate.dart';
+import 'package:photo_manager/photo_manager.dart';
+
+import '../../utils/rating.dart';
 
 class RestaurantReviewSummaryPage extends StatefulWidget {
   final RestaurantReviewProvider reviewProvider;
@@ -118,48 +120,115 @@ class _RestaurantReviewSummaryPageState
                           provider.selectedAssetsNotifier.value[index];
                       return Padding(
                         padding: const EdgeInsets.only(right: 8.0),
-                        child: Image.memory(
-                          provider.thumbnailCache[asset]!,
-                          fit: BoxFit.cover,
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            Image.memory(
+                              provider.thumbnailCache[asset]!,
+                              fit: BoxFit.cover,
+                            ),
+                            if (asset.type ==
+                                AssetType
+                                    .video) // Replace with your condition for video
+                              const Icon(
+                                Icons.videocam,
+                                color: Colors.white,
+                                size: 40.0,
+                              ),
+                          ],
                         ),
                       );
                     },
                   ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 12),
+                const Divider()
               ],
-              Text(
-                "Total Rating: ${review.ratingOverall!.toStringAsPrecision(2)}",
-                style:
-                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
-              ),
-              const SizedBox(height: 8),
-              RatingWidget(
-                rating: review.ratingOverall,
-                onRatingSelected: (rating) {},
-                isTotalRating: true,
-              ),
-              const SizedBox(height: 20),
-              ListTile(
-                title: Text(
-                  _selectedDate != null
-                      ? DateFormat.yMMMd().format(_selectedDate!)
-                      : "Select a date",
-                  style: TextStyle(
-                    color: _selectedDate != null ? Colors.black : Colors.grey,
-                    fontSize: 16,
+              const SizedBox(height: 12),
+              Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Text(
+                              "Total Rating: ${review.ratingOverall?.toStringAsFixed(1)}",
+                              style: const TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const Text(
+                              " — ",
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Text(
+                              (getRatingData(review.ratingOverall,
+                                  isTotalRating: true)['description']),
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.normal,
+                                color: Colors.grey[600], // Use our textColor
+                              ),
+                            ),
+                          ]),
+                    ],
                   ),
-                ),
-                subtitle: _selectedDate == null
-                    ? const Text(
-                        "A date must be selected.",
-                        style: TextStyle(color: Colors.redAccent),
-                      )
-                    : null,
-                trailing: const Icon(Icons.calendar_today),
-                onTap: () => _selectDate(context),
+                ],
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 12),
+              const Divider(),
+              InkWell(
+                onTap: () => _selectDate(context),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 12),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(Icons.calendar_today),
+                            const SizedBox(width: 8),
+                            Text(
+                              _selectedDate != null
+                                  ? DateFormat.yMMMd().format(_selectedDate!)
+                                  : "Velg besøksdato",
+                              style: TextStyle(
+                                color: _selectedDate != null
+                                    ? Colors.black
+                                    : Colors.grey,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (_selectedDate == null) ...[
+                          const SizedBox(height: 4), // Add some spacing (4px
+                          const Row(
+                            children: [
+                              SizedBox(width: 32),
+                              Text(
+                                "En dato må velges",
+                                style: TextStyle(color: Colors.redAccent),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                ),
+              ),
+              const Divider(),
+              const SizedBox(height: 12),
               const Row(
                 children: [
                   Text(

@@ -1,12 +1,9 @@
-import 'dart:async';
-
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:goodie/bloc/restaurants.dart';
 import 'package:goodie/pages/review/review_select_page.dart';
 import 'package:goodie/pages/review/review_page_buttons.dart';
 import 'package:goodie/pages/review/photo/review_photo_page.dart';
-import 'package:goodie/pages/review/review_progress_bar.dart';
 import 'package:goodie/pages/review/review_rating_page.dart';
 import 'package:goodie/pages/review/review_summary_page.dart';
 import 'package:provider/provider.dart';
@@ -136,7 +133,7 @@ class _RestaurantReviewPageState extends State<RestaurantReviewPage>
 
   void _handleOnRightPressed() {
     if (_pageIndex == 3) {
-      _reviewProvider.onShareReview();
+      _handleOnReview();
       return;
     }
 
@@ -170,16 +167,6 @@ class _RestaurantReviewPageState extends State<RestaurantReviewPage>
       }
     });
     hasSelectedRestaurant = true;
-  }
-
-  void _handleListItem() {
-    Timer(const Duration(milliseconds: 500), () {
-      if (mounted && _pageIndex == 1) {
-        setState(() {
-          showListItem = false;
-        });
-      }
-    });
   }
 
   @override
@@ -237,7 +224,10 @@ class _RestaurantReviewPageState extends State<RestaurantReviewPage>
   }
 
   void _handleOnReview() {
-    print("Review");
+    _pageIndex = 0;
+    _pageController.animateToPage(0,
+        duration: const Duration(milliseconds: 500), curve: Curves.easeInOut);
+    _reviewProvider.onShareReview();
   }
 
   void _handleOnCanSubmit(bool canSubmit) {

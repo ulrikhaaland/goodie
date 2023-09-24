@@ -3,10 +3,10 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:firebase_storage/firebase_storage.dart';
 
-Future<String> uploadImageToFirebaseStorage(File imageFile, String path) async {
+Future<String> uploadAssetToFirebaseStorage(File assetFile, String path) async {
   FirebaseStorage storage = FirebaseStorage.instance;
   Reference ref = storage.ref().child(path);
-  UploadTask uploadTask = ref.putFile(imageFile);
+  UploadTask uploadTask = ref.putFile(assetFile);
   TaskSnapshot taskSnapshot = await uploadTask.whenComplete(() => {});
   String downloadUrl = await taskSnapshot.ref.getDownloadURL();
   return downloadUrl;
