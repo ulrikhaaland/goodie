@@ -6,7 +6,7 @@ import 'package:photo_manager/photo_manager.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:video_player/video_player.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
-import '../../../bloc/review.dart';
+import '../../../bloc/create_review.dart';
 
 class AssetThumbnail extends StatefulWidget {
   final GoodieAsset asset;

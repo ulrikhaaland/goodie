@@ -1,6 +1,6 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:goodie/bloc/restaurants.dart';
+import 'package:goodie/pages/review/review_list_item.dart';
 import 'package:goodie/pages/review/review_select_page.dart';
 import 'package:goodie/pages/review/review_page_buttons.dart';
 import 'package:goodie/pages/review/photo/review_photo_page.dart';
@@ -8,7 +8,7 @@ import 'package:goodie/pages/review/review_rating_page.dart';
 import 'package:goodie/pages/review/review_summary_page.dart';
 import 'package:provider/provider.dart';
 
-import '../../bloc/review.dart';
+import '../../bloc/create_review.dart';
 import '../../model/restaurant.dart';
 
 class RestaurantReviewPage extends StatefulWidget {
@@ -22,7 +22,8 @@ class RestaurantReviewPage extends StatefulWidget {
 class _RestaurantReviewPageState extends State<RestaurantReviewPage>
     with AutomaticKeepAliveClientMixin {
   final PageController _pageController = PageController();
-  final RestaurantReviewProvider _reviewProvider = RestaurantReviewProvider();
+  final CreateRestaurantReviewProvider _reviewProvider =
+      CreateRestaurantReviewProvider();
 
   late final RestaurantProvider restaurantProvider;
 
@@ -70,7 +71,9 @@ class _RestaurantReviewPageState extends State<RestaurantReviewPage>
           children: [
             RestaurantReviewPhotoPage(
               key: const Key("picker"),
-              restaurantListItem: _buildRestaurantListItem(context),
+              restaurantListItem: RestaurantReviewListItem(
+                  key: Key(_selectedRestaurant?.id ?? "listitem"),
+                  selectedRestaurant: _selectedRestaurant),
               reviewProvider: _reviewProvider,
             ),
             ResturantReviewSelectPage(
@@ -90,12 +93,16 @@ class _RestaurantReviewPageState extends State<RestaurantReviewPage>
                 _handleOnCanSubmit(canSubmit);
               },
               review: _reviewProvider.review,
-              listItem: _buildRestaurantListItem(context),
+              listItem: RestaurantReviewListItem(
+                  key: Key(_selectedRestaurant?.id ?? "listitem"),
+                  selectedRestaurant: _selectedRestaurant),
             ),
             RestaurantReviewSummaryPage(
               key: Key(_selectedRestaurant?.id ?? "summary"),
               reviewProvider: _reviewProvider,
-              listItem: _buildRestaurantListItem(context),
+              listItem: RestaurantReviewListItem(
+                  key: Key(_selectedRestaurant?.id ?? "listitem"),
+                  selectedRestaurant: _selectedRestaurant),
             ),
           ],
         ),
@@ -174,53 +181,6 @@ class _RestaurantReviewPageState extends State<RestaurantReviewPage>
     _pageController.dispose();
 
     super.dispose();
-  }
-
-  Widget _buildRestaurantListItem(BuildContext context) {
-    if (_selectedRestaurant == null) return Container();
-
-    return Column(
-      children: [
-        ListTile(
-          contentPadding: EdgeInsets.zero,
-          leading: ClipRRect(
-            borderRadius: BorderRadius.circular(8.0),
-            child: CachedNetworkImage(
-              imageUrl: _selectedRestaurant!.coverImg ?? '',
-              placeholder: (context, url) => const SizedBox(
-                width: 50, // Set the width
-                height: 50, // Set the height
-                child: CircularProgressIndicator(
-                  strokeWidth: 2.0,
-                ),
-              ),
-              errorWidget: (context, url, error) => const Icon(Icons.error),
-              width: 50, // Set the width
-              height: 50, // Set the height
-              fit: BoxFit.cover,
-            ),
-          ),
-          title: Text(
-            _selectedRestaurant!.name,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
-          ),
-          subtitle: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 2),
-              Text(
-                _selectedRestaurant!.description ?? '',
-                style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 2), // Space between description and rating
-            ],
-          ),
-        ),
-        const Divider(),
-      ],
-    );
   }
 
   void _handleOnReview() {

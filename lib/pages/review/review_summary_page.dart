@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:goodie/main.dart';
 import 'package:intl/intl.dart'; // Import for DateFormat
-import 'package:goodie/bloc/review.dart';
+import 'package:goodie/bloc/create_review.dart';
 import 'package:goodie/model/restaurant.dart';
 import 'package:photo_manager/photo_manager.dart';
 
 import '../../utils/rating.dart';
 
 class RestaurantReviewSummaryPage extends StatefulWidget {
-  final RestaurantReviewProvider reviewProvider;
+  final CreateRestaurantReviewProvider reviewProvider;
   final Widget listItem;
 
   const RestaurantReviewSummaryPage({
@@ -29,7 +29,7 @@ class _RestaurantReviewSummaryPageState
   final FocusNode _commentFocusNode = FocusNode();
   DateTime? _selectedDate;
 
-  RestaurantReviewProvider get provider => widget.reviewProvider;
+  CreateRestaurantReviewProvider get provider => widget.reviewProvider;
 
   RestaurantReview get review => provider.review;
 
@@ -169,7 +169,7 @@ class _RestaurantReviewSummaryPageState
                               ),
                             ),
                             Text(
-                              (getRatingData(review.ratingOverall,
+                              (getRatingData(review.ratingOverall ?? 0,
                                   isTotalRating: true)['description']),
                               style: TextStyle(
                                 fontSize: 16,

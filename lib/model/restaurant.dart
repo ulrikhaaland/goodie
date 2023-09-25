@@ -65,7 +65,7 @@ class RestaurantReview {
   num? ratingOverall; // 0-10 (needed for both dine in and takeout)
   DateTime? timestamp;
   bool dineIn; // If not dine-in, then takeout
-  List<Image>? images; // Images of the review
+  List<String>? images; // Images of the review
   // Below are not for making a review, but for other users to interact with the review
   List<Comment>? comments; // Comments on the review
   List<Like>? likes; // Likes on the review

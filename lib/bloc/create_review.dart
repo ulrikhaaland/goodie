@@ -30,7 +30,7 @@ final _videoConfig = VideoConfig(
   // ],
 );
 
-class RestaurantReviewProvider with ChangeNotifier {
+class CreateRestaurantReviewProvider with ChangeNotifier {
   Restaurant? _selectedRestaurant;
   List<Restaurant> restaurants = [];
   RestaurantReview review = RestaurantReview(
@@ -44,7 +44,7 @@ class RestaurantReviewProvider with ChangeNotifier {
   final ValueNotifier<GoodieAsset?> selectedAssetNotifier = ValueNotifier(null);
   final Map<GoodieAsset, Uint8List> thumbnailCache = {};
 
-  RestaurantReviewProvider() {
+  CreateRestaurantReviewProvider() {
     loadRecentImages();
     selectedAssetsNotifier.addListener(() {
       _handleSelectedRestaurant();
@@ -218,21 +218,28 @@ class RestaurantReviewProvider with ChangeNotifier {
     return res;
   }
 
-  void onShareReview() async {
-    RestaurantReview shareReview = review;
-    // reset assets
+  void _resetReview() {
     selectedAssetsNotifier.value = [];
-    selectedAssetNotifier.value = recentImages.first;
+    selectedAssetNotifier.value =
+        recentImages.isNotEmpty ? recentImages.first : null;
+    _selectedRestaurant = null;
     review = RestaurantReview(
       restaurantId: "",
       userId: "test",
       dineIn: true,
     );
+  }
+
+  void onShareReview() async {
+    RestaurantReview shareReview = review;
+    List<GoodieAsset> assets = [...selectedAssetsNotifier.value];
+    // reset assets
+    _resetReview();
 
     List<String> assetUrls = [];
 
     // Upload assets to Firebase Storage from selectedAssetsNotifier
-    for (GoodieAsset asset in selectedAssetsNotifier.value) {
+    for (GoodieAsset asset in assets) {
       // Get the File from the GoodieAsset
       File assetFile = (asset.imageFile ?? await asset.asset.file)!;
 

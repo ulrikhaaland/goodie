@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:goodie/bloc/restaurants.dart';
-import 'package:goodie/pages/home.dart';
-import 'package:goodie/pages/login.dart';
+import 'package:goodie/bloc/user_reviews.dart';
+import 'package:goodie/pages/home/home.dart';
+import 'package:goodie/pages/login/login.dart';
 import 'package:goodie/pages/review/review_page.dart';
 import 'package:provider/provider.dart';
 
@@ -18,6 +19,7 @@ void main() async {
   final authProvider = AuthProvider(); // Create instance
   final restaurantProvider = RestaurantProvider(); // Create instance
   final filterProvider = FilterProvider();
+  final reviewProvider = UserReviewProvider();
 
   // Move restaurant fetching to a method that can be called on auth changes.
   void fetchRestaurants() async {
@@ -44,6 +46,9 @@ void main() async {
             value: restaurantProvider), // Provide the instance
         ChangeNotifierProvider.value(
           value: filterProvider,
+        ),
+        ChangeNotifierProvider.value(
+          value: reviewProvider,
         ),
       ],
       child: MainApp(authProvider: authProvider),

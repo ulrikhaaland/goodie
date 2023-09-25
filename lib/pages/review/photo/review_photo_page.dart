@@ -9,13 +9,13 @@ import 'package:image_picker/image_picker.dart';
 import 'package:photo_manager/photo_manager.dart';
 // ignore: depend_on_referenced_packages
 import 'package:collection/collection.dart';
-import '../../../bloc/review.dart';
+import '../../../bloc/create_review.dart';
 
 // ignore: must_be_immutable
 
 class RestaurantReviewPhotoPage extends StatefulWidget {
   final Widget restaurantListItem;
-  final RestaurantReviewProvider reviewProvider;
+  final CreateRestaurantReviewProvider reviewProvider;
 
   const RestaurantReviewPhotoPage({
     Key? key,
@@ -94,7 +94,7 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
                   children: [
                     SizedBox(height: 24.0),
                     Text(
-                      'Legg til bilder fra besøket',
+                      'Ny anmeldelse',
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,

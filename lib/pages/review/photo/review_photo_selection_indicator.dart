@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../bloc/review.dart';
+import '../../../bloc/create_review.dart';
 
 class SelectionIndicator extends StatelessWidget {
   final GoodieAsset asset;
