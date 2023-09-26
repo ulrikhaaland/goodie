@@ -24,8 +24,7 @@ class _HomePageState extends State<HomePage>
     final reviews = Provider.of<UserReviewProvider>(context)
         .reviews; // Get the list of reviews
 
-    final restaurants = Provider.of<RestaurantProvider>(context)
-        .restaurants; // Get the list of restaurants
+    final restaurantProvider = Provider.of<RestaurantProvider>(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -46,12 +45,14 @@ class _HomePageState extends State<HomePage>
             itemCount: reviews.length,
             itemBuilder: (context, index) {
               final review = reviews[index];
-              final restaurant = restaurants.firstWhere(
+              final restaurant = restaurantProvider.restaurants.firstWhere(
                 (element) => element.id == review.restaurantId,
               );
               return ReviewListItem(
-                  review: review,
-                  restaurant: restaurant); // Use the ReviewListItem widget
+                review: review,
+                restaurant: restaurant,
+                restaurantProvider: restaurantProvider,
+              ); // Use the ReviewListItem widget
             },
           )),
     );
