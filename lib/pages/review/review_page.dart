@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:goodie/bloc/restaurants.dart';
+import 'package:goodie/bloc/restaurant_provider.dart';
 import 'package:goodie/pages/review/review_list_item.dart';
 import 'package:goodie/pages/review/review_select_page.dart';
 import 'package:goodie/pages/review/review_page_buttons.dart';
@@ -8,7 +8,7 @@ import 'package:goodie/pages/review/review_rating_page.dart';
 import 'package:goodie/pages/review/review_summary_page.dart';
 import 'package:provider/provider.dart';
 
-import '../../bloc/create_review.dart';
+import '../../bloc/create_review_provider.dart';
 import '../../model/restaurant.dart';
 
 class RestaurantReviewPage extends StatefulWidget {

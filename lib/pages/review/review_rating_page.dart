@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:goodie/main.dart';
 import 'package:provider/provider.dart';
 
-import '../../bloc/auth.dart';
+import '../../bloc/auth_provider.dart';
 import '../../model/restaurant.dart';
 import '../../utils/rating.dart';
 import 'review_rate.dart';

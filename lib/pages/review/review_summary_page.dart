@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:goodie/main.dart';
 import 'package:intl/intl.dart'; // Import for DateFormat
-import 'package:goodie/bloc/create_review.dart';
+import 'package:goodie/bloc/create_review_provider.dart';
 import 'package:goodie/model/restaurant.dart';
 import 'package:photo_manager/photo_manager.dart';
 

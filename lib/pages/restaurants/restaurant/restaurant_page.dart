@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:goodie/pages/restaurants/restaurant/restaurant_info.dart';
 import 'package:provider/provider.dart';
 
-import '../../../bloc/restaurants.dart';
+import '../../../bloc/restaurant_provider.dart';
 import '../../../model/restaurant.dart';
 import 'dish_list_view.dart';
 

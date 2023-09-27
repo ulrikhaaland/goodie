@@ -9,7 +9,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:photo_manager/photo_manager.dart';
 // ignore: depend_on_referenced_packages
 import 'package:collection/collection.dart';
-import '../../../bloc/create_review.dart';
+import '../../../bloc/create_review_provider.dart';
 
 // ignore: must_be_immutable
 

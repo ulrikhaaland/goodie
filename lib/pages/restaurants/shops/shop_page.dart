@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:goodie/bloc/location.dart';
+import 'package:goodie/bloc/location_provider.dart';
 import 'package:goodie/pages/restaurants/shops/restaurant_list_view.dart';
 import 'package:goodie/pages/restaurants/shops/restaurant_map_view.dart';
 import 'package:location/location.dart';
 import 'package:provider/provider.dart';
 
-import '../../../bloc/filter.dart';
-import '../../../bloc/restaurants.dart';
+import '../../../bloc/filter_provider.dart';
+import '../../../bloc/restaurant_provider.dart';
 import '../../../model/restaurant.dart';
 import 'filter_bottom_sheet.dart';
 

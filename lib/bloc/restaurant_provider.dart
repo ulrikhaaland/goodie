@@ -7,6 +7,8 @@ class RestaurantProvider with ChangeNotifier {
 
   List<Restaurant> get restaurants => _restaurants;
 
+  Set<String> loadingDishes = {};
+
   DocumentSnapshot?
       _lastRestaurantDocument; // Tracks the last document in the current list
 
@@ -89,6 +91,12 @@ class RestaurantProvider with ChangeNotifier {
 
   Future<void> fetchDishesAndPrecacheImages(
       String restaurantId, BuildContext context) async {
+    if (loadingDishes.contains(restaurantId)) {
+      return; // If the dishes are already being fetched, return
+    }
+
+    loadingDishes
+        .add(restaurantId); // Add the restaurant ID to the loading list
     final dishesCollection = FirebaseFirestore.instance
         .collection('restaurants')
         .doc(restaurantId)
@@ -126,14 +134,14 @@ class RestaurantProvider with ChangeNotifier {
       }
     });
 
-    // Precache the images
-    for (var dish in dishes
-        .where(
-            (element) => element.imgUrl != null && element.imgUrl!.isNotEmpty)
-        .take(8)) {
-      // ignore: use_build_context_synchronously
-      await precacheImage(NetworkImage(dish.imgUrl ?? ''), context);
-    }
+    // // Precache the images
+    // for (var dish in dishes
+    //     .where(
+    //         (element) => element.imgUrl != null && element.imgUrl!.isNotEmpty)
+    //     .take(8)) {
+
+    //   await precacheImage(NetworkImage(dish.imgUrl ?? ''), context);
+    // }
 
     // Update the restaurant's dishes
     int restaurantIndex = _restaurants.indexWhere((r) => r.id == restaurantId);
@@ -145,6 +153,8 @@ class RestaurantProvider with ChangeNotifier {
     } else {
       // Handle error: Restaurant not found
     }
+    loadingDishes
+        .remove(restaurantId); // Remove the restaurant ID from the loading list
   }
 
   void sortRestaurantCategories(Map<String, int> categoryCounts) {

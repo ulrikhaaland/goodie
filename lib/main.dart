@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:goodie/bloc/restaurants.dart';
-import 'package:goodie/bloc/user_reviews.dart';
+import 'package:goodie/bloc/restaurant_provider.dart';
+import 'package:goodie/bloc/user_review_provider.dart';
 import 'package:goodie/pages/home/home.dart';
 import 'package:goodie/pages/login/login.dart';
 import 'package:goodie/pages/review/review_page.dart';
 import 'package:provider/provider.dart';
 
-import 'bloc/auth.dart';
-import 'bloc/filter.dart';
-import 'bloc/location.dart';
+import 'bloc/auth_provider.dart';
+import 'bloc/filter_provider.dart';
+import 'bloc/location_provider.dart';
 import 'data/migration.dart';
 import 'pages/restaurants/shops/shop_page.dart';
 

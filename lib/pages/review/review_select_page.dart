@@ -4,7 +4,7 @@ import 'package:goodie/main.dart';
 import 'package:provider/provider.dart';
 
 import '../../../model/restaurant.dart';
-import '../../bloc/restaurants.dart';
+import '../../bloc/restaurant_provider.dart';
 
 class ResturantReviewSelectPage extends StatefulWidget {
   final Function(Restaurant) onSelectRestaurant;

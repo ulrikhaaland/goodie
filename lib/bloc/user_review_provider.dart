@@ -6,18 +6,17 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../model/restaurant.dart';
 
 class UserReviewProvider with ChangeNotifier {
-  List<RestaurantReview> reviews = [];
+  final ValueNotifier<List<RestaurantReview>> reviews = ValueNotifier([]);
 
   UserReviewProvider() {
     fetchReviews();
-    addImaginaryInteractions();
   }
 
   Future<void> fetchReviews() async {
     try {
       QuerySnapshot querySnapshot =
           await FirebaseFirestore.instance.collection('reviews').get();
-      reviews = querySnapshot.docs.map((doc) {
+      reviews.value = querySnapshot.docs.map((doc) {
         Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
         return RestaurantReview(
           id: doc.id,
@@ -37,7 +36,7 @@ class UserReviewProvider with ChangeNotifier {
           // Add other fields like comments and likes here
         );
       }).toList();
-      notifyListeners();
+      addImaginaryInteractions();
     } catch (e) {
       print("Failed to fetch reviews: $e");
     }
@@ -45,7 +44,7 @@ class UserReviewProvider with ChangeNotifier {
 
   void addImaginaryInteractions() {
     Random random = Random();
-    for (RestaurantReview review in reviews) {
+    for (RestaurantReview review in reviews.value) {
       // Generate imaginary comments
       int commentCount = random.nextInt(5); // Generate up to 5 comments
       List<Comment> comments = [];
@@ -79,7 +78,7 @@ class UserReviewProvider with ChangeNotifier {
       }
       review.likes = likes;
     }
-    notifyListeners();
+    reviews.notifyListeners();
   }
 }
 

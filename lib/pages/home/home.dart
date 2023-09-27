@@ -3,8 +3,9 @@ import 'package:goodie/pages/home/review_list_item.dart';
 import 'package:provider/provider.dart';
 import 'package:goodie/model/review.dart';
 
-import '../../bloc/restaurants.dart';
-import '../../bloc/user_reviews.dart'; // Import your RestaurantReview model
+import '../../bloc/restaurant_provider.dart';
+import '../../bloc/user_review_provider.dart';
+import '../../model/restaurant.dart'; // Import your RestaurantReview model
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -41,18 +42,24 @@ class _HomePageState extends State<HomePage>
       ),
       body: Padding(
           padding: const EdgeInsets.all(8.0),
-          child: ListView.builder(
-            itemCount: reviews.length,
-            itemBuilder: (context, index) {
-              final review = reviews[index];
-              final restaurant = restaurantProvider.restaurants.firstWhere(
-                (element) => element.id == review.restaurantId,
+          child: ValueListenableBuilder(
+            valueListenable: reviews,
+            builder: (BuildContext context, List<RestaurantReview> value,
+                Widget? child) {
+              return ListView.builder(
+                itemCount: value.length,
+                itemBuilder: (context, index) {
+                  final review = value[index];
+                  final restaurant = restaurantProvider.restaurants.firstWhere(
+                    (element) => element.id == review.restaurantId,
+                  );
+                  return ReviewListItem(
+                    review: review,
+                    restaurant: restaurant,
+                    restaurantProvider: restaurantProvider,
+                  ); // Use the ReviewListItem widget
+                },
               );
-              return ReviewListItem(
-                review: review,
-                restaurant: restaurant,
-                restaurantProvider: restaurantProvider,
-              ); // Use the ReviewListItem widget
             },
           )),
     );

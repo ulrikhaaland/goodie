@@ -1,9 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:goodie/model/review.dart';
 import 'package:provider/provider.dart';
 
-import '../../bloc/restaurants.dart';
-import '../../model/restaurant.dart'; // Import your RestaurantReview model
+import '../../bloc/restaurant_provider.dart';
+import '../../model/restaurant.dart';
 
 class ReviewListItem extends StatefulWidget {
   final RestaurantReview review;
@@ -25,121 +27,117 @@ class _ReviewListItemState extends State<ReviewListItem> {
 
   List<String> _images = [];
 
+  bool _isImagesHandled = false;
+
+  bool _isCancelled = false;
+
   @override
-  void initState() {
-    _handleImages();
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_isImagesHandled) {
+      _handleImages();
+      _isImagesHandled = true;
+    }
+  }
+
+  @override
+  void dispose() {
+    _isCancelled = true;
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Card(
-        elevation: 8,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Profile Picture and User Info (Dummy Data)
-              Row(
-                children: [
-                  CircleAvatar(
-                    backgroundImage: NetworkImage(widget.restaurant!.coverImg ??
-                        "https://firebasestorage.googleapis.com/v0/b/goodie-8814a.appspot.com/o/reviews%2F1947-gandhi%2F1695624291647.jpg?alt=media&token=94780007-27cb-43d0-b53b-37b747a3d2d7"), // Dummy URL
-                  ),
-                  const SizedBox(width: 10),
-                  Text(
-                    widget.review.userId, // Use userId for now
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
+      child: Container(
+        height:
+            MediaQuery.of(context).size.height * 0.9, // 90% of screen height
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Profile Picture and User Info
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    CircleAvatar(
+                      backgroundImage: NetworkImage(
+                          widget.restaurant.coverImg ??
+                              "https://example.com/default.jpg"),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-
-              // Restaurant Images - Horizontal Scrollable
-              SizedBox(
-                height: 200,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount:
-                      _images.length, // Use the length of the images list
-                  itemBuilder: (context, index) => Padding(
-                    padding: EdgeInsets.only(
-                        right: index < (_images.length) - 1 ? 8.0 : 0),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(15),
-                      child: Image.network(
-                        _images[index], // Use the image URL
-                        fit: BoxFit.cover,
-                        height: 200,
-                        width: 200,
+                    const SizedBox(width: 10),
+                    Text(
+                      widget.review.userId,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                  ),
+                  ],
                 ),
-              ),
-              const SizedBox(height: 10),
+                // Add more options icon (optional)
+                const Icon(Icons.more_horiz),
+              ],
+            ),
+            const SizedBox(height: 10),
 
-              // Restaurant Name and Rating (Dummy Data)
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    widget.restaurant.name, // Use restaurantId for now
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                    ),
-                  ),
-                  Text(
-                    '${widget.review.ratingOverall?.toStringAsPrecision(2)}/10', // Use ratingOverall
-                    style: const TextStyle(
-                        color: Colors.blue, // Replace with your accent color
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500),
-                  ),
-                ],
+            // Restaurant Images - Horizontal PageView
+            Expanded(
+              child: PageView.builder(
+                itemCount:
+                    _images.where((element) => element.isNotEmpty).length,
+                itemBuilder: (context, index) {
+                  return Image.network(
+                    _images[index],
+                    errorBuilder: (context, error, stackTrace) => Container(),
+                    fit: BoxFit.cover,
+                  );
+                },
               ),
-              const SizedBox(height: 5),
+            ),
+            const SizedBox(height: 10),
 
-              // Review Text
-              Text(
-                widget.review.description ?? '', // Use the review description
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 16),
-              ),
+            // Actions like Like, Comment, and Share
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.favorite_border, color: Colors.grey[600]),
+                    const SizedBox(width: 15),
+                    Icon(Icons.comment_outlined, color: Colors.grey[600]),
+                    const SizedBox(width: 15),
+                    Icon(Icons.send_outlined, color: Colors.grey[600]),
+                  ],
+                ),
+                Icon(Icons.bookmark_border, color: Colors.grey[600]),
+              ],
+            ),
+            const SizedBox(height: 10),
 
-              // Actions like Like and Comment
-              const SizedBox(height: 10),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Icon(Icons.thumb_up, color: Colors.grey[600]),
-                      const SizedBox(width: 5),
-                      Text(
-                          '${widget.review.likes?.length ?? 0} Likes'), // Use the length of the likes list
-                    ],
-                  ),
-                  Text(
-                      '${widget.review.comments?.length ?? 0} Comments'), // Use the length of the comments list
-                ],
-              ),
-            ],
-          ),
+            // Likes Count
+            Text('${widget.review.likes?.length ?? 0} likes',
+                style: const TextStyle(fontWeight: FontWeight.bold)),
+
+            // Review Text (Caption)
+            Text(
+              widget.review.description ?? '',
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 16),
+            ),
+
+            // Comments Count
+            Text('${widget.review.comments?.length ?? 0} comments',
+                style: TextStyle(color: Colors.grey[600])),
+          ],
         ),
       ),
     );
   }
 
-  void _handleImages() {
+  void _handleImages() async {
     if (widget.review.images != null && widget.review.images!.isNotEmpty) {
       _images = widget.review.images!;
     } else {
@@ -147,11 +145,8 @@ class _ReviewListItemState extends State<ReviewListItem> {
         _images.add(restaurant.coverImg!);
       }
 
-      /// Iterate through the restaurant.dishes list and until two dish.imgurl have been added
-      /// or the list has been exhausted
-
       if (restaurant.dishes.isEmpty) {
-        widget.restaurantProvider
+        await widget.restaurantProvider
             .fetchDishesAndPrecacheImages(restaurant.id, context)
             .then((value) {
           for (var dish in restaurant.dishes) {
@@ -163,6 +158,57 @@ class _ReviewListItemState extends State<ReviewListItem> {
           }
         });
       }
+    }
+
+    _precacheImages(_images);
+  }
+
+  void _precacheImages(List<String> imageUrls) async {
+    if (_isCancelled) return; // Check if widget is disposed
+
+    List<String> successfulUrls = [];
+
+    for (var imageUrl in imageUrls) {
+      // Skip invalid URLs
+      if (imageUrl.isEmpty || !Uri.parse(imageUrl).hasScheme) {
+        print("Skipping invalid URL: $imageUrl");
+        continue;
+      }
+
+      var completer = Completer<void>();
+
+      if (_isCancelled) return; // Check again before precaching
+
+      precacheImage(NetworkImage(imageUrl), context, onError: (e, stackTrace) {
+        print("Failed to precache image: $e");
+        if (!completer.isCompleted) {
+          completer.completeError(e);
+        }
+      }).then((_) {
+        if (!completer.isCompleted) {
+          successfulUrls.add(imageUrl);
+          completer.complete();
+        }
+      }).catchError((e) {
+        print("Error during precaching: $e");
+        if (!completer.isCompleted) {
+          completer.completeError(e);
+        }
+      });
+
+      try {
+        await completer.future;
+      } catch (e) {
+        print("Skipping image due to error: $e");
+      }
+    }
+
+    if (!_isCancelled) {
+      // Check again before calling setState
+      setState(() {
+        _images =
+            successfulUrls; // Update _images to only contain successful URLs
+      });
     }
   }
 }
