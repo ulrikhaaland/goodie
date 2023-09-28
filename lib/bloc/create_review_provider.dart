@@ -10,7 +10,7 @@ import '../model/restaurant.dart';
 import '../utils/distance.dart';
 import '../utils/image.dart';
 
-final _videoConfig = VideoConfig(
+final videoConfig = VideoConfig(
   autoInitialize: true,
   canChangeVolumeOrBrightness: false,
   useRootNavigator: false,
@@ -83,7 +83,7 @@ class CreateRestaurantReviewProvider with ChangeNotifier {
           video.originFile.then((value) {
             video.videoPlayerController = VideoController(
               videoPlayerController: VideoPlayerController.file(value!),
-              videoConfig: _videoConfig,
+              videoConfig: videoConfig,
             );
             video.videoPlayerController!.initialize();
           });

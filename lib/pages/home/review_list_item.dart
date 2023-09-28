@@ -31,6 +31,20 @@ class _ReviewListItemState extends State<ReviewListItem> {
 
   bool _isCancelled = false;
 
+  final PageController _pageController = PageController();
+  int _currentPage = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController.addListener(() {
+      setState(() {
+        _currentPage = _pageController.page!.round();
+      });
+    });
+    // ... existing code ...
+  }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -43,6 +57,7 @@ class _ReviewListItemState extends State<ReviewListItem> {
   @override
   void dispose() {
     _isCancelled = true;
+    _pageController.dispose();
     super.dispose();
   }
 
@@ -50,7 +65,7 @@ class _ReviewListItemState extends State<ReviewListItem> {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Container(
+      child: SizedBox(
         height:
             MediaQuery.of(context).size.height * 0.9, // 90% of screen height
         child: Column(
@@ -76,15 +91,32 @@ class _ReviewListItemState extends State<ReviewListItem> {
                     ),
                   ],
                 ),
-                // Add more options icon (optional)
-                const Icon(Icons.more_horiz),
+                Row(
+                  children: [
+                    OutlinedButton(
+                      onPressed: () {
+                        // Add your follow functionality here
+                      },
+                      child: Text("Follow"),
+                      style: TextButton.styleFrom(
+                        primary: Colors.blue, // Text color
+                      ),
+                    ),
+                    const SizedBox(
+                        width:
+                            10), // Add some spacing between the button and the icon
+                    const Icon(Icons.more_horiz),
+                  ],
+                ),
               ],
             ),
+
             const SizedBox(height: 10),
 
             // Restaurant Images - Horizontal PageView
             Expanded(
               child: PageView.builder(
+                controller: _pageController,
                 itemCount:
                     _images.where((element) => element.isNotEmpty).length,
                 itemBuilder: (context, index) {
@@ -99,21 +131,50 @@ class _ReviewListItemState extends State<ReviewListItem> {
             const SizedBox(height: 10),
 
             // Actions like Like, Comment, and Share
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            // Actions like Like, Comment, and Share
+            Stack(
               children: [
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Icon(Icons.favorite_border, color: Colors.grey[600]),
-                    const SizedBox(width: 15),
-                    Icon(Icons.comment_outlined, color: Colors.grey[600]),
-                    const SizedBox(width: 15),
-                    Icon(Icons.send_outlined, color: Colors.grey[600]),
+                    Row(
+                      children: [
+                        Icon(Icons.favorite_border, color: Colors.grey[600]),
+                        const SizedBox(width: 15),
+                        Icon(Icons.comment_outlined, color: Colors.grey[600]),
+                        const SizedBox(width: 15),
+                        Icon(Icons.send_outlined, color: Colors.grey[600]),
+                      ],
+                    ),
+                    Icon(Icons.bookmark_border, color: Colors.grey[600]),
                   ],
                 ),
-                Icon(Icons.bookmark_border, color: Colors.grey[600]),
+                // Dots indicator
+                if (_images.length > 1)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(
+                        _images.length,
+                        (index) => AnimatedContainer(
+                          duration: const Duration(milliseconds: 300),
+                          margin: const EdgeInsets.symmetric(horizontal: 2),
+                          width: _currentPage == index ? 12 : 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: _currentPage == index
+                                ? Colors.blue
+                                : Colors.grey,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
               ],
             ),
+
             const SizedBox(height: 10),
 
             // Likes Count
@@ -121,12 +182,17 @@ class _ReviewListItemState extends State<ReviewListItem> {
                 style: const TextStyle(fontWeight: FontWeight.bold)),
 
             // Review Text (Caption)
-            Text(
-              widget.review.description ?? '',
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 16),
-            ),
+            if (widget.review.description != null &&
+                widget.review.description!.isNotEmpty) ...[
+              Text(
+                widget.review.description ?? '',
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 16),
+              ),
+            ] else ...[
+              const SizedBox(height: 4),
+            ],
 
             // Comments Count
             Text('${widget.review.comments?.length ?? 0} comments',
@@ -137,16 +203,17 @@ class _ReviewListItemState extends State<ReviewListItem> {
     );
   }
 
-  void _handleImages() async {
+  void _handleImages() {
     if (widget.review.images != null && widget.review.images!.isNotEmpty) {
-      _images = widget.review.images!;
+      _precacheImages(widget.review.images!);
     } else {
       if (restaurant.coverImg != null) {
         _images.add(restaurant.coverImg!);
+        setState(() {});
       }
 
       if (restaurant.dishes.isEmpty) {
-        await widget.restaurantProvider
+        widget.restaurantProvider
             .fetchDishesAndPrecacheImages(restaurant.id, context)
             .then((value) {
           for (var dish in restaurant.dishes) {
@@ -156,11 +223,12 @@ class _ReviewListItemState extends State<ReviewListItem> {
               break;
             }
           }
+          _precacheImages(_images);
         });
       }
     }
 
-    _precacheImages(_images);
+    // _precacheImages(_images);
   }
 
   void _precacheImages(List<String> imageUrls) async {

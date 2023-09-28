@@ -10,11 +10,12 @@ import '../../utils/rating.dart';
 class RestaurantReviewSummaryPage extends StatefulWidget {
   final CreateRestaurantReviewProvider reviewProvider;
   final Widget listItem;
-
+  final VoidCallback onDatePick;
   const RestaurantReviewSummaryPage({
     super.key,
     required this.reviewProvider,
     required this.listItem,
+    required this.onDatePick,
   });
 
   @override
@@ -70,6 +71,7 @@ class _RestaurantReviewSummaryPageState
         _selectedDate = pickedDate;
         review.timestamp = pickedDate;
       });
+      widget.onDatePick();
     }
   }
 

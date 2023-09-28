@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:goodie/pages/home/review_list_item.dart';
 import 'package:provider/provider.dart';
-import 'package:goodie/model/review.dart';
-
+import 'package:collection/collection.dart';
 import '../../bloc/restaurant_provider.dart';
 import '../../bloc/user_review_provider.dart';
 import '../../model/restaurant.dart'; // Import your RestaurantReview model
@@ -48,16 +47,24 @@ class _HomePageState extends State<HomePage>
                 Widget? child) {
               return ListView.builder(
                 itemCount: value.length,
+                cacheExtent: 10000,
                 itemBuilder: (context, index) {
                   final review = value[index];
-                  final restaurant = restaurantProvider.restaurants.firstWhere(
+                  final restaurant =
+                      restaurantProvider.restaurants.firstWhereOrNull(
                     (element) => element.id == review.restaurantId,
                   );
-                  return ReviewListItem(
-                    review: review,
-                    restaurant: restaurant,
-                    restaurantProvider: restaurantProvider,
-                  ); // Use the ReviewListItem widget
+
+                  if (restaurant == null) {
+                    return const SizedBox.shrink();
+                  } else {
+                    return ReviewListItem(
+                      key: Key(restaurant.id),
+                      review: review,
+                      restaurant: restaurant,
+                      restaurantProvider: restaurantProvider,
+                    ); // Use the ReviewListItem widget
+                  }
                 },
               );
             },

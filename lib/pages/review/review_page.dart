@@ -43,6 +43,8 @@ class _RestaurantReviewPageState extends State<RestaurantReviewPage>
 
   bool hasSelectedRestaurant = false;
 
+  int _selectRestaurantId = 0;
+
   @override
   bool get wantKeepAlive => true;
 
@@ -77,6 +79,7 @@ class _RestaurantReviewPageState extends State<RestaurantReviewPage>
               reviewProvider: _reviewProvider,
             ),
             ResturantReviewSelectPage(
+              key: Key(_selectRestaurantId.toString()),
               restaurants: _reviewProvider.restaurants,
               selectedRestaurant: _selectedRestaurant,
               onSelectRestaurant: (restaurant) {
@@ -100,6 +103,9 @@ class _RestaurantReviewPageState extends State<RestaurantReviewPage>
             RestaurantReviewSummaryPage(
               key: Key(_selectedRestaurant?.id ?? "summary"),
               reviewProvider: _reviewProvider,
+              onDatePick: () {
+                setState(() {});
+              },
               listItem: RestaurantReviewListItem(
                   key: Key(_selectedRestaurant?.id ?? "listitem"),
                   selectedRestaurant: _selectedRestaurant),
@@ -112,7 +118,7 @@ class _RestaurantReviewPageState extends State<RestaurantReviewPage>
           right: 0,
           child: ReviewPageButtons(
             isSubmit: _pageIndex == 2,
-            canSubmit: _pageIndex == 2 ? _canSubmit : true,
+            canSubmit: _getCanSubmit(),
             rightButtonText: _getRightButtonText(),
             hideLeftButton: _pageIndex == 0,
             hideRightButton: _pageIndex == 1 &&
@@ -184,6 +190,9 @@ class _RestaurantReviewPageState extends State<RestaurantReviewPage>
   }
 
   void _handleOnReview() {
+    // TODO: Add review to feed list
+    _canSubmit = false;
+    _selectRestaurantId++;
     _pageIndex = 0;
     _pageController.animateToPage(0,
         duration: const Duration(milliseconds: 500), curve: Curves.easeInOut);
@@ -207,6 +216,17 @@ class _RestaurantReviewPageState extends State<RestaurantReviewPage>
       return "Del";
     }
     return "Neste";
+  }
+
+  _getCanSubmit() {
+    if (_pageIndex == 2) return _canSubmit;
+
+    if (_pageIndex == 3) {
+      if (_reviewProvider.review.timestamp != null) return true;
+      return false;
+    }
+
+    return true;
   }
 }
 

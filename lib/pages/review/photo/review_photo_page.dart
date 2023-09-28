@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter_video_view/flutter_video_view.dart';
 import 'package:goodie/pages/review/photo/review_photo_asset_thumbnail.dart';
 import 'package:goodie/pages/review/photo/review_photo_selection_indicator.dart';
 import 'package:goodie/pages/review/photo/review_photo_sliver_head_delegate.dart';
@@ -308,7 +309,8 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
     AssetType assetType;
 
     // List of video extensions can be extended as needed
-    if (['mov', 'mp4', 'avi'].contains(fileExtension.toLowerCase())) {
+    if (['mov', 'mp4', 'avi', 'mpeg', 'webm', 'wmv', 'mkv', 'flv', '3gp']
+        .contains(fileExtension.toLowerCase())) {
       assetType = AssetType.video;
     }
     // List of image extensions can be extended as needed
@@ -316,7 +318,8 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
         .contains(fileExtension.toLowerCase())) {
       assetType = AssetType.image;
     } else {
-      assetType = AssetType.other; // Handle other types as you see fit
+      throw Exception('Invalid file extension');
+      assetType = AssetType.other; // Hand other types as you see fit
     }
 
     AssetEntity asset = AssetEntity(
@@ -329,9 +332,21 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
         height: 1,
         relativePath: file.path);
 
+    final originFile = File(file.path);
+
+    VideoController? videoController;
+
+    if (assetType == AssetType.video) {
+      videoController = VideoController(
+        videoPlayerController: VideoPlayerController.file(originFile),
+        videoConfig: videoConfig,
+      )..initialize();
+    }
+
     return GoodieAsset(
       asset: asset,
-      imageFile: File(file.path),
+      imageFile: originFile,
+      videoPlayerController: videoController,
     );
   }
 }
