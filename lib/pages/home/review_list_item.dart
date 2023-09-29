@@ -1,9 +1,14 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_video_view/flutter_video_view.dart';
 import 'package:goodie/model/review.dart';
+import 'package:goodie/pages/home/review_list_item_video.dart';
+import 'package:goodie/utils/image.dart';
 import 'package:provider/provider.dart';
 
+import '../../bloc/create_review_provider.dart';
 import '../../bloc/restaurant_provider.dart';
 import '../../model/restaurant.dart';
 
@@ -25,7 +30,7 @@ class ReviewListItem extends StatefulWidget {
 class _ReviewListItemState extends State<ReviewListItem> {
   Restaurant get restaurant => widget.restaurant;
 
-  List<String> _images = [];
+  List<MediaItem> _mediaItems = [];
 
   bool _isImagesHandled = false;
 
@@ -33,6 +38,8 @@ class _ReviewListItemState extends State<ReviewListItem> {
 
   final PageController _pageController = PageController();
   int _currentPage = 0;
+
+  ValueNotifier<bool> videoInitializedNotifier = ValueNotifier<bool>(false);
 
   @override
   void initState() {
@@ -112,26 +119,25 @@ class _ReviewListItemState extends State<ReviewListItem> {
             ),
 
             const SizedBox(height: 10),
-
-            // Restaurant Images - Horizontal PageView
             Expanded(
-              child: PageView.builder(
-                controller: _pageController,
-                itemCount:
-                    _images.where((element) => element.isNotEmpty).length,
-                itemBuilder: (context, index) {
+                child: PageView.builder(
+              controller: _pageController,
+              itemCount: _mediaItems.length,
+              itemBuilder: (context, index) {
+                final item = _mediaItems[index];
+                if (item.type == MediaType.Image) {
                   return Image.network(
-                    _images[index],
+                    item.url,
                     errorBuilder: (context, error, stackTrace) => Container(),
                     fit: BoxFit.cover,
                   );
-                },
-              ),
-            ),
-            const SizedBox(height: 10),
+                } else if (item.type == MediaType.Video) {
+                  return ReviewListItemVideo(key: Key(item.url), item: item);
+                }
+                return Container(); // Fallback
+              },
+            )),
 
-            // Actions like Like, Comment, and Share
-            // Actions like Like, Comment, and Share
             Stack(
               children: [
                 Row(
@@ -150,13 +156,13 @@ class _ReviewListItemState extends State<ReviewListItem> {
                   ],
                 ),
                 // Dots indicator
-                if (_images.length > 1)
+                if (_mediaItems.length > 1)
                   Padding(
                     padding: const EdgeInsets.only(top: 8.0),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: List.generate(
-                        _images.length,
+                        _mediaItems.length,
                         (index) => AnimatedContainer(
                           duration: const Duration(milliseconds: 300),
                           margin: const EdgeInsets.symmetric(horizontal: 2),
@@ -203,13 +209,15 @@ class _ReviewListItemState extends State<ReviewListItem> {
     );
   }
 
-  void _handleImages() {
-    if (widget.review.images != null && widget.review.images!.isNotEmpty) {
-      _precacheImages(widget.review.images!);
+  Future<void> _handleImages() async {
+    if (widget.review.media != null && widget.review.media!.isNotEmpty) {
+      // Assuming widget.review.media is a list of MediaItem
+      _mediaItems = widget.review.media!;
+      setState(() {});
     } else {
       if (restaurant.coverImg != null) {
-        _images.add(restaurant.coverImg!);
-        setState(() {});
+        _mediaItems
+            .add(MediaItem(url: restaurant.coverImg!, type: MediaType.Image));
       }
 
       if (restaurant.dishes.isEmpty) {
@@ -217,29 +225,34 @@ class _ReviewListItemState extends State<ReviewListItem> {
             .fetchDishesAndPrecacheImages(restaurant.id, context)
             .then((value) {
           for (var dish in restaurant.dishes) {
-            if (_images.length < 2) {
-              _images.add(dish.imgUrl!);
+            if (_mediaItems.length < 2) {
+              _mediaItems
+                  .add(MediaItem(url: dish.imgUrl!, type: MediaType.Image));
             } else {
               break;
             }
           }
-          _precacheImages(_images);
+          // Only precache images
+          _precacheImages(_mediaItems
+              .where((item) => item.type == MediaType.Image)
+              .toList());
         });
       }
     }
 
-    // _precacheImages(_images);
+    _precacheImages(
+        _mediaItems.where((item) => item.type == MediaType.Image).toList());
   }
 
-  void _precacheImages(List<String> imageUrls) async {
+  void _precacheImages(List<MediaItem> mediaItems) async {
     if (_isCancelled) return; // Check if widget is disposed
 
-    List<String> successfulUrls = [];
+    List<MediaItem> successfulItems = [];
 
-    for (var imageUrl in imageUrls) {
+    for (var mediaItem in mediaItems) {
       // Skip invalid URLs
-      if (imageUrl.isEmpty || !Uri.parse(imageUrl).hasScheme) {
-        print("Skipping invalid URL: $imageUrl");
+      if (mediaItem.url.isEmpty || !Uri.parse(mediaItem.url).hasScheme) {
+        print("Skipping invalid URL: ${mediaItem.url}");
         continue;
       }
 
@@ -247,14 +260,15 @@ class _ReviewListItemState extends State<ReviewListItem> {
 
       if (_isCancelled) return; // Check again before precaching
 
-      precacheImage(NetworkImage(imageUrl), context, onError: (e, stackTrace) {
+      precacheImage(NetworkImage(mediaItem.url), context,
+          onError: (e, stackTrace) {
         print("Failed to precache image: $e");
         if (!completer.isCompleted) {
           completer.completeError(e);
         }
       }).then((_) {
         if (!completer.isCompleted) {
-          successfulUrls.add(imageUrl);
+          successfulItems.add(mediaItem);
           completer.complete();
         }
       }).catchError((e) {
@@ -267,15 +281,15 @@ class _ReviewListItemState extends State<ReviewListItem> {
       try {
         await completer.future;
       } catch (e) {
-        print("Skipping image due to error: $e");
+        print("Skipping media item due to error: $e");
       }
     }
 
     if (!_isCancelled) {
       // Check again before calling setState
       setState(() {
-        _images =
-            successfulUrls; // Update _images to only contain successful URLs
+        _mediaItems =
+            successfulItems; // Update _mediaItems to only contain successful items
       });
     }
   }

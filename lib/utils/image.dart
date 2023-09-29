@@ -2,12 +2,15 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter_video_view/flutter_video_view.dart';
 
 class MediaItem {
   final String url;
   final MediaType type;
+  VideoController? videoController;
+  final Reference? ref;
 
-  MediaItem({required this.url, required this.type});
+  MediaItem({required this.url, required this.type, this.ref});
 }
 
 enum MediaType { Image, Video }

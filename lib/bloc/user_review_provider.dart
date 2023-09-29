@@ -1,12 +1,15 @@
 import 'dart:math';
 
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:goodie/utils/image.dart';
 
 import '../model/restaurant.dart';
 
 class UserReviewProvider with ChangeNotifier {
   final ValueNotifier<List<RestaurantReview>> reviews = ValueNotifier([]);
+  FirebaseStorage storage = FirebaseStorage.instance;
 
   UserReviewProvider() {
     fetchReviews();
@@ -16,7 +19,8 @@ class UserReviewProvider with ChangeNotifier {
     try {
       QuerySnapshot querySnapshot =
           await FirebaseFirestore.instance.collection('reviews').get();
-      reviews.value = querySnapshot.docs.map((doc) {
+      List<Future<RestaurantReview>> futureReviews =
+          querySnapshot.docs.map((doc) async {
         Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
         return RestaurantReview(
           id: doc.id,
@@ -32,14 +36,38 @@ class UserReviewProvider with ChangeNotifier {
           ratingPackaging: data['ratingPackaging'],
           ratingOverall: data['ratingOverall'],
           timestamp: (data['timestamp'] as Timestamp?)?.toDate(),
-          images: List<String>.from(data['images'] ?? []), // Fetching images
+          media:
+              await _handleMedia(data['images']), // Fetching images and videos
           // Add other fields like comments and likes here
         );
       }).toList();
+      reviews.value = await Future.wait(futureReviews);
       addImaginaryInteractions();
     } catch (e) {
       print("Failed to fetch reviews: $e");
     }
+  }
+
+  Future<List<MediaItem>> _handleMedia(data) async {
+    List<MediaItem> media = [];
+    if (data != null) {
+      for (String url in data) {
+        MediaType mediaType =
+            url.contains('mp4') ? MediaType.Video : MediaType.Image;
+        if (mediaType == MediaType.Video) {
+          // gs: //firebasestorage.googleapis.com/goodie-8814a.appspot.com/o/reviews/flamme-burger-frogner/1695907841164.mp4
+          media.add(MediaItem(
+              url: url, type: mediaType, ref: storage.refFromURL(url)));
+        } else {
+          // Assuming images don't need to fetch download URL and are already in gs:// format
+          media.add(MediaItem(
+            url: url,
+            type: mediaType,
+          ));
+        }
+      }
+    }
+    return media;
   }
 
   void addImaginaryInteractions() {

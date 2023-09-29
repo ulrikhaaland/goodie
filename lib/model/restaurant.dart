@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:goodie/utils/image.dart';
 import 'package:latlong2/latlong.dart';
 
 class Dish {
@@ -65,7 +66,7 @@ class RestaurantReview {
   num? ratingOverall; // 0-10 (needed for both dine in and takeout)
   DateTime? timestamp;
   bool dineIn; // If not dine-in, then takeout
-  List<Media>? images; // Images of the review
+  List<MediaItem>? media; // media of the review
   // Below are not for making a review, but for other users to interact with the review
   List<Comment>? comments; // Comments on the review
   List<Like>? likes; // Likes on the review
@@ -74,7 +75,7 @@ class RestaurantReview {
       {required this.restaurantId,
       required this.userId,
       required this.dineIn,
-      this.images,
+      this.media,
       this.ratingFood,
       this.ratingService,
       this.comments,
