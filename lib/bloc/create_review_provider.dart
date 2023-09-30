@@ -3,32 +3,32 @@ import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:exif/exif.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_video_view/flutter_video_view.dart';
 import 'package:photo_manager/photo_manager.dart';
+import 'package:video_player/video_player.dart';
 // ignore: depend_on_referenced_packages
 import '../model/restaurant.dart';
 import '../utils/distance.dart';
 import '../utils/image.dart';
 
-final videoConfig = VideoConfig(
-  autoInitialize: true,
-  canChangeVolumeOrBrightness: false,
-  useRootNavigator: false,
-  panEnabled: true,
-  scaleEnabled: true,
-  volume: 0.3,
-  minScale: 1,
-  maxScale: 3,
-  // canBack: false,
-  canChangeProgress: false,
-  // // autoPlay: true,
-  // showControls: (context, isFullScreen) => false,
-  // aspectRatio:
-  //     widget.asset.videoPlayerController!.value.aspectRatio,
-  // topActionsBuilder: (context, isFullScreen) => [
-  //   const SizedBox(),
-  // ],
-);
+// final videoConfig = VideoConfig(
+//   autoInitialize: true,
+//   canChangeVolumeOrBrightness: false,
+//   useRootNavigator: false,
+//   panEnabled: true,
+//   scaleEnabled: true,
+//   volume: 0.3,
+//   minScale: 1,
+//   maxScale: 3,
+//   // canBack: false,
+//   canChangeProgress: false,
+//   // // autoPlay: true,
+//   // showControls: (context, isFullScreen) => false,
+//   // aspectRatio:
+//   //     widget.asset.videoPlayerController!.value.aspectRatio,
+//   // topActionsBuilder: (context, isFullScreen) => [
+//   //   const SizedBox(),
+//   // ],
+// );
 
 class CreateRestaurantReviewProvider with ChangeNotifier {
   Restaurant? _selectedRestaurant;
@@ -81,11 +81,8 @@ class CreateRestaurantReviewProvider with ChangeNotifier {
             .where((media) => media.asset.type == AssetType.video)
             .forEach((video) async {
           video.originFile.then((value) {
-            video.videoPlayerController = VideoController(
-              videoPlayerController: VideoPlayerController.file(value!),
-              videoConfig: videoConfig,
-            );
-            video.videoPlayerController!.initialize();
+            video.videoPlayerController = VideoPlayerController.file(value!)
+              ..initialize();
           });
         });
       });
@@ -294,7 +291,7 @@ class GoodieAsset extends AssetEntity {
   Offset? offset;
   File? imageFile;
   Restaurant? restaurant;
-  VideoController? videoPlayerController;
+  VideoPlayerController? videoPlayerController;
 
   GoodieAsset({
     required this.asset,

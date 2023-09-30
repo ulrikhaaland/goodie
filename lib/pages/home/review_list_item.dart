@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_video_view/flutter_video_view.dart';
 import 'package:goodie/model/review.dart';
 import 'package:goodie/pages/home/review_list_item_video.dart';
 import 'package:goodie/utils/image.dart';
@@ -121,6 +120,7 @@ class _ReviewListItemState extends State<ReviewListItem> {
             const SizedBox(height: 10),
             Expanded(
                 child: PageView.builder(
+              key: Key(_mediaItems.length.toString()),
               controller: _pageController,
               itemCount: _mediaItems.length,
               itemBuilder: (context, index) {

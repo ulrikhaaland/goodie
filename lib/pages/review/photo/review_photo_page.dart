@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:flutter_video_view/flutter_video_view.dart';
 import 'package:goodie/pages/review/photo/review_photo_asset_thumbnail.dart';
 import 'package:goodie/pages/review/photo/review_photo_selection_indicator.dart';
 import 'package:goodie/pages/review/photo/review_photo_sliver_head_delegate.dart';
@@ -10,6 +9,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:photo_manager/photo_manager.dart';
 // ignore: depend_on_referenced_packages
 import 'package:collection/collection.dart';
+import 'package:video_player/video_player.dart';
 import '../../../bloc/create_review_provider.dart';
 
 // ignore: must_be_immutable
@@ -59,11 +59,14 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
         });
       }
     });
+    _selectedAssetNotifier.addListener(_onSelectedAssetChange);
     super.initState();
   }
 
   @override
   void dispose() {
+    _selectedAssetNotifier.removeListener(_onSelectedAssetChange);
+
     super.dispose();
   }
 
@@ -77,7 +80,7 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
     final selectedAssetWidth = (selectedAssetHeight * 0.8).floor();
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      padding: const EdgeInsets.symmetric(horizontal: 12.0),
       child: SizedBox(
         height: screenHeight,
         child: CustomScrollView(
@@ -86,14 +89,14 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
               : const NeverScrollableScrollPhysics(),
           slivers: [
             const SliverAppBar(
-              backgroundColor: Colors.white,
+              backgroundColor: Colors.transparent,
               elevation: 0,
               floating: true, // Add this line
-              expandedHeight: 78,
+              expandedHeight: 54,
               flexibleSpace: FlexibleSpaceBar(
                 background: Column(
                   children: [
-                    SizedBox(height: 24.0),
+                    SizedBox(height: 12.0),
                     Text(
                       'Ny anmeldelse',
                       style: TextStyle(
@@ -101,7 +104,6 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    SizedBox(height: 24.0),
                   ],
                 ),
               ),
@@ -192,11 +194,22 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
             cache: _thumbnailCache,
           ),
           if (asset.type == AssetType.video)
-            const Positioned(
-              bottom: 10,
-              right: 10,
-              child:
-                  Icon(Icons.play_circle_fill, color: Colors.white, size: 24),
+            Positioned(
+              right: 5,
+              bottom: 5,
+              child: Builder(
+                builder: (context) {
+                  final duration = Duration(seconds: asset.duration);
+                  final minutes = duration.inMinutes;
+                  final seconds = (duration.inSeconds % 60)
+                      .toString()
+                      .padLeft(2, '0'); // Ensure seconds is two digits
+                  return Text(
+                    '$minutes:$seconds',
+                    style: const TextStyle(color: Colors.white),
+                  );
+                },
+              ),
             ),
           SelectionIndicator(
             asset: asset,
@@ -241,7 +254,12 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
   Widget _buildPickImage() {
     return GestureDetector(
       onTap: () async {
-        final List<XFile> pickedFiles = await ImagePicker().pickMultipleMedia();
+        List<XFile> pickedFiles = [];
+        try {
+          pickedFiles = await ImagePicker().pickMultipleMedia();
+        } catch (e) {
+          print(e);
+        }
 
         final List<GoodieAsset> pickedAssets = [];
 
@@ -334,13 +352,10 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
 
     final originFile = File(file.path);
 
-    VideoController? videoController;
+    VideoPlayerController? videoController;
 
     if (assetType == AssetType.video) {
-      videoController = VideoController(
-        videoPlayerController: VideoPlayerController.file(originFile),
-        videoConfig: videoConfig,
-      )..initialize();
+      videoController = VideoPlayerController.file(originFile)..initialize();
     }
 
     return GoodieAsset(
@@ -348,5 +363,19 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
       imageFile: originFile,
       videoPlayerController: videoController,
     );
+  }
+
+  void _onSelectedAssetChange() {
+    final selectedAsset = _selectedAssetNotifier.value;
+
+    if (selectedAsset!.type == AssetType.video) {
+      selectedAsset.videoPlayerController!
+        ..play()
+        ..setLooping(true);
+    } else {
+      _recentImages
+          .where((element) => element.type == AssetType.video)
+          .forEach((element) => element.videoPlayerController?.pause());
+    }
   }
 }

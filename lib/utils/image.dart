@@ -1,13 +1,11 @@
 import 'dart:io';
-import 'dart:typed_data';
-import 'dart:ui' as ui;
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:flutter_video_view/flutter_video_view.dart';
+import 'package:video_player/video_player.dart';
 
 class MediaItem {
   final String url;
   final MediaType type;
-  VideoController? videoController;
+  VideoPlayerController? videoController;
   final Reference? ref;
 
   MediaItem({required this.url, required this.type, this.ref});

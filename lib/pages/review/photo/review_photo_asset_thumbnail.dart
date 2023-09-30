@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:flutter_video_view/flutter_video_view.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:video_player/video_player.dart';
@@ -36,6 +35,9 @@ class _AssetThumbnailState extends State<AssetThumbnail> {
   MemoryImage? editImage;
   PhotoViewController? controller;
 
+  VideoPlayerController? get _videoController =>
+      widget.asset.videoPlayerController;
+
   @override
   void initState() {
     if (widget.fullResolution && widget.asset.type == AssetType.image) {
@@ -68,16 +70,45 @@ class _AssetThumbnailState extends State<AssetThumbnail> {
     if (widget.asset.type == AssetType.video &&
         widget.asset.videoPlayerController != null &&
         widget.fullResolution) {
-      return ClipRect(
-        child: OverflowBox(
-          maxWidth: widget.width!.toDouble() * 1.63, // 1.5 is the zoom factor
-          child: Transform.scale(
-            scale: 1.63, // 1.5 is the zoom factor
-            child: VideoView(
-              key: Key(widget.asset.id),
-              controller: widget.asset.videoPlayerController!,
+      final double videoAspectRatio = _videoController!.value.aspectRatio;
+
+      return GestureDetector(
+        onTap: _handleOnTapVideo,
+        child: Stack(
+          children: [
+            Align(
+              alignment: Alignment.center,
+              child: AspectRatio(
+                aspectRatio: videoAspectRatio,
+                child: FittedBox(
+                  fit: BoxFit.contain,
+                  child: SizedBox(
+                    width: _videoController!.value.size.width,
+                    height: _videoController!.value.size.height,
+                    child: VideoPlayer(
+                      _videoController!,
+                      key: Key(widget.asset.id),
+                    ),
+                  ),
+                ),
+              ),
             ),
-          ),
+            if (!_videoController!.value.isPlaying) ...[
+              Positioned(
+                left: 0,
+                right: 0,
+                top: 0,
+                bottom: 0,
+                child: SizedBox.shrink(
+                  child: Icon(
+                    Icons.play_arrow_rounded,
+                    color: Colors.grey[300],
+                    size: 80,
+                  ),
+                ),
+              ),
+            ]
+          ],
         ),
       );
     } else {
@@ -96,6 +127,7 @@ class _AssetThumbnailState extends State<AssetThumbnail> {
               minScale: minScale,
               maxScale: maxScale,
               initialScale: widget.asset.scale,
+              tightMode: true,
               backgroundDecoration: const BoxDecoration(
                 color: Colors.transparent,
               ),
@@ -170,6 +202,15 @@ class _AssetThumbnailState extends State<AssetThumbnail> {
         }
       },
     );
+  }
+
+  void _handleOnTapVideo() {
+    if (_videoController!.value.isPlaying) {
+      _videoController!.pause();
+    } else {
+      _videoController!.play();
+    }
+    setState(() {});
   }
 }
 

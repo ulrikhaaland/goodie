@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_video_view/flutter_video_view.dart';
 import 'package:goodie/utils/image.dart';
+import 'package:video_player/video_player.dart';
 
 import '../../bloc/create_review_provider.dart';
 
@@ -15,7 +15,7 @@ class ReviewListItemVideo extends StatefulWidget {
 class _ReviewListItemVideoState extends State<ReviewListItemVideo> {
   MediaItem get item => widget.item;
 
-  VideoController? get controller => item.videoController;
+  VideoPlayerController? get controller => item.videoController;
 
   @override
   void initState() {
@@ -29,23 +29,20 @@ class _ReviewListItemVideoState extends State<ReviewListItemVideo> {
       return const Center(child: CircularProgressIndicator());
     }
     return AspectRatio(
-      aspectRatio:
-          item.videoController!.videoPlayerController.value.aspectRatio,
-      child: VideoView(
+      aspectRatio: item.videoController!.value.aspectRatio,
+      child: VideoPlayer(
+        controller!,
         key: Key(item.url),
-        controller: item.videoController!,
       ),
     );
   }
 
   Future<void> _handleLoadVideo() async {
-    final controller = VideoController(
-      videoPlayerController: VideoPlayerController.network(item.url),
-      videoConfig: videoConfig,
-    );
+    final controller = VideoPlayerController.network(item.url);
 
-    await controller.initialize();
-    item.videoController = controller;
-    setState(() {});
+    controller.initialize().then((value) {
+      item.videoController = controller;
+      setState(() {});
+    });
   }
 }
