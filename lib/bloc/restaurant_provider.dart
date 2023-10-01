@@ -153,8 +153,8 @@ class RestaurantProvider with ChangeNotifier {
     } else {
       // Handle error: Restaurant not found
     }
-    loadingDishes
-        .remove(restaurantId); // Remove the restaurant ID from the loading list
+    // loadingDishes
+    //     .remove(restaurantId); // Remove the restaurant ID from the loading list
   }
 
   void sortRestaurantCategories(Map<String, int> categoryCounts) {

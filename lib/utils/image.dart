@@ -3,12 +3,14 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:video_player/video_player.dart';
 
 class MediaItem {
+  final int index;
   final String url;
   final MediaType type;
   VideoPlayerController? videoController;
   final Reference? ref;
 
-  MediaItem({required this.url, required this.type, this.ref});
+  MediaItem(
+      {required this.index, required this.url, required this.type, this.ref});
 }
 
 enum MediaType { Image, Video }
@@ -21,6 +23,12 @@ Future<String> uploadAssetToFirebaseStorage(File assetFile, String path) async {
   String downloadUrl = await taskSnapshot.ref.getDownloadURL();
   return downloadUrl;
 }
+
+bool isValidUrl(String url) {
+  final Uri? uri = Uri.tryParse(url);
+  return uri != null && uri.scheme.isNotEmpty && uri.host.isNotEmpty;
+}
+
 
 // Future<bool> isValidImageData(Uint8List bytes) async {
 //   try {

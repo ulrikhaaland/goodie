@@ -51,19 +51,23 @@ class UserReviewProvider with ChangeNotifier {
   Future<List<MediaItem>> _handleMedia(data) async {
     List<MediaItem> media = [];
     if (data != null) {
-      for (String url in data) {
+      for (int i = 0; i < data.length; i++) {
+        String url = data[i];
         MediaType mediaType =
             url.contains('mp4') ? MediaType.Video : MediaType.Image;
         if (mediaType == MediaType.Video) {
           // gs: //firebasestorage.googleapis.com/goodie-8814a.appspot.com/o/reviews/flamme-burger-frogner/1695907841164.mp4
-          media.add(MediaItem(
-              url: url, type: mediaType, ref: storage.refFromURL(url)));
+          media.add(
+            MediaItem(
+                index: i,
+                url: url,
+                type: mediaType,
+                ref: storage.refFromURL(url)),
+          );
         } else {
+          final ref = storage.refFromURL(url);
           // Assuming images don't need to fetch download URL and are already in gs:// format
-          media.add(MediaItem(
-            url: url,
-            type: mediaType,
-          ));
+          media.add(MediaItem(index: i, url: url, type: mediaType, ref: ref));
         }
       }
     }

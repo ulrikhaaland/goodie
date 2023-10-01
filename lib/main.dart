@@ -189,19 +189,6 @@ class _HomeWithBottomNavigationState extends State<HomeWithBottomNavigation> {
   }
 }
 
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(
-        child: Text('Welcome to Home Page!'),
-      ),
-    );
-  }
-}
-
 class BookmarksScreen extends StatelessWidget {
   const BookmarksScreen({super.key});
 

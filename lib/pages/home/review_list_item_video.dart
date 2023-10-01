@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:goodie/utils/image.dart';
 import 'package:video_player/video_player.dart';
+import 'package:visibility_detector/visibility_detector.dart';
 
 import '../../bloc/create_review_provider.dart';
 
@@ -25,14 +26,37 @@ class _ReviewListItemVideoState extends State<ReviewListItemVideo> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+
     if (controller == null) {
       return const Center(child: CircularProgressIndicator());
     }
-    return AspectRatio(
-      aspectRatio: item.videoController!.value.aspectRatio,
-      child: VideoPlayer(
-        controller!,
-        key: Key(item.url),
+
+    return VisibilityDetector(
+      key: Key(item.url),
+      onVisibilityChanged: (visibilityInfo) {
+        if (visibilityInfo.visibleFraction < 0.5) {
+          controller!.pause();
+        } else if (visibilityInfo.visibleFraction > 0.5) {
+          controller!.play();
+        }
+      },
+      child: AspectRatio(
+        aspectRatio: controller!.value.aspectRatio,
+        child: Container(
+          width: screenWidth, // Set the width to the screen width
+          child: FittedBox(
+            fit: BoxFit.fitWidth,
+            child: SizedBox(
+              width: controller!.value.size.width,
+              height: controller!.value.size.height,
+              child: VideoPlayer(
+                controller!,
+                key: Key(item.url),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -42,7 +66,9 @@ class _ReviewListItemVideoState extends State<ReviewListItemVideo> {
 
     controller.initialize().then((value) {
       item.videoController = controller;
-      setState(() {});
+      if (mounted) {
+        setState(() {});
+      }
     });
   }
 }

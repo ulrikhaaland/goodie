@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:goodie/model/review.dart';
 import 'package:goodie/pages/home/review_list_item_video.dart';
 import 'package:goodie/utils/image.dart';
+import 'package:preload_page_view/preload_page_view.dart';
 import 'package:provider/provider.dart';
 
 import '../../bloc/create_review_provider.dart';
@@ -35,7 +37,7 @@ class _ReviewListItemState extends State<ReviewListItem> {
 
   bool _isCancelled = false;
 
-  final PageController _pageController = PageController();
+  final PreloadPageController _pageController = PreloadPageController();
   int _currentPage = 0;
 
   ValueNotifier<bool> videoInitializedNotifier = ValueNotifier<bool>(false);
@@ -103,7 +105,7 @@ class _ReviewListItemState extends State<ReviewListItem> {
                       onPressed: () {
                         // Add your follow functionality here
                       },
-                      child: Text("Follow"),
+                      child: const Text("Follow"),
                       style: TextButton.styleFrom(
                         primary: Colors.blue, // Text color
                       ),
@@ -119,24 +121,29 @@ class _ReviewListItemState extends State<ReviewListItem> {
 
             const SizedBox(height: 10),
             Expanded(
-                child: PageView.builder(
-              key: Key(_mediaItems.length.toString()),
-              controller: _pageController,
-              itemCount: _mediaItems.length,
-              itemBuilder: (context, index) {
-                final item = _mediaItems[index];
-                if (item.type == MediaType.Image) {
-                  return Image.network(
-                    item.url,
-                    errorBuilder: (context, error, stackTrace) => Container(),
-                    fit: BoxFit.cover,
-                  );
-                } else if (item.type == MediaType.Video) {
-                  return ReviewListItemVideo(key: Key(item.url), item: item);
-                }
-                return Container(); // Fallback
-              },
-            )),
+                child: PreloadPageView.builder(
+                    controller: _pageController,
+                    itemCount: _mediaItems.length,
+                    preloadPagesCount:
+                        3, // Adjust this value to control the number of pages to preload
+                    itemBuilder: (context, index) {
+                      final media = _mediaItems[index];
+                      if (media.type == MediaType.Image) {
+                        return CachedNetworkImage(
+                          imageUrl: media.url,
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) => const SizedBox.shrink(
+                              child: CircularProgressIndicator()),
+                          errorWidget: (context, url, error) =>
+                              const Icon(Icons.error),
+                        );
+                      } else {
+                        return ReviewListItemVideo(
+                          key: Key(media.url),
+                          item: _mediaItems[index],
+                        );
+                      }
+                    })),
 
             Stack(
               children: [
@@ -212,12 +219,16 @@ class _ReviewListItemState extends State<ReviewListItem> {
   Future<void> _handleImages() async {
     if (widget.review.media != null && widget.review.media!.isNotEmpty) {
       // Assuming widget.review.media is a list of MediaItem
-      _mediaItems = widget.review.media!;
+      _mediaItems = widget.review.media!
+          .where((element) => element.url.isNotEmpty && isValidUrl(element.url))
+          .toList();
       setState(() {});
     } else {
       if (restaurant.coverImg != null) {
-        _mediaItems
-            .add(MediaItem(url: restaurant.coverImg!, type: MediaType.Image));
+        _mediaItems.add(MediaItem(
+            index: _mediaItems.length,
+            url: restaurant.coverImg!,
+            type: MediaType.Image));
       }
 
       if (restaurant.dishes.isEmpty) {
@@ -225,72 +236,18 @@ class _ReviewListItemState extends State<ReviewListItem> {
             .fetchDishesAndPrecacheImages(restaurant.id, context)
             .then((value) {
           for (var dish in restaurant.dishes) {
-            if (_mediaItems.length < 2) {
-              _mediaItems
-                  .add(MediaItem(url: dish.imgUrl!, type: MediaType.Image));
+            if (_mediaItems.length < 3) {
+              _mediaItems.add(MediaItem(
+                  url: dish.imgUrl!,
+                  type: MediaType.Image,
+                  index: _mediaItems.length));
             } else {
               break;
             }
           }
-          // Only precache images
-          _precacheImages(_mediaItems
-              .where((item) => item.type == MediaType.Image)
-              .toList());
+          if (mounted) setState(() {});
         });
       }
-    }
-
-    _precacheImages(
-        _mediaItems.where((item) => item.type == MediaType.Image).toList());
-  }
-
-  void _precacheImages(List<MediaItem> mediaItems) async {
-    if (_isCancelled) return; // Check if widget is disposed
-
-    List<MediaItem> successfulItems = [];
-
-    for (var mediaItem in mediaItems) {
-      // Skip invalid URLs
-      if (mediaItem.url.isEmpty || !Uri.parse(mediaItem.url).hasScheme) {
-        print("Skipping invalid URL: ${mediaItem.url}");
-        continue;
-      }
-
-      var completer = Completer<void>();
-
-      if (_isCancelled) return; // Check again before precaching
-
-      precacheImage(NetworkImage(mediaItem.url), context,
-          onError: (e, stackTrace) {
-        print("Failed to precache image: $e");
-        if (!completer.isCompleted) {
-          completer.completeError(e);
-        }
-      }).then((_) {
-        if (!completer.isCompleted) {
-          successfulItems.add(mediaItem);
-          completer.complete();
-        }
-      }).catchError((e) {
-        print("Error during precaching: $e");
-        if (!completer.isCompleted) {
-          completer.completeError(e);
-        }
-      });
-
-      try {
-        await completer.future;
-      } catch (e) {
-        print("Skipping media item due to error: $e");
-      }
-    }
-
-    if (!_isCancelled) {
-      // Check again before calling setState
-      setState(() {
-        _mediaItems =
-            successfulItems; // Update _mediaItems to only contain successful items
-      });
     }
   }
 }
