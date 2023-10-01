@@ -74,41 +74,46 @@ class _AssetThumbnailState extends State<AssetThumbnail> {
 
       return GestureDetector(
         onTap: _handleOnTapVideo,
-        child: Stack(
-          children: [
-            Align(
-              alignment: Alignment.center,
-              child: AspectRatio(
-                aspectRatio: videoAspectRatio,
-                child: FittedBox(
-                  fit: BoxFit.contain,
-                  child: SizedBox(
-                    width: _videoController!.value.size.width,
-                    height: _videoController!.value.size.height,
-                    child: VideoPlayer(
-                      _videoController!,
-                      key: Key(widget.asset.id),
+        child: Container(
+          width: widget.width?.toDouble(),
+          height: widget.height?.toDouble(),
+          color: Colors.white,
+          child: Stack(
+            children: [
+              Align(
+                alignment: Alignment.center,
+                child: AspectRatio(
+                  aspectRatio: videoAspectRatio,
+                  child: FittedBox(
+                    fit: BoxFit.contain,
+                    child: SizedBox(
+                      width: _videoController!.value.size.width,
+                      height: _videoController!.value.size.height,
+                      child: VideoPlayer(
+                        _videoController!,
+                        key: Key(widget.asset.id),
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-            if (!_videoController!.value.isPlaying) ...[
-              Positioned(
-                left: 0,
-                right: 0,
-                top: 0,
-                bottom: 0,
-                child: SizedBox.shrink(
-                  child: Icon(
-                    Icons.play_arrow_rounded,
-                    color: Colors.grey[300],
-                    size: 80,
+              if (!_videoController!.value.isPlaying) ...[
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  top: 0,
+                  bottom: 0,
+                  child: SizedBox.shrink(
+                    child: Icon(
+                      Icons.play_arrow_rounded,
+                      color: Colors.grey[300],
+                      size: 80,
+                    ),
                   ),
                 ),
-              ),
-            ]
-          ],
+              ]
+            ],
+          ),
         ),
       );
     } else {

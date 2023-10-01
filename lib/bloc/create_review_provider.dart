@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:exif/exif.dart';
 import 'package:flutter/material.dart';
+import 'package:goodie/bloc/user_review_provider.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:video_player/video_player.dart';
 // ignore: depend_on_referenced_packages
@@ -227,7 +228,7 @@ class CreateRestaurantReviewProvider with ChangeNotifier {
     );
   }
 
-  void onShareReview() async {
+  void onShareReview(UserReviewProvider userReviewProvider) async {
     RestaurantReview shareReview = review;
     List<GoodieAsset> assets = [...selectedAssetsNotifier.value];
     // reset assets
@@ -280,6 +281,8 @@ class CreateRestaurantReviewProvider with ChangeNotifier {
       await reviews.doc(shareReview.id).set(reviewMap);
     }
 
+    // Update the userReviewProvider
+    userReviewProvider.fetchReviews();
     print("Review and images uploaded to Firestore and Firebase Storage.");
   }
 }

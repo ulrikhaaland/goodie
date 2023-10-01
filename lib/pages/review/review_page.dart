@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:goodie/bloc/restaurant_provider.dart';
+import 'package:goodie/bloc/user_review_provider.dart';
 import 'package:goodie/pages/review/review_list_item.dart';
 import 'package:goodie/pages/review/review_select_page.dart';
 import 'package:goodie/pages/review/review_page_buttons.dart';
@@ -191,12 +192,15 @@ class _RestaurantReviewPageState extends State<RestaurantReviewPage>
 
   void _handleOnReview() {
     // TODO: Add review to feed list
+    UserReviewProvider userReviewProvider =
+        Provider.of<UserReviewProvider>(context, listen: false);
+
     _canSubmit = false;
     _selectRestaurantId++;
     _pageIndex = 0;
     _pageController.animateToPage(0,
         duration: const Duration(milliseconds: 500), curve: Curves.easeInOut);
-    _reviewProvider.onShareReview();
+    _reviewProvider.onShareReview(userReviewProvider);
   }
 
   void _handleOnCanSubmit(bool canSubmit) {

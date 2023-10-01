@@ -89,7 +89,7 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
               : const NeverScrollableScrollPhysics(),
           slivers: [
             const SliverAppBar(
-              backgroundColor: Colors.transparent,
+              backgroundColor: Colors.white,
               elevation: 0,
               floating: true, // Add this line
               expandedHeight: 54,

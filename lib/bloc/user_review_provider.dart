@@ -41,7 +41,8 @@ class UserReviewProvider with ChangeNotifier {
           // Add other fields like comments and likes here
         );
       }).toList();
-      reviews.value = await Future.wait(futureReviews);
+      reviews.value = await Future.wait(futureReviews)
+        ..sort(((a, b) => b.timestamp!.compareTo(a.timestamp!)));
       addImaginaryInteractions();
     } catch (e) {
       print("Failed to fetch reviews: $e");
