@@ -45,18 +45,28 @@ class _ReviewListItemState extends State<ReviewListItem>
 
   ValueNotifier<bool> videoInitializedNotifier = ValueNotifier<bool>(false);
 
-  late AnimationController _animationController;
-  late Animation<double> _opacityAnimation;
+  late AnimationController _animationControllerSoundOn;
+  late AnimationController _animationControllerSoundOff;
+  late Animation<double> _opacityAnimationSoundOn;
+  late Animation<double> _opacityAnimationSoundOff;
 
   @override
   void initState() {
-    _animationController = AnimationController(
-        duration: const Duration(seconds: 1), // Set duration to 1 second
+    _animationControllerSoundOn = AnimationController(
+        duration: const Duration(milliseconds: 500), // Set duration to 1 second
         vsync: this,
         value: 0);
 
-    _opacityAnimation =
-        Tween<double>(begin: 1.0, end: 0.0).animate(_animationController);
+    _animationControllerSoundOff = AnimationController(
+        duration: const Duration(milliseconds: 500), // Set duration to 1 second
+        vsync: this,
+        value: 0);
+
+    _opacityAnimationSoundOn =
+        Tween<double>(begin: 0, end: 1).animate(_animationControllerSoundOn);
+
+    _opacityAnimationSoundOff =
+        Tween<double>(begin: 0, end: 1).animate(_animationControllerSoundOff);
 
     _pageController.addListener(() {
       setState(() {
@@ -165,17 +175,24 @@ class _ReviewListItemState extends State<ReviewListItem>
                           )),
                     ),
                   ),
-                if (_mediaItems[_currentPage].type == MediaType.Video)
+                if (_mediaItems[_currentPage].type == MediaType.Video) ...[
                   FadeTransition(
-                    opacity: _opacityAnimation,
+                    opacity: _opacityAnimationSoundOn,
                     child: Icon(
-                      widget.reviewProvider.soundOn.value
-                          ? Icons.volume_up
-                          : Icons.volume_mute,
+                      Icons.volume_up,
                       color: Colors.grey[300],
                       size: 80,
                     ),
                   ),
+                  FadeTransition(
+                    opacity: _opacityAnimationSoundOff,
+                    child: Icon(
+                      Icons.volume_mute,
+                      color: Colors.grey[300],
+                      size: 80,
+                    ),
+                  ),
+                ]
               ],
             )),
 
@@ -303,10 +320,17 @@ class _ReviewListItemState extends State<ReviewListItem>
         onTap: () {
           if (widget.reviewProvider.soundOn.value) {
             widget.reviewProvider.soundOn.value = false;
-            _animationController.forward();
+            _animationControllerSoundOn.reset();
+            _animationControllerSoundOff
+                .forward()
+                .whenComplete(() => _animationControllerSoundOff.reverse());
           } else {
             widget.reviewProvider.soundOn.value = true;
-            _animationController.reverse();
+            _animationControllerSoundOff.reset();
+
+            _animationControllerSoundOn
+                .forward()
+                .whenComplete(() => _animationControllerSoundOn.reverse());
           }
         },
         soundOnListener: widget.reviewProvider.soundOn,

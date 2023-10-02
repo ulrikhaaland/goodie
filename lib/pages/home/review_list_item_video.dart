@@ -59,28 +59,22 @@ class _ReviewListItemVideoState extends State<ReviewListItemVideo> {
       },
       child: GestureDetector(
         onTap: widget.onTap,
-        child: Stack(
-          fit: StackFit.passthrough,
-          alignment: Alignment.center,
-          children: [
-            AspectRatio(
-              aspectRatio: controller!.value.aspectRatio,
+        child: AspectRatio(
+          aspectRatio: controller!.value.aspectRatio,
+          child: SizedBox(
+            width: screenWidth, // Set the width to the screen width
+            child: FittedBox(
+              fit: BoxFit.fitWidth,
               child: SizedBox(
-                width: screenWidth, // Set the width to the screen width
-                child: FittedBox(
-                  fit: BoxFit.fitWidth,
-                  child: SizedBox(
-                    width: controller!.value.size.width,
-                    height: controller!.value.size.height,
-                    child: VideoPlayer(
-                      controller!,
-                      key: Key(item.url),
-                    ),
-                  ),
+                width: controller!.value.size.width,
+                height: controller!.value.size.height,
+                child: VideoPlayer(
+                  controller!,
+                  key: Key(item.url),
                 ),
               ),
             ),
-          ],
+          ),
         ),
       ),
     );

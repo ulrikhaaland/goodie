@@ -78,6 +78,7 @@ class _RestaurantReviewPageState extends State<RestaurantReviewPage>
                   key: Key(_selectedRestaurant?.id ?? "listitem"),
                   selectedRestaurant: _selectedRestaurant),
               reviewProvider: _reviewProvider,
+              isCurrentPage: _pageIndex == 0,
             ),
             ResturantReviewSelectPage(
               key: Key(_selectRestaurantId.toString()),

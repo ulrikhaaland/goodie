@@ -17,11 +17,13 @@ import '../../../bloc/create_review_provider.dart';
 class RestaurantReviewPhotoPage extends StatefulWidget {
   final Widget restaurantListItem;
   final CreateRestaurantReviewProvider reviewProvider;
+  final bool isCurrentPage;
 
   const RestaurantReviewPhotoPage({
     Key? key,
     required this.restaurantListItem,
     required this.reviewProvider,
+    required this.isCurrentPage,
   }) : super(key: key);
 
   @override
@@ -68,6 +70,16 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
     _selectedAssetNotifier.removeListener(_onSelectedAssetChange);
 
     super.dispose();
+  }
+
+  @override
+  void didUpdateWidget(covariant RestaurantReviewPhotoPage oldWidget) {
+    // pause all videos if widget.iscurrentpage == false
+    if (!widget.isCurrentPage) {
+      _pauseAllVideos();
+    }
+
+    super.didUpdateWidget(oldWidget);
   }
 
   @override
@@ -199,7 +211,10 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
               bottom: 5,
               child: Builder(
                 builder: (context) {
-                  final duration = Duration(seconds: asset.duration);
+                  final duration = Duration(
+                      seconds: asset.duration != 0
+                          ? asset.duration
+                          : asset.asset.duration);
                   final minutes = duration.inMinutes;
                   final seconds = (duration.inSeconds % 60)
                       .toString()
@@ -274,7 +289,7 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
             bool isRecent = asset != null;
 
             if (asset == null) {
-              asset = xFileToAssetEntity(file);
+              asset = await xFileToAssetEntity(file);
             } else {
               final isSelected = _selectedAssetsNotifier.value.firstWhereOrNull(
                     (element) => element.asset.title == file.name,
@@ -320,7 +335,7 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
     );
   }
 
-  GoodieAsset xFileToAssetEntity(XFile file) {
+  Future<GoodieAsset> xFileToAssetEntity(XFile file) async {
     String filePath = file.path;
     String fileExtension = filePath.split('.').last;
 
@@ -355,7 +370,8 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
     VideoPlayerController? videoController;
 
     if (assetType == AssetType.video) {
-      videoController = VideoPlayerController.file(originFile)..initialize();
+      videoController = VideoPlayerController.file(originFile);
+      await videoController.initialize();
     }
 
     return GoodieAsset(
@@ -373,9 +389,13 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
         ..play()
         ..setLooping(true);
     } else {
-      _recentImages
-          .where((element) => element.type == AssetType.video)
-          .forEach((element) => element.videoPlayerController?.pause());
+      _pauseAllVideos();
     }
+  }
+
+  void _pauseAllVideos() {
+    _recentImages
+        .where((element) => element.type == AssetType.video)
+        .forEach((element) => element.videoPlayerController?.pause());
   }
 }
