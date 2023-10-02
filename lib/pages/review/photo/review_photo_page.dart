@@ -211,10 +211,7 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
               bottom: 5,
               child: Builder(
                 builder: (context) {
-                  final duration = Duration(
-                      seconds: asset.duration != 0
-                          ? asset.duration
-                          : asset.asset.duration);
+                  final duration = Duration(seconds: asset.duration);
                   final minutes = duration.inMinutes;
                   final seconds = (duration.inSeconds % 60)
                       .toString()
@@ -289,7 +286,7 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
             bool isRecent = asset != null;
 
             if (asset == null) {
-              asset = await xFileToAssetEntity(file);
+              asset = xFileToAssetEntity(file);
             } else {
               final isSelected = _selectedAssetsNotifier.value.firstWhereOrNull(
                     (element) => element.asset.title == file.name,
@@ -335,7 +332,7 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
     );
   }
 
-  Future<GoodieAsset> xFileToAssetEntity(XFile file) async {
+  GoodieAsset xFileToAssetEntity(XFile file) {
     String filePath = file.path;
     String fileExtension = filePath.split('.').last;
 
@@ -370,8 +367,7 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
     VideoPlayerController? videoController;
 
     if (assetType == AssetType.video) {
-      videoController = VideoPlayerController.file(originFile);
-      await videoController.initialize();
+      videoController = VideoPlayerController.file(originFile)..initialize();
     }
 
     return GoodieAsset(
