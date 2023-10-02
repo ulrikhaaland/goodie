@@ -11,6 +11,8 @@ class UserReviewProvider with ChangeNotifier {
   final ValueNotifier<List<RestaurantReview>> reviews = ValueNotifier([]);
   FirebaseStorage storage = FirebaseStorage.instance;
 
+  final ValueNotifier<bool> soundOn = ValueNotifier(true);
+
   UserReviewProvider() {
     fetchReviews();
   }

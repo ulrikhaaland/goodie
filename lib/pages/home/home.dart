@@ -25,8 +25,7 @@ class _HomePageState extends State<HomePage>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    final reviews = Provider.of<UserReviewProvider>(context)
-        .reviews; // Get the list of reviews
+    final reviewProvider = Provider.of<UserReviewProvider>(context);
 
     final restaurantProvider = Provider.of<RestaurantProvider>(context);
 
@@ -52,7 +51,7 @@ class _HomePageState extends State<HomePage>
         child: Padding(
             padding: const EdgeInsets.all(8.0),
             child: ValueListenableBuilder(
-              valueListenable: reviews,
+              valueListenable: reviewProvider.reviews,
               builder: (BuildContext context, List<RestaurantReview> value,
                   Widget? child) {
                 return ListView.builder(
@@ -73,6 +72,7 @@ class _HomePageState extends State<HomePage>
                         review: review,
                         restaurant: restaurant,
                         restaurantProvider: restaurantProvider,
+                        reviewProvider: reviewProvider,
                       ); // Use the ReviewListItem widget
                     }
                   },

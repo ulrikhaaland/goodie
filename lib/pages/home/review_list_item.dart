@@ -11,46 +11,59 @@ import 'package:provider/provider.dart';
 
 import '../../bloc/create_review_provider.dart';
 import '../../bloc/restaurant_provider.dart';
+import '../../bloc/user_review_provider.dart';
 import '../../model/restaurant.dart';
 
 class ReviewListItem extends StatefulWidget {
   final RestaurantReview review;
   final Restaurant restaurant;
   final RestaurantProvider restaurantProvider;
+  final UserReviewProvider reviewProvider;
 
-  const ReviewListItem(
-      {super.key,
-      required this.review,
-      required this.restaurant,
-      required this.restaurantProvider});
+  const ReviewListItem({
+    super.key,
+    required this.review,
+    required this.restaurant,
+    required this.restaurantProvider,
+    required this.reviewProvider,
+  });
 
   @override
   State<ReviewListItem> createState() => _ReviewListItemState();
 }
 
-class _ReviewListItemState extends State<ReviewListItem> {
+class _ReviewListItemState extends State<ReviewListItem>
+    with TickerProviderStateMixin {
   Restaurant get restaurant => widget.restaurant;
 
   List<MediaItem> _mediaItems = [];
 
   bool _isImagesHandled = false;
 
-  bool _isCancelled = false;
-
   final PreloadPageController _pageController = PreloadPageController();
   int _currentPage = 0;
 
   ValueNotifier<bool> videoInitializedNotifier = ValueNotifier<bool>(false);
 
+  late AnimationController _animationController;
+  late Animation<double> _opacityAnimation;
+
   @override
   void initState() {
-    super.initState();
+    _animationController = AnimationController(
+        duration: const Duration(seconds: 1), // Set duration to 1 second
+        vsync: this,
+        value: 0);
+
+    _opacityAnimation =
+        Tween<double>(begin: 1.0, end: 0.0).animate(_animationController);
+
     _pageController.addListener(() {
       setState(() {
         _currentPage = _pageController.page!.round();
       });
     });
-    // ... existing code ...
+    super.initState();
   }
 
   @override
@@ -64,7 +77,6 @@ class _ReviewListItemState extends State<ReviewListItem> {
 
   @override
   void dispose() {
-    _isCancelled = true;
     _pageController.dispose();
     super.dispose();
   }
@@ -121,29 +133,51 @@ class _ReviewListItemState extends State<ReviewListItem> {
 
             const SizedBox(height: 10),
             Expanded(
-                child: PreloadPageView.builder(
+                child: Stack(
+              alignment: Alignment.center,
+              children: [
+                PreloadPageView.builder(
                     controller: _pageController,
                     itemCount: _mediaItems.length,
                     preloadPagesCount:
                         3, // Adjust this value to control the number of pages to preload
                     itemBuilder: (context, index) {
                       final media = _mediaItems[index];
-                      if (media.type == MediaType.Image) {
-                        return CachedNetworkImage(
-                          imageUrl: media.url,
-                          fit: BoxFit.cover,
-                          placeholder: (context, url) => const SizedBox.shrink(
-                              child: CircularProgressIndicator()),
-                          errorWidget: (context, url, error) =>
-                              const Icon(Icons.error),
-                        );
-                      } else {
-                        return ReviewListItemVideo(
-                          key: Key(media.url),
-                          item: _mediaItems[index],
-                        );
-                      }
-                    })),
+                      return _buildMedia(media);
+                    }),
+                if (_mediaItems.length > 1)
+                  Positioned(
+                    top: 10,
+                    right: 10,
+                    child: Container(
+                      padding:
+                          const EdgeInsets.all(8.0), // Padding around the text
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.5),
+                        borderRadius: BorderRadius.circular(
+                            8.0), // Optional: to round the corners
+                      ),
+                      child: Text(
+                          "${(_currentPage + 1).toString()}/${_mediaItems.length}",
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          )),
+                    ),
+                  ),
+                if (_mediaItems[_currentPage].type == MediaType.Video)
+                  FadeTransition(
+                    opacity: _opacityAnimation,
+                    child: Icon(
+                      widget.reviewProvider.soundOn.value
+                          ? Icons.volume_up
+                          : Icons.volume_mute,
+                      color: Colors.grey[300],
+                      size: 80,
+                    ),
+                  ),
+              ],
+            )),
 
             Stack(
               children: [
@@ -231,23 +265,52 @@ class _ReviewListItemState extends State<ReviewListItem> {
             type: MediaType.Image));
       }
 
-      if (restaurant.dishes.isEmpty) {
-        widget.restaurantProvider
-            .fetchDishesAndPrecacheImages(restaurant.id, context)
-            .then((value) {
-          for (var dish in restaurant.dishes) {
-            if (_mediaItems.length < 3) {
-              _mediaItems.add(MediaItem(
-                  url: dish.imgUrl!,
-                  type: MediaType.Image,
-                  index: _mediaItems.length));
-            } else {
-              break;
-            }
+      // if (restaurant.dishes.isEmpty) {
+      //   widget.restaurantProvider
+      //       .fetchDishesAndPrecacheImages(restaurant.id, context)
+      //       .then((value) {
+      //     for (var dish in restaurant.dishes) {
+      //       if (_mediaItems.length < 3) {
+      //         _mediaItems.add(MediaItem(
+      //             url: dish.imgUrl!,
+      //             type: MediaType.Image,
+      //             index: _mediaItems.length));
+      //       } else {
+      //         break;
+      //       }
+      //     }
+      //     if (mounted) setState(() {});
+      //   });
+      // }
+    }
+  }
+
+  Widget _buildMedia(MediaItem mediaItem) {
+    final isImage = mediaItem.type == MediaType.Image;
+
+    if (isImage) {
+      return CachedNetworkImage(
+        imageUrl: mediaItem.url,
+        fit: BoxFit.cover,
+        placeholder: (context, url) =>
+            const SizedBox.shrink(child: CircularProgressIndicator()),
+        errorWidget: (context, url, error) => const Icon(Icons.error),
+      );
+    } else {
+      return ReviewListItemVideo(
+        key: Key(mediaItem.url),
+        item: mediaItem,
+        onTap: () {
+          if (widget.reviewProvider.soundOn.value) {
+            widget.reviewProvider.soundOn.value = false;
+            _animationController.forward();
+          } else {
+            widget.reviewProvider.soundOn.value = true;
+            _animationController.reverse();
           }
-          if (mounted) setState(() {});
-        });
-      }
+        },
+        soundOnListener: widget.reviewProvider.soundOn,
+      );
     }
   }
 }
