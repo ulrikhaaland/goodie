@@ -56,7 +56,7 @@ class _HomePageState extends State<HomePage>
                   Widget? child) {
                 return ListView.builder(
                   itemCount: value.length,
-                  cacheExtent: 10000,
+                  cacheExtent: 100000,
                   itemBuilder: (context, index) {
                     final review = value[index];
                     final restaurant =

@@ -176,20 +176,24 @@ class _ReviewListItemState extends State<ReviewListItem>
                     ),
                   ),
                 if (_mediaItems[_currentPage].type == MediaType.Video) ...[
-                  FadeTransition(
-                    opacity: _opacityAnimationSoundOn,
-                    child: Icon(
-                      Icons.volume_up,
-                      color: Colors.grey[300],
-                      size: 80,
+                  IgnorePointer(
+                    child: FadeTransition(
+                      opacity: _opacityAnimationSoundOn,
+                      child: Icon(
+                        Icons.volume_up,
+                        color: Colors.grey[300],
+                        size: 80,
+                      ),
                     ),
                   ),
-                  FadeTransition(
-                    opacity: _opacityAnimationSoundOff,
-                    child: Icon(
-                      Icons.volume_mute,
-                      color: Colors.grey[300],
-                      size: 80,
+                  IgnorePointer(
+                    child: FadeTransition(
+                      opacity: _opacityAnimationSoundOff,
+                      child: Icon(
+                        Icons.volume_mute,
+                        color: Colors.grey[300],
+                        size: 80,
+                      ),
                     ),
                   ),
                 ]
