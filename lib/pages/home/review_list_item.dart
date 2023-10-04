@@ -46,8 +46,9 @@ class _ReviewListItemState extends State<ReviewListItem>
   ValueNotifier<bool> videoInitializedNotifier = ValueNotifier<bool>(false);
 
   late AnimationController _animationControllerSoundOn;
-  late AnimationController _animationControllerSoundOff;
   late Animation<double> _opacityAnimationSoundOn;
+
+  late AnimationController _animationControllerSoundOff;
   late Animation<double> _opacityAnimationSoundOff;
 
   @override

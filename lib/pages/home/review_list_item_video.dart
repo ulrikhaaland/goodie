@@ -23,18 +23,36 @@ class ReviewListItemVideo extends StatefulWidget {
   State<ReviewListItemVideo> createState() => _ReviewListItemVideoState();
 }
 
-class _ReviewListItemVideoState extends State<ReviewListItemVideo> {
+class _ReviewListItemVideoState extends State<ReviewListItemVideo>
+    with TickerProviderStateMixin {
   MediaItem get item => widget.item;
 
-  VideoPlayerController? get controller => item.videoController;
+  late final VideoPlayerController controller;
 
   int _playCount = 0;
   bool _showReplayOverlay = false;
 
+  bool _showDurationOverlay = false;
+
   bool get soundOn => widget.soundOnListener.value;
+
+  late final AnimationController _animationControllerDuration;
+  late final Animation<double> _opacityAnimationDuration;
+
+  final ValueNotifier<bool> durationUpdater = ValueNotifier<bool>(false);
 
   @override
   void initState() {
+    controller = VideoPlayerController.network(item.url);
+
+    _animationControllerDuration = AnimationController(
+        duration: const Duration(milliseconds: 500), // Set duration to 1 second
+        vsync: this,
+        value: 0);
+
+    _opacityAnimationDuration =
+        Tween<double>(begin: 0, end: 1).animate(_animationControllerDuration);
+
     _handleLoadVideo();
     widget.soundOnListener.addListener(_handleOnSoundChange);
 
@@ -44,14 +62,16 @@ class _ReviewListItemVideoState extends State<ReviewListItemVideo> {
   @override
   void dispose() {
     widget.soundOnListener.removeListener(_handleOnSoundChange);
-    controller?.removeListener(_handleOnInitVid);
+    controller.removeListener(_handleOnInitVid);
+    controller.dispose();
+    durationUpdater.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    if (controller == null || controller!.value.isInitialized == false) {
+    if (controller.value.isInitialized == false) {
       return const Center(child: CircularProgressIndicator());
     }
 
@@ -62,10 +82,11 @@ class _ReviewListItemVideoState extends State<ReviewListItemVideo> {
           key: Key(item.url),
           onVisibilityChanged: (visibilityInfo) {
             if (visibilityInfo.visibleFraction < 0.5) {
-              controller!.pause();
+              controller.pause();
             } else if (visibilityInfo.visibleFraction > 0.5) {
-              controller!.play();
-              controller!.setLooping(true);
+              controller.play();
+              handleDurationElapsed();
+              controller.setLooping(true);
             }
             setState(() {});
           },
@@ -74,16 +95,16 @@ class _ReviewListItemVideoState extends State<ReviewListItemVideo> {
               widget.onTap();
             },
             child: AspectRatio(
-              aspectRatio: controller!.value.aspectRatio,
+              aspectRatio: controller.value.aspectRatio,
               child: SizedBox(
                 width: screenWidth, // Set the width to the screen width
                 child: FittedBox(
                   fit: BoxFit.fitWidth,
                   child: SizedBox(
-                    width: controller!.value.size.width,
-                    height: controller!.value.size.height,
+                    width: controller.value.size.width,
+                    height: controller.value.size.height,
                     child: VideoPlayer(
-                      controller!,
+                      controller,
                       key: Key(item.url),
                     ),
                   ),
@@ -123,13 +144,42 @@ class _ReviewListItemVideoState extends State<ReviewListItemVideo> {
             ),
           ),
         if (_showReplayOverlay) ReplayOverlay(onReplay: _handleReplay),
+        Positioned(
+          bottom: 10,
+          left: 10,
+          child: FadeTransition(
+            opacity: _opacityAnimationDuration,
+            child: Container(
+              padding: const EdgeInsets.all(4.0), // Padding around the text
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.5),
+                borderRadius: BorderRadius.circular(
+                    8.0), // Optional: to round the corners
+              ),
+              child: ValueListenableBuilder(
+                  valueListenable: durationUpdater,
+                  builder: (context, value, child) {
+                    controller.value.position;
+                    final duration =
+                        controller.value.duration - controller.value.position;
+
+                    final minutes = duration.inMinutes;
+                    final seconds = (duration.inSeconds % 60)
+                        .toString()
+                        .padLeft(2, '0'); // Ensure seconds is two digits
+                    return Text(
+                      '$minutes:$seconds',
+                      style: const TextStyle(color: Colors.white),
+                    );
+                  }),
+            ),
+          ),
+        ),
       ],
     );
   }
 
   Future<void> _handleLoadVideo() async {
-    final controller = VideoPlayerController.network(item.url);
-
     await controller.initialize();
     item.videoController = controller;
     _handleOnSoundChange();
@@ -141,22 +191,24 @@ class _ReviewListItemVideoState extends State<ReviewListItemVideo> {
   }
 
   void _handleOnSoundChange() {
-    if (controller != null) {
-      if (soundOn) {
-        controller!.setVolume(1);
-      } else {
-        controller!.setVolume(0);
-      }
+    handleDurationElapsed();
+
+    if (soundOn) {
+      controller.setVolume(1);
+    } else {
+      controller.setVolume(0);
     }
   }
 
   Future<void> _handleReplay() async {
-    controller!.removeListener(_handleOnInitVid);
+    controller.removeListener(_handleOnInitVid);
     _playCount = 0;
     _showReplayOverlay = false;
-    await controller!.seekTo(Duration.zero);
-    await controller!.play();
-    await controller!.setLooping(true);
+    handleDurationElapsed();
+    controller.seekTo(Duration.zero).then((value) =>
+        controller.play().then((value) => controller.setLooping(true)));
+    // controller.play();
+    // controller.setLooping(true);
     setState(() {});
   }
 
@@ -164,21 +216,58 @@ class _ReviewListItemVideoState extends State<ReviewListItemVideo> {
 
   void _handleOnInitVid() {
     if (canIncrement &&
-        (controller!.value.position >=
+        (controller.value.position >=
             Duration(
                 milliseconds:
-                    controller!.value.duration.inMilliseconds - 400))) {
+                    controller.value.duration.inMilliseconds - 500))) {
       canIncrement = false;
       _playCount += 1;
+      // durationAnimation
+      if (_playCount == 1) {
+        handleDurationElapsed();
+      }
+
       Timer(const Duration(milliseconds: 500), () => canIncrement = true);
       if (_playCount >= 2) {
-        controller!.setLooping(false);
-        controller!.pause();
-        setState(() {
-          _showReplayOverlay = true;
+        controller.setLooping(false);
+
+        Timer.periodic(const Duration(milliseconds: 50), (timer) {
+          if (controller.value.isCompleted ||
+              controller.value.isPlaying == false) {
+            timer.cancel();
+            setState(() {
+              _showReplayOverlay = true;
+            });
+            controller.seekTo(Duration.zero);
+          }
         });
+
+        // controller.seekTo(Duration.zero);
+
+        // controller.setLooping(false);
+        // controller.pause();
+        // setState(() {
+        //   _showReplayOverlay = true;
+        // });
       }
     }
+  }
+
+  void handleDurationElapsed() {
+    final Stopwatch stopwatch = Stopwatch();
+
+    void updateDuration() {
+      _animationControllerDuration.forward(from: 1);
+
+      stopwatch.start();
+      durationUpdater.value = !durationUpdater.value;
+      if (stopwatch.elapsed.inMilliseconds >= 2250) {
+        _animationControllerDuration.reverse();
+        controller.removeListener(updateDuration);
+      }
+    }
+
+    controller.addListener(updateDuration);
   }
 }
 
