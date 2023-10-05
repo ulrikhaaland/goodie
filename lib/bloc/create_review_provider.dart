@@ -8,7 +8,7 @@ import 'package:photo_manager/photo_manager.dart';
 import 'package:video_player/video_player.dart';
 // ignore: depend_on_referenced_packages
 import '../model/restaurant.dart';
-import '../utils/distance.dart';
+import '../utils/location.dart';
 import '../utils/image.dart';
 
 // final videoConfig = VideoConfig(

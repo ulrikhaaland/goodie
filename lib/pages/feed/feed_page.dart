@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:goodie/pages/home/review_list_item.dart';
+import 'package:goodie/pages/feed/feed_list_item.dart';
 import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
 import 'package:provider/provider.dart';
 import 'package:collection/collection.dart';

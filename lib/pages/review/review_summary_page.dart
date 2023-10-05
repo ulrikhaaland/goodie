@@ -217,7 +217,7 @@ class _RestaurantReviewSummaryPageState
                             children: [
                               SizedBox(width: 32),
                               Text(
-                                "En dato må velges",
+                                "En besøksdato må velges",
                                 style: TextStyle(color: Colors.redAccent),
                               ),
                             ],

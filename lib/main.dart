@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:goodie/bloc/restaurant_provider.dart';
 import 'package:goodie/bloc/user_review_provider.dart';
-import 'package:goodie/pages/home/home.dart';
+import 'package:goodie/pages/feed/feed_page.dart';
 import 'package:goodie/pages/login/login.dart';
 import 'package:goodie/pages/review/review_page.dart';
 import 'package:provider/provider.dart';

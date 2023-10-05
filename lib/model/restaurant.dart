@@ -22,7 +22,9 @@ class Dish {
 class Restaurant {
   final String id;
   final String name;
+  //TODO: Create address object with city, country etc
   final String? address;
+  // final String? city;
   final String? description;
   final num? rating;
   final int? priceLevel;

@@ -21,3 +21,21 @@ double getDistance(double lat1, double lon1, double lat2, double lon2) {
 double _degreesToRadians(double degrees) {
   return degrees * pi / 180;
 }
+
+String extractCity(String? address) {
+  if (address == null) return '';
+
+  // Find the position of the last number in the address string
+  final lastNumberIndex = address.lastIndexOf(RegExp(r'\d'));
+
+  // If there's no number in the address, return an empty string
+  if (lastNumberIndex == -1) return '';
+
+  // Extract the substring that comes after the last number
+  final citySubstring = address.substring(lastNumberIndex + 1);
+
+  // Trim any leading or trailing whitespace to get the city name
+  final cityName = citySubstring.trim();
+
+  return cityName;
+}

@@ -11,13 +11,9 @@ import '../../bloc/create_review_provider.dart';
 
 class ReviewListItemVideo extends StatefulWidget {
   final MediaItem item;
-  final VoidCallback onTap;
   final ValueListenable soundOnListener;
   const ReviewListItemVideo(
-      {super.key,
-      required this.item,
-      required this.onTap,
-      required this.soundOnListener});
+      {super.key, required this.item, required this.soundOnListener});
 
   @override
   State<ReviewListItemVideo> createState() => _ReviewListItemVideoState();
@@ -83,17 +79,18 @@ class _ReviewListItemVideoState extends State<ReviewListItemVideo>
           onVisibilityChanged: (visibilityInfo) {
             if (visibilityInfo.visibleFraction < 0.5) {
               controller.pause();
-            } else if (visibilityInfo.visibleFraction > 0.5) {
+            } else if (visibilityInfo.visibleFraction > 0.5 &&
+                !_showReplayOverlay) {
               controller.play();
               handleDurationElapsed();
               controller.setLooping(true);
             }
             setState(() {});
           },
-          child: GestureDetector(
-            onTap: () {
-              widget.onTap();
-            },
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: controller.value.size.height,
+            ),
             child: AspectRatio(
               aspectRatio: controller.value.aspectRatio,
               child: SizedBox(
@@ -120,25 +117,19 @@ class _ReviewListItemVideoState extends State<ReviewListItemVideo>
             child: ValueListenableBuilder(
               valueListenable: widget.soundOnListener,
               builder: (BuildContext context, value, Widget? child) {
-                return GestureDetector(
-                  onTap: () => setState(() {
-                    widget.onTap();
-                  }),
-                  child: Container(
-                    padding:
-                        const EdgeInsets.all(4.0), // Padding around the text
-                    decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.5),
-                      borderRadius: BorderRadius.circular(
-                          8.0), // Optional: to round the corners
-                    ),
-                    child: value
-                        ? const Icon(
-                            Icons.volume_up,
-                            color: Colors.white,
-                          )
-                        : const Icon(Icons.volume_off, color: Colors.white),
+                return Container(
+                  padding: const EdgeInsets.all(4.0), // Padding around the text
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.5),
+                    borderRadius: BorderRadius.circular(
+                        8.0), // Optional: to round the corners
                   ),
+                  child: value
+                      ? const Icon(
+                          Icons.volume_up,
+                          color: Colors.white,
+                        )
+                      : const Icon(Icons.volume_off, color: Colors.white),
                 );
               },
             ),
@@ -181,6 +172,7 @@ class _ReviewListItemVideoState extends State<ReviewListItemVideo>
 
   Future<void> _handleLoadVideo() async {
     await controller.initialize();
+    controller.seekTo(Duration.zero);
     item.videoController = controller;
     _handleOnSoundChange();
     controller.addListener(_handleOnInitVid);
