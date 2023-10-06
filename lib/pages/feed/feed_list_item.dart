@@ -82,6 +82,7 @@ class _ReviewListItemState extends State<ReviewListItem>
   @override
   Widget build(BuildContext context) {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Profile Picture and User Info
@@ -130,8 +131,7 @@ class _ReviewListItemState extends State<ReviewListItem>
         ConstrainedBox(
           constraints: BoxConstraints(
               maxHeight: MediaQuery.of(context).size.height * 0.6),
-          child: Flexible(
-              child: Stack(
+          child: Stack(
             alignment: Alignment.center,
             children: [
               PreloadPageView.builder(
@@ -197,7 +197,7 @@ class _ReviewListItemState extends State<ReviewListItem>
                 },
               ),
             ],
-          )),
+          ),
         ),
         const SizedBox(
           height: 10,
