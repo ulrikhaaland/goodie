@@ -172,7 +172,9 @@ class _RestaurantReviewSummaryPageState
                             ),
                             Text(
                               (getRatingData(review.ratingOverall ?? 0,
-                                  isTotalRating: true)['description']),
+                                          isTotalRating: true)
+                                      ?.description ??
+                                  ""),
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.normal,

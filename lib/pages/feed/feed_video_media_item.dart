@@ -85,7 +85,7 @@ class _ReviewListItemVideoState extends State<ReviewListItemVideo>
               handleDurationElapsed();
               controller.setLooping(true);
             }
-            setState(() {});
+            if (mounted) setState(() {});
           },
           child: ConstrainedBox(
             constraints: BoxConstraints(

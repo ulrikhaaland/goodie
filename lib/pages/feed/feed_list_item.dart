@@ -116,7 +116,7 @@ class _ReviewListItemState extends State<ReviewListItem>
                         // Add your follow functionality here
                       },
                       style: TextButton.styleFrom(
-                        foregroundColor: Colors.blue, // Text color
+                        foregroundColor: accent2Color, // Text color
                       ),
                       child: const Text("Follow"),
                     ),
@@ -130,7 +130,7 @@ class _ReviewListItemState extends State<ReviewListItem>
             ),
           ),
 
-          const SizedBox(height: 10),
+          const SizedBox(height: 4),
           Flexible(
               child: Stack(
             alignment: Alignment.center,
@@ -279,17 +279,17 @@ class _ReviewListItemState extends State<ReviewListItem>
                 const SizedBox(height: 10),
 
                 // Review Text (Caption)
-                if (widget.review.description != null &&
-                    widget.review.description!.isNotEmpty) ...[
-                  Text(
-                    widget.review.description ?? 'Dette er en beskrivelse',
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 16),
-                  ),
-                ] else ...[
-                  const SizedBox(height: 4),
-                ],
+                // if (widget.review.description != null &&
+                //     widget.review.description!.isNotEmpty) ...[
+                //   Text(
+                //     widget.review.description ?? 'Dette er en beskrivelse',
+                //     maxLines: 3,
+                //     overflow: TextOverflow.ellipsis,
+                //     style: const TextStyle(fontSize: 16),
+                //   ),
+                // ] else ...[
+                //   const SizedBox(height: 4),
+                // ],
                 FeedRestaurantInfo(
                   restaurant: restaurant,
                   review: widget.review,

@@ -65,7 +65,7 @@ class RatingWidget extends StatelessWidget {
         child: isSelected
             ? Center(
                 child: Icon(
-                  getRatingData(circleRating.toDouble())['icon'],
+                  getRatingData(circleRating.toDouble())?.icon,
                   color: Colors.white,
                   size: isTotalRating ? 20 : 15, // Adjust icon size
                 ),

@@ -150,8 +150,8 @@ class _RestaurantReviewReviewState extends State<RestaurantReviewRatingPage> {
                     Text(
                       // ignore: prefer_interpolation_to_compose_strings
                       ' ' +
-                          (getRatingData(
-                                  currentRating?.toDouble())['description'] ??
+                          (getRatingData(currentRating?.toDouble())
+                                  ?.description ??
                               ''),
                       style: const TextStyle(
                         fontWeight: FontWeight.normal,
@@ -203,7 +203,9 @@ class _RestaurantReviewReviewState extends State<RestaurantReviewRatingPage> {
                       ),
                       Text(
                         (getRatingData(currentRating.toDouble(),
-                            isTotalRating: true)['description']),
+                                    isTotalRating: true)
+                                ?.description ??
+                            ""),
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.normal,
