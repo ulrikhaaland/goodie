@@ -24,19 +24,23 @@ class UserReviewProvider with ChangeNotifier {
       List<Future<RestaurantReview>> futureReviews =
           querySnapshot.docs.map((doc) async {
         Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+        final RestaurantReviewRating rating = RestaurantReviewRating(
+          food: data['ratingFood'],
+          service: data['ratingService'],
+          price: data['ratingPrice'],
+          atmosphere: data['ratingAtmosphere'],
+          cleanliness: data['ratingCleanliness'],
+          packaging: data['ratingPackaging'],
+          overall: data['ratingOverall'],
+        );
+
         return RestaurantReview(
           id: doc.id,
           restaurantId: data['restaurantId'],
           userId: data['userId'],
           dineIn: data['dineIn'],
           description: data['description'],
-          ratingFood: data['ratingFood'],
-          ratingService: data['ratingService'],
-          ratingPrice: data['ratingPrice'],
-          ratingAtmosphere: data['ratingAtmosphere'],
-          ratingCleanliness: data['ratingCleanliness'],
-          ratingPackaging: data['ratingPackaging'],
-          ratingOverall: data['ratingOverall'],
+          rating: rating,
           timestamp: (data['timestamp'] as Timestamp?)?.toDate(),
           media:
               await _handleMedia(data['images']), // Fetching images and videos

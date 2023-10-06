@@ -38,6 +38,7 @@ class CreateRestaurantReviewProvider with ChangeNotifier {
     restaurantId: "",
     userId: "test",
     dineIn: true,
+    rating: RestaurantReviewRating(),
   );
   List<GoodieAsset> recentImages = [];
   final ValueNotifier<List<GoodieAsset>> selectedAssetsNotifier =
@@ -60,6 +61,7 @@ class CreateRestaurantReviewProvider with ChangeNotifier {
       userId: "test",
       dineIn: true,
       timestamp: review.timestamp,
+      rating: RestaurantReviewRating(),
     );
   }
 
@@ -225,6 +227,7 @@ class CreateRestaurantReviewProvider with ChangeNotifier {
       restaurantId: "",
       userId: "test",
       dineIn: true,
+      rating: RestaurantReviewRating(),
     );
   }
 
@@ -258,13 +261,13 @@ class CreateRestaurantReviewProvider with ChangeNotifier {
       'restaurantId': shareReview.restaurantId,
       'userId': shareReview.userId,
       'dineIn': shareReview.dineIn,
-      'ratingFood': shareReview.ratingFood,
-      'ratingService': shareReview.ratingService,
-      'ratingPrice': shareReview.ratingPrice,
-      'ratingAtmosphere': shareReview.ratingAtmosphere,
-      'ratingCleanliness': shareReview.ratingCleanliness,
-      'ratingPackaging': shareReview.ratingPackaging,
-      'ratingOverall': shareReview.ratingOverall,
+      'ratingFood': shareReview.rating.food,
+      'ratingService': shareReview.rating.service,
+      'ratingPrice': shareReview.rating.price,
+      'ratingAtmosphere': shareReview.rating.atmosphere,
+      'ratingCleanliness': shareReview.rating.cleanliness,
+      'ratingPackaging': shareReview.rating.packaging,
+      'ratingOverall': shareReview.rating.overall,
       'description': shareReview.description,
       'timestamp': shareReview.timestamp,
       'images': assetUrls, // Store the image URLs in the review document

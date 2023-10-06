@@ -80,7 +80,7 @@ class _HomePageState extends State<HomePage>
                               restaurant: restaurant,
                               restaurantProvider: restaurantProvider,
                               reviewProvider: reviewProvider,
-                            ); // Use the ReviewListItem widget
+                            );
                           }
                         },
                         childCount: value.length,

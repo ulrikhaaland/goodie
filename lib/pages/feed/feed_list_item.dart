@@ -81,57 +81,56 @@ class _ReviewListItemState extends State<ReviewListItem>
 
   @override
   Widget build(BuildContext context) {
-    return ConstrainedBox(
-      constraints:
-          BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Profile Picture and User Info
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    CircleAvatar(
-                      backgroundImage: NetworkImage(
-                          widget.restaurant.coverImg ??
-                              "https://example.com/default.jpg"),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Profile Picture and User Info
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  CircleAvatar(
+                    backgroundImage: NetworkImage(widget.restaurant.coverImg ??
+                        "https://example.com/default.jpg"),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    widget.review.userId,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
                     ),
-                    const SizedBox(width: 10),
-                    Text(
-                      widget.review.userId,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                      ),
+                  ),
+                ],
+              ),
+              Row(
+                children: [
+                  OutlinedButton(
+                    onPressed: () {
+                      // Add your follow functionality here
+                    },
+                    style: TextButton.styleFrom(
+                      foregroundColor: accent2Color, // Text color
                     ),
-                  ],
-                ),
-                Row(
-                  children: [
-                    OutlinedButton(
-                      onPressed: () {
-                        // Add your follow functionality here
-                      },
-                      style: TextButton.styleFrom(
-                        foregroundColor: accent2Color, // Text color
-                      ),
-                      child: const Text("Follow"),
-                    ),
-                    const SizedBox(
-                        width:
-                            10), // Add some spacing between the button and the icon
-                    const Icon(Icons.more_horiz),
-                  ],
-                ),
-              ],
-            ),
+                    child: const Text("Follow"),
+                  ),
+                  const SizedBox(
+                      width:
+                          10), // Add some spacing between the button and the icon
+                  const Icon(Icons.more_horiz),
+                ],
+              ),
+            ],
           ),
+        ),
 
-          const SizedBox(height: 4),
-          Flexible(
+        const SizedBox(height: 4),
+        ConstrainedBox(
+          constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.6),
+          child: Flexible(
               child: Stack(
             alignment: Alignment.center,
             children: [
@@ -199,107 +198,139 @@ class _ReviewListItemState extends State<ReviewListItem>
               ),
             ],
           )),
-          const SizedBox(
-            height: 10,
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Stack(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            GestureDetector(
-                              onTap: () {
-                                setState(() {
-                                  isLiked = !isLiked;
+        ),
+        const SizedBox(
+          height: 10,
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Stack(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                isLiked = !isLiked;
+                              });
+                              if (isLiked) {
+                                _controller
+                                    .forward(from: _animationForwardValue)
+                                    .then((_) {
+                                  _controller.reverse();
                                 });
-                                if (isLiked) {
-                                  _controller
-                                      .forward(from: _animationForwardValue)
-                                      .then((_) {
-                                    _controller.reverse();
-                                  });
-                                }
-                              },
-                              child: AnimatedBuilder(
-                                  animation: _controller,
-                                  builder: (context, child) {
-                                    return Row(
-                                      children: [
-                                        Icon(
-                                          isLiked
-                                              ? Icons.favorite
-                                              : Icons.favorite_border,
-                                          color: isLiked
-                                              ? Colors.red
-                                              : Colors.grey[600],
-                                        ),
-                                        Text(
-                                            ' ${widget.review.likes?.length ?? 0}',
-                                            style: TextStyle(
-                                                color: isLiked
-                                                    ? Colors.red
-                                                    : Colors.grey[600])),
-                                      ],
-                                    );
-                                  }),
-                            ),
-                            const SizedBox(width: 15),
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Icon(Icons.chat_bubble_outline,
-                                    color: Colors.grey[600]),
-                                Text(' ${widget.review.comments?.length ?? 0}',
-                                    style: TextStyle(color: Colors.grey[600])),
-                              ],
-                            ),
-                            // const SizedBox(width: 15),
-                            // Icon(Icons.send_outlined,
-                            //     color: Colors.grey[600]),
-                          ],
+                              }
+                            },
+                            child: AnimatedBuilder(
+                                animation: _controller,
+                                builder: (context, child) {
+                                  return Row(
+                                    children: [
+                                      Icon(
+                                        isLiked
+                                            ? Icons.favorite
+                                            : Icons.favorite_border,
+                                        color: isLiked
+                                            ? Colors.red
+                                            : Colors.grey[600],
+                                      ),
+                                      Text(
+                                          ' ${widget.review.likes?.length ?? 0}',
+                                          style: TextStyle(
+                                              color: isLiked
+                                                  ? Colors.red
+                                                  : Colors.grey[600])),
+                                    ],
+                                  );
+                                }),
+                          ),
+                          const SizedBox(width: 15),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Icon(Icons.chat_bubble_outline,
+                                  color: Colors.grey[600]),
+                              Text(' ${widget.review.comments?.length ?? 0}',
+                                  style: TextStyle(color: Colors.grey[600])),
+                            ],
+                          ),
+                          // const SizedBox(width: 15),
+                          // Icon(Icons.send_outlined,
+                          //     color: Colors.grey[600]),
+                        ],
+                      ),
+                      Icon(Icons.bookmark_border, color: Colors.grey[600]),
+                    ],
+                  ),
+                  // Dots indicator
+                  _buildPageCountIndicator(),
+                ],
+              ),
+
+              const SizedBox(height: 10),
+
+              // Review Text (Caption)
+              if (widget.review.description != null &&
+                  widget.review.description!.isNotEmpty) ...[
+                Padding(
+                  padding: const EdgeInsets.only(left: 4.0),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Flexible(
+                        child: Text.rich(
+                          TextSpan(
+                            text: "brukernavn ",
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                            children: [
+                              TextSpan(
+                                text: widget.review.description,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.normal,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                        Icon(Icons.bookmark_border, color: Colors.grey[600]),
-                      ],
-                    ),
-                    // Dots indicator
-                    _buildPageCountIndicator(),
-                  ],
-                ),
+                      ),
 
+                      // const Text("brukernavn ",
+                      //     style: TextStyle(fontWeight: FontWeight.bold)),
+                      // Flexible(
+                      //   child: Text(
+                      //     widget.review.description! +
+                      //         'Dette er en beskrivelse' +
+                      //         "asdasdasdasdasdasdasdasdas ",
+                      //     maxLines: 3,
+                      //     overflow: TextOverflow.clip,
+                      //     style: const TextStyle(fontSize: 14),
+                      //   ),
+                      // ),
+                    ],
+                  ),
+                ),
                 const SizedBox(height: 10),
-
-                // Review Text (Caption)
-                // if (widget.review.description != null &&
-                //     widget.review.description!.isNotEmpty) ...[
-                //   Text(
-                //     widget.review.description ?? 'Dette er en beskrivelse',
-                //     maxLines: 3,
-                //     overflow: TextOverflow.ellipsis,
-                //     style: const TextStyle(fontSize: 16),
-                //   ),
-                // ] else ...[
-                //   const SizedBox(height: 4),
-                // ],
-                FeedRestaurantInfo(
-                  restaurant: restaurant,
-                  review: widget.review,
-                ),
-                const Divider(),
+              ] else ...[
+                // const SizedBox(height: 4),
               ],
-            ),
-          )
-        ],
-      ),
+              FeedRestaurantInfo(
+                restaurant: restaurant,
+                review: widget.review,
+              ),
+              const Divider(),
+            ],
+          ),
+        )
+      ],
     );
   }
 

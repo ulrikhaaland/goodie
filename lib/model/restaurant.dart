@@ -54,18 +54,31 @@ class Restaurant {
       required this.position});
 }
 
+class RestaurantReviewRating {
+  num? food; // 0-10 (needed for both dine in and takeout)
+  num? service; // 0-10 (needed only for dinein)
+  num? price; // 0-10 (needed for both dine in and takeout)
+  num? atmosphere; // 0-10 (needed only for dinein)
+  num? cleanliness; // 0-10 (needed only for dinein)
+  num? packaging; // 0-10 (needed only for takeout)
+  num? overall; // 0-10 (needed for both dine in and takeout)
+
+  RestaurantReviewRating(
+      {this.food,
+      this.service,
+      this.price,
+      this.atmosphere,
+      this.cleanliness,
+      this.packaging,
+      this.overall});
+}
+
 class RestaurantReview {
   String? id;
   String restaurantId;
   String userId;
   String? description; //
-  num? ratingFood; // 0-10 (needed for both dine in and takeout)
-  num? ratingService; // 0-10 (needed only for dinein)
-  num? ratingPrice; // 0-10 (needed for both dine in and takeout)
-  num? ratingAtmosphere; // 0-10 (needed only for dinein)
-  num? ratingCleanliness; // 0-10 (needed only for dinein)
-  num? ratingPackaging; // 0-10 (needed only for takeout)
-  num? ratingOverall; // 0-10 (needed for both dine in and takeout)
+  final RestaurantReviewRating rating;
   DateTime? timestamp;
   bool dineIn; // If not dine-in, then takeout
   List<MediaItem>? media; // media of the review
@@ -77,16 +90,10 @@ class RestaurantReview {
       {required this.restaurantId,
       required this.userId,
       required this.dineIn,
+      required this.rating,
       this.media,
-      this.ratingFood,
-      this.ratingService,
       this.comments,
       this.likes,
-      this.ratingPrice,
-      this.ratingAtmosphere,
-      this.ratingCleanliness,
-      this.ratingPackaging,
-      this.ratingOverall,
       this.id,
       this.description,
       this.timestamp});

@@ -3,12 +3,14 @@ import 'package:goodie/main.dart';
 import 'package:goodie/model/restaurant.dart';
 import 'package:goodie/utils/location.dart';
 
+import '../../utils/date.dart';
 import '../../utils/rating.dart';
 import '../restaurants/restaurant/restaurant_page.dart';
 
 class FeedRestaurantInfo extends StatefulWidget {
   final Restaurant restaurant;
   final RestaurantReview review;
+
   const FeedRestaurantInfo(
       {super.key, required this.restaurant, required this.review});
 
@@ -21,6 +23,8 @@ class _FeedRestaurantInfoState extends State<FeedRestaurantInfo> {
 
   RestaurantReview get review => widget.review;
 
+  RestaurantReviewRating get rating => review.rating;
+
   String? get city => extractCity(restaurant.address!);
 
   bool _expanded = false;
@@ -28,6 +32,7 @@ class _FeedRestaurantInfoState extends State<FeedRestaurantInfo> {
   @override
   Widget build(BuildContext context) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // restaurant name
         Row(
@@ -85,6 +90,7 @@ class _FeedRestaurantInfoState extends State<FeedRestaurantInfo> {
                       color: Colors.grey[600],
                       fontSize: 14,
                     ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               )
@@ -118,6 +124,27 @@ class _FeedRestaurantInfoState extends State<FeedRestaurantInfo> {
             //     fontSize: 14,
             //   ),
             // ),
+          ],
+        ),
+        Row(
+          children: [
+            Icon(
+              Icons.access_time_outlined,
+              color: Colors.grey[600],
+            ),
+            const SizedBox(
+              width: 8,
+            ),
+            Padding(
+              padding: const EdgeInsets.only(top: 0.0),
+              child: Text(
+                formatTimestamp(review.timestamp!),
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 14,
+                ),
+              ),
+            ),
           ],
         ),
         // expand to see more
@@ -157,30 +184,119 @@ class _FeedRestaurantInfoState extends State<FeedRestaurantInfo> {
 
   Widget _buildExpanded() {
     // show less
-    return InkWell(
-      onTap: () {
-        setState(() {
-          _expanded = false;
-        });
-      },
-      child: const Row(
+    return Padding(
+      padding: const EdgeInsets.only(top: 4.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            Icons.expand_less,
-            color: Colors.grey,
+          // const Text(
+          //   "Vurderinger:",
+          //   style: TextStyle(
+          //     fontWeight: FontWeight.bold,
+          //     fontSize: 16,
+          //   ),
+          // ),
+          Padding(
+            padding: const EdgeInsets.only(left: 4.0),
+            child: Wrap(
+              runSpacing: 8,
+              spacing: 36,
+              children: [
+                // taste rating
+                _buildRatingItem(
+                  "Smak",
+                  rating.food!,
+                  Icons.restaurant_outlined,
+                ),
+                if (review.dineIn)
+                  _buildRatingItem(
+                      "Service", rating.service!, Icons.room_service_outlined),
+                _buildRatingItem("Verdi", rating.price!, Icons.wallet_outlined),
+                if (review.dineIn)
+                  _buildRatingItem(
+                      "Atmosfære", rating.atmosphere!, Icons.mood_outlined),
+                if (review.dineIn)
+                  _buildRatingItem("Renhold", rating.cleanliness!,
+                      Icons.cleaning_services_outlined),
+                if (!review.dineIn)
+                  _buildRatingItem(
+                      "Innpakning", rating.packaging!, Icons.wrap_text),
+              ],
+            ),
           ),
-          SizedBox(
-            width: 8,
-          ),
-          Text(
-            'Vis mindre',
-            style: TextStyle(
-              color: Colors.grey,
-              fontSize: 14,
+          InkWell(
+            onTap: () {
+              setState(() {
+                _expanded = false;
+              });
+            },
+            child: const Row(
+              children: [
+                Icon(
+                  Icons.expand_less,
+                  color: Colors.grey,
+                ),
+                SizedBox(
+                  width: 8,
+                ),
+                Text(
+                  'Vis mindre',
+                  style: TextStyle(
+                    color: Colors.grey,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildRatingItem(String name, num rating, IconData icon) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              color: Colors.grey[600],
+              size: 16,
+            ),
+            const SizedBox(
+              width: 8,
+            ),
+            Text(
+              (rating * 2).toString(),
+              style: const TextStyle(
+                fontWeight: FontWeight.normal,
+                fontSize: 16,
+              ),
+            ),
+            // rating data description
+            // const SizedBox(
+            //   width: 8,
+            // ),
+            // Text(
+            //   getRatingData(restaurant.rating)?.description ?? "",
+            //   style: TextStyle(
+            //     color: Colors.grey[600],
+            //     fontSize: 14,
+            //   ),
+            // ),
+          ],
+        ),
+        // name
+        Text(
+          name,
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+        )
+      ],
     );
   }
 }

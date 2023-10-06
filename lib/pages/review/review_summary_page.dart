@@ -34,6 +34,8 @@ class _RestaurantReviewSummaryPageState
 
   RestaurantReview get review => provider.review;
 
+  RestaurantReviewRating get rating => review.rating;
+
   @override
   void initState() {
     super.initState();
@@ -157,7 +159,7 @@ class _RestaurantReviewSummaryPageState
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             Text(
-                              "Total Rating: ${review.ratingOverall?.toStringAsFixed(1)}",
+                              "Total Rating: ${rating.overall?.toStringAsFixed(1)}",
                               style: const TextStyle(
                                 fontSize: 22,
                                 fontWeight: FontWeight.bold,
@@ -171,7 +173,7 @@ class _RestaurantReviewSummaryPageState
                               ),
                             ),
                             Text(
-                              (getRatingData(review.ratingOverall ?? 0,
+                              (getRatingData(rating.overall ?? 0,
                                           isTotalRating: true)
                                       ?.description ??
                                   ""),
@@ -250,6 +252,7 @@ class _RestaurantReviewSummaryPageState
                 focusNode: _commentFocusNode,
                 controller: _commentController,
                 maxLines: 5,
+                maxLength: 140,
                 decoration: const InputDecoration(
                   hintText: "Del litt om din opplevelse...",
                   border: OutlineInputBorder(),

@@ -31,6 +31,8 @@ class RestaurantReviewRatingPage extends StatefulWidget {
 class _RestaurantReviewReviewState extends State<RestaurantReviewRatingPage> {
   RestaurantReview get review => widget.review!;
 
+  RestaurantReviewRating get rating => review.rating;
+
   bool _canSubmit = false;
 
   @override
@@ -49,47 +51,45 @@ class _RestaurantReviewReviewState extends State<RestaurantReviewRatingPage> {
               child: SingleChildScrollView(
                 child: Column(
                   children: [
-                    _buildRating("Smak", currentRating: review.ratingFood,
-                        (value) {
+                    _buildRating("Smak", currentRating: rating.food, (value) {
                       setState(() {
-                        review.ratingFood = value;
+                        rating.food = value;
                         _setCanSubmit();
                       });
                     }),
-                    _buildRating("Pris", currentRating: review.ratingPrice,
-                        (value) {
+                    _buildRating("Pris", currentRating: rating.price, (value) {
                       setState(() {
-                        review.ratingPrice = value;
+                        rating.price = value;
                         _setCanSubmit();
                       });
                     }),
                     if (review.dineIn) ...[
-                      _buildRating("Service",
-                          currentRating: review.ratingService, (value) {
+                      _buildRating("Service", currentRating: rating.service,
+                          (value) {
                         setState(() {
-                          review.ratingService = value;
+                          rating.service = value;
                           _setCanSubmit();
                         });
                       }),
                       _buildRating("Atmosfære",
-                          currentRating: review.ratingAtmosphere, (value) {
+                          currentRating: rating.atmosphere, (value) {
                         setState(() {
-                          review.ratingAtmosphere = value;
+                          rating.atmosphere = value;
                           _setCanSubmit();
                         });
                       }),
-                      _buildRating("Renhold",
-                          currentRating: review.ratingCleanliness, (value) {
+                      _buildRating("Renhold", currentRating: rating.cleanliness,
+                          (value) {
                         setState(() {
-                          review.ratingCleanliness = value;
+                          rating.cleanliness = value;
                           _setCanSubmit();
                         });
                       }),
                     ] else ...[
                       _buildRating("Innpakning",
-                          currentRating: review.ratingPackaging, (value) {
+                          currentRating: rating.packaging, (value) {
                         setState(() {
-                          review.ratingPackaging = value;
+                          rating.packaging = value;
                           _setCanSubmit();
                         });
                       }),
@@ -301,54 +301,51 @@ class _RestaurantReviewReviewState extends State<RestaurantReviewRatingPage> {
   void _setCanSubmit() {
     bool canSubmit;
     if (review.dineIn) {
-      canSubmit = review.ratingFood != null &&
-          review.ratingService != null &&
-          review.ratingPrice != null &&
-          review.ratingCleanliness != null &&
-          review.ratingAtmosphere != null;
+      canSubmit = rating.food != null &&
+          rating.service != null &&
+          rating.price != null &&
+          rating.cleanliness != null &&
+          rating.atmosphere != null;
     } else {
-      canSubmit = review.ratingFood != null &&
-          review.ratingPrice != null &&
-          review.ratingPackaging != null;
+      canSubmit = rating.food != null &&
+          rating.price != null &&
+          rating.packaging != null;
     }
 
     widget.onCanSubmit(canSubmit);
 
     if (canSubmit) {
-      review.ratingOverall = _computeOverallRating();
+      rating.overall = _computeOverallRating();
     }
 
     _canSubmit = canSubmit;
   }
 
   num? _computeOverallRating() {
-    num? rating;
+    num? overallRating;
 
     if (review.dineIn) {
-      if (review.ratingFood != null &&
-          review.ratingService != null &&
-          review.ratingPrice != null &&
-          review.ratingCleanliness != null &&
-          review.ratingAtmosphere != null) {
-        rating = (review.ratingFood! +
-                review.ratingService! +
-                review.ratingPrice! +
-                review.ratingCleanliness! +
-                review.ratingAtmosphere!) /
+      if (rating.food != null &&
+          rating.service != null &&
+          rating.price != null &&
+          rating.cleanliness != null &&
+          rating.atmosphere != null) {
+        overallRating = (rating.food! +
+                rating.service! +
+                rating.price! +
+                rating.cleanliness! +
+                rating.atmosphere!) /
             5;
       }
     } else {
-      if (review.ratingFood != null &&
-          review.ratingPrice != null &&
-          review.ratingPackaging != null) {
-        rating = (review.ratingFood! +
-                review.ratingPrice! +
-                review.ratingPackaging!) /
-            3;
+      if (rating.food != null &&
+          rating.price != null &&
+          rating.packaging != null) {
+        overallRating = (rating.food! + rating.price! + rating.packaging!) / 3;
       }
     }
-    return (rating != null
-        ? rating * 2
+    return (overallRating != null
+        ? overallRating * 2
         : null); // Return null if not all required ratings are provided
   }
 }
