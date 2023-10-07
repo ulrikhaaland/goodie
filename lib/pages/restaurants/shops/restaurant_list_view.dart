@@ -1,15 +1,19 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../../../bloc/bottom_nav_provider.dart';
 import '../../../model/restaurant.dart';
 import '../restaurant/restaurant_page.dart';
 
 class RestaurantListView extends StatefulWidget {
   final List<Restaurant> restaurants;
+  final ScrollController scrollController;
 
   const RestaurantListView({
     Key? key,
     required this.restaurants,
+    required this.scrollController,
   }) : super(key: key);
 
   @override
@@ -28,32 +32,37 @@ class _RestaurantListViewState extends State<RestaurantListView>
 
     return Padding(
       padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
-      child: ListView.builder(
-        cacheExtent: 500,
-        itemCount: widget.restaurants.length,
-        itemBuilder: (context, index) {
-          final restaurant = widget.restaurants[index];
+      child: Scrollbar(
+        controller: widget.scrollController,
+        child: ListView.builder(
+          controller: widget.scrollController,
+          cacheExtent: 500,
+          itemCount: widget.restaurants.length,
+          itemBuilder: (context, index) {
+            final restaurant = widget.restaurants[index];
 
-          // Pre-cache the restaurant cover image
-          precacheImage(NetworkImage(restaurant.coverImg ?? ''), context);
+            // Pre-cache the restaurant cover image
+            precacheImage(NetworkImage(restaurant.coverImg ?? ''), context);
 
-          // Here, we removed the logic to fetch more restaurants since it was
-          // based on the total restaurants list from the provider.
-          // If you still want to handle pagination, consider modifying this logic
-          // based on _filteredRestaurants.
+            // Here, we removed the logic to fetch more restaurants since it was
+            // based on the total restaurants list from the provider.
+            // If you still want to handle pagination, consider modifying this logic
+            // based on _filteredRestaurants.
 
-          return InkWell(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => RestaurantPage(restaurant: restaurant),
-                ),
-              );
-            },
-            child: _buildRestaurantListItem(context, restaurant),
-          );
-        },
+            return InkWell(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        RestaurantPage(restaurant: restaurant),
+                  ),
+                );
+              },
+              child: _buildRestaurantListItem(context, restaurant),
+            );
+          },
+        ),
       ),
     );
   }

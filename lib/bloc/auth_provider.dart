@@ -45,6 +45,7 @@ class AuthProvider with ChangeNotifier {
 
   // Sign out
   Future<void> signOut() async {
+    verificationId = null;
     await _auth.signOut();
     notifyListeners();
   }

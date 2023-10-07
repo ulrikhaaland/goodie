@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:goodie/bloc/bottom_nav_provider.dart';
 import 'package:goodie/bloc/restaurant_provider.dart';
 import 'package:goodie/bloc/user_review_provider.dart';
 import 'package:goodie/pages/feed/feed_page.dart';
@@ -20,6 +21,8 @@ void main() async {
   final restaurantProvider = RestaurantProvider(); // Create instance
   final filterProvider = FilterProvider();
   final reviewProvider = UserReviewProvider();
+  final BottomNavigationProvider bottomNavigationProvider =
+      BottomNavigationProvider();
 
   // Move restaurant fetching to a method that can be called on auth changes.
   void fetchRestaurants() async {
@@ -49,6 +52,9 @@ void main() async {
         ),
         ChangeNotifierProvider.value(
           value: reviewProvider,
+        ),
+        ChangeNotifierProvider.value(
+          value: bottomNavigationProvider,
         ),
       ],
       child: MainApp(authProvider: authProvider),
@@ -117,37 +123,41 @@ class _MainAppState extends State<MainApp> {
     );
 
     return MaterialApp(
+      key: const Key("mainApp"),
       theme: customTheme,
       home: loggedIn
           ? ChangeNotifierProvider.value(
               value: _locationProvider!,
-              child: const HomeWithBottomNavigation())
-          : const LoginPage(),
+              child: HomeWithBottomNavigation(
+                key: UniqueKey(),
+              ))
+          : const LoginPage(
+              key: Key('loginPage'),
+            ),
     );
   }
 
   _handleOnLogin() async {
     if (widget.authProvider.firebaseUser != null) {
+      UserReviewProvider reviewProvider =
+          Provider.of<UserReviewProvider>(context, listen: false);
+
+      reviewProvider.fetchReviews();
       _locationProvider = LocationProvider();
       await _locationProvider!.initializeLocation();
       setState(() {
         loggedIn = true;
       });
+    } else {
+      setState(() {
+        loggedIn = false;
+      });
     }
   }
 }
 
-class HomeWithBottomNavigation extends StatefulWidget {
-  const HomeWithBottomNavigation({super.key});
-
-  @override
-  // ignore: library_private_types_in_public_api
-  _HomeWithBottomNavigationState createState() =>
-      _HomeWithBottomNavigationState();
-}
-
-class _HomeWithBottomNavigationState extends State<HomeWithBottomNavigation> {
-  int _selectedIndex = 0;
+class HomeWithBottomNavigation extends StatelessWidget {
+  HomeWithBottomNavigation({super.key});
 
   final List<Widget> _pages = [
     const HomePage(),
@@ -159,33 +169,39 @@ class _HomeWithBottomNavigationState extends State<HomeWithBottomNavigation> {
 
   @override
   Widget build(BuildContext context) {
+    final BottomNavigationProvider bottomNavigationProvider =
+        Provider.of<BottomNavigationProvider>(context);
+
     return Scaffold(
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: _pages,
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.white,
-        selectedItemColor: primaryColor,
-        unselectedItemColor: Colors.grey[600],
-        currentIndex: _selectedIndex,
-        onTap: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-        },
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Hjem'),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.list), label: 'Restauranter'),
-          BottomNavigationBarItem(icon: Icon(Icons.post_add), label: 'Anmeld'),
-          BottomNavigationBarItem(icon: Icon(Icons.bookmarks), label: 'Lagret'),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.account_circle), label: 'Profil'),
-        ],
-      ),
-    );
+        body: ValueListenableBuilder(
+          valueListenable: bottomNavigationProvider.currentIndexListener,
+          builder: (context, value, child) => IndexedStack(
+            index: value,
+            children: _pages,
+          ),
+        ),
+        bottomNavigationBar: ValueListenableBuilder(
+          valueListenable: bottomNavigationProvider.currentIndexListener,
+          builder: (context, value, child) => BottomNavigationBar(
+            type: BottomNavigationBarType.fixed,
+            backgroundColor: Colors.white,
+            selectedItemColor: primaryColor,
+            unselectedItemColor: Colors.grey[600],
+            currentIndex: bottomNavigationProvider.currentIndexListener.value,
+            onTap: (index) => bottomNavigationProvider.index = index,
+            items: const [
+              BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Hjem'),
+              BottomNavigationBarItem(
+                  icon: Icon(Icons.list), label: 'Restauranter'),
+              BottomNavigationBarItem(
+                  icon: Icon(Icons.post_add), label: 'Anmeld'),
+              BottomNavigationBarItem(
+                  icon: Icon(Icons.bookmarks), label: 'Lagret'),
+              BottomNavigationBarItem(
+                  icon: Icon(Icons.account_circle), label: 'Profil'),
+            ],
+          ),
+        ));
   }
 }
 
@@ -207,9 +223,12 @@ class ProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
+    AuthProvider authProvider = Provider.of<AuthProvider>(context);
+
+    return Scaffold(
       body: Center(
-        child: Text('Welcome to Home Page!'),
+        child: TextButton(
+            onPressed: () => authProvider.signOut(), child: Text('Sign out')),
       ),
     );
   }

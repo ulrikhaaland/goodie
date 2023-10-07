@@ -77,6 +77,7 @@ class _ReviewListItemVideoState extends State<ReviewListItemVideo>
         VisibilityDetector(
           key: Key(item.url),
           onVisibilityChanged: (visibilityInfo) {
+            if (!mounted) return;
             if (visibilityInfo.visibleFraction < 0.5) {
               controller.pause();
             } else if (visibilityInfo.visibleFraction > 0.5 &&

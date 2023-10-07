@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:goodie/bloc/location_provider.dart';
+import 'package:goodie/main.dart';
 import 'package:goodie/pages/restaurants/shops/restaurant_list_view.dart';
 import 'package:goodie/pages/restaurants/shops/restaurant_map_view.dart';
 import 'package:location/location.dart';
 import 'package:provider/provider.dart';
 
+import '../../../bloc/bottom_nav_provider.dart';
 import '../../../bloc/filter_provider.dart';
 import '../../../bloc/restaurant_provider.dart';
 import '../../../model/restaurant.dart';
@@ -27,12 +29,20 @@ class _ListPageState extends State<ListPage>
   late final FilterProvider _filterProvider;
   RestaurantFilter get _filter => _filterProvider.filter;
 
+  final ScrollController _listViewScrollController = ScrollController();
+
+  late final BottomNavigationProvider bottomNavigationProvider;
+
   @override
   bool get wantKeepAlive => true;
 
   @override
   void initState() {
-    super.initState();
+    bottomNavigationProvider =
+        Provider.of<BottomNavigationProvider>(context, listen: false);
+
+    bottomNavigationProvider.onTapCurrentTabListener
+        .addListener(_handleOnTapTab);
 
     // Fetch all restaurants initially.
     final restaurantProvider =
@@ -50,12 +60,16 @@ class _ListPageState extends State<ListPage>
     _searchController.addListener(_onSearchChanged);
     _filterProvider = Provider.of<FilterProvider>(context, listen: false);
     _filterProvider.addListener(_updateFilteredRestaurants);
+
+    super.initState();
   }
 
   @override
   void dispose() {
     _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
+    _listViewScrollController.dispose();
+
     super.dispose();
   }
 
@@ -100,7 +114,7 @@ class _ListPageState extends State<ListPage>
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.pink[300],
+        backgroundColor: primaryColor,
         leading: IconButton(
           icon: Icon(
             isMapView ? Icons.list : Icons.map,
@@ -139,7 +153,10 @@ class _ListPageState extends State<ListPage>
       ),
       body: isMapView
           ? RestaurantMapView(restaurants: _filteredRestaurants)
-          : RestaurantListView(restaurants: _filteredRestaurants),
+          : RestaurantListView(
+              restaurants: _filteredRestaurants,
+              scrollController: _listViewScrollController,
+            ),
     );
   }
 
@@ -151,5 +168,19 @@ class _ListPageState extends State<ListPage>
         return const FilterBottomSheet();
       },
     );
+  }
+
+  void _handleOnTapTab() {
+    if (bottomNavigationProvider.currentIndexListener.value == 1) {
+      if (_searchController.text.isNotEmpty) {
+        _searchController.clear();
+      } else {
+        _listViewScrollController.animateTo(
+          0.0,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    }
   }
 }
