@@ -32,6 +32,7 @@ class _ListPageState extends State<ListPage>
   final ScrollController _listViewScrollController = ScrollController();
 
   late final BottomNavigationProvider bottomNavigationProvider;
+  late final RestaurantProvider restaurantProvider;
 
   @override
   bool get wantKeepAlive => true;
@@ -45,14 +46,10 @@ class _ListPageState extends State<ListPage>
         .addListener(_handleOnTapTab);
 
     // Fetch all restaurants initially.
-    final restaurantProvider =
+    restaurantProvider =
         Provider.of<RestaurantProvider>(context, listen: false);
 
-    restaurantProvider.addListener(() {
-      setState(() {
-        _filteredRestaurants = restaurantProvider.restaurants;
-      });
-    });
+    restaurantProvider.addListener(_updateFilteredRestaurants);
 
     userLocation ??=
         Provider.of<LocationProvider>(context, listen: false).currentLocation;
@@ -69,6 +66,7 @@ class _ListPageState extends State<ListPage>
     _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
     _listViewScrollController.dispose();
+    restaurantProvider.removeListener(_updateFilteredRestaurants);
 
     super.dispose();
   }

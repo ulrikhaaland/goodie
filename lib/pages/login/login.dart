@@ -15,7 +15,6 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final _smsCodeController = TextEditingController();
   String phoneNumber = "+47";
   bool isLoadingVerify = false;
   bool isLoadingSignIn = false;

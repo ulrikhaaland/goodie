@@ -85,12 +85,12 @@ class _MainAppState extends State<MainApp> {
 
   @override
   void initState() {
+    widget.authProvider.addListener(_handleOnLogin);
+
     if (widget.authProvider.firebaseUser != null) {
       _locationProvider = LocationProvider();
       _locationProvider!.initializeLocation();
       loggedIn = true;
-    } else {
-      widget.authProvider.addListener(_handleOnLogin);
     }
     super.initState();
   }
@@ -129,7 +129,8 @@ class _MainAppState extends State<MainApp> {
           ? ChangeNotifierProvider.value(
               value: _locationProvider!,
               child: HomeWithBottomNavigation(
-                key: UniqueKey(),
+                key: Key(
+                    widget.authProvider.firebaseUser!.refreshToken.toString()),
               ))
           : const LoginPage(
               key: Key('loginPage'),
@@ -139,12 +140,13 @@ class _MainAppState extends State<MainApp> {
 
   _handleOnLogin() async {
     if (widget.authProvider.firebaseUser != null) {
+      _locationProvider = LocationProvider();
+      await _locationProvider!.initializeLocation();
       UserReviewProvider reviewProvider =
+          // ignore: use_build_context_synchronously
           Provider.of<UserReviewProvider>(context, listen: false);
 
       reviewProvider.fetchReviews();
-      _locationProvider = LocationProvider();
-      await _locationProvider!.initializeLocation();
       setState(() {
         loggedIn = true;
       });
@@ -228,7 +230,8 @@ class ProfileScreen extends StatelessWidget {
     return Scaffold(
       body: Center(
         child: TextButton(
-            onPressed: () => authProvider.signOut(), child: Text('Sign out')),
+            onPressed: () => authProvider.signOut(),
+            child: const Text('Sign out')),
       ),
     );
   }
