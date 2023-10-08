@@ -156,7 +156,7 @@ class _MainAppState extends State<MainApp> {
         return const LoadingPage();
       }
       if (user!.isNewUser) {
-        return const IntroPage();
+        return IntroPage(onDone: () => setState(() {}));
       } else {
         return ChangeNotifierProvider.value(
             value: _locationProvider!,

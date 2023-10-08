@@ -84,6 +84,8 @@ class AuthProvider with ChangeNotifier {
           firebaseUser: firebaseUser,
           reviews: data['reviews'] ?? [],
           favorites: data['favorites'] ?? [],
+          fullName: data['fullName'],
+          username: data['username'],
           isNewUser: false);
     } else {
       // Initialize as you did before
@@ -92,6 +94,36 @@ class AuthProvider with ChangeNotifier {
           reviews: [],
           favorites: [],
           isNewUser: true);
+    }
+  }
+
+  Future<void> updateUserData() async {
+    final String userId =
+        firebaseUser!.uid; // Make sure firebaseUser is not null
+    final FirebaseFirestore firestore = FirebaseFirestore.instance;
+
+    try {
+      await firestore.collection('users').doc(userId).set(
+          {
+            // 'reviews': updatedUser.reviews
+            //     .map((review) => review.toJson())
+            //     .toList(), // Replace with your logic to serialize
+            // 'favorites': updatedUser.favorites
+            //     .map((fav) => fav.toJson())
+            //     .toList(), // Replace with your logic to serialize
+            'isNewUser': user.value!.isNewUser,
+            'fullName': user.value!.fullName,
+            'username': user.value!.username,
+          },
+          SetOptions(
+              merge:
+                  true)); // Using SetOptions(merge: true) to only update fields that are passed
+
+      user.value = user.value!; // Optionally update the local user value
+      notifyListeners(); // Notify listeners to rebuild UI if needed
+    } catch (e) {
+      print("Error updating user: $e");
+      throw e; // Rethrow to handle it from where the function is called
     }
   }
 }

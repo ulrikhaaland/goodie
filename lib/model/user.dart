@@ -6,9 +6,13 @@ class User {
   List<RestaurantReview> reviews;
   List<Restaurant> favorites;
   bool isNewUser;
+  String? fullName;
+  String? username;
 
   User(
       {this.firebaseUser,
+      this.fullName,
+      this.username,
       required this.reviews,
       required this.favorites,
       required this.isNewUser});
