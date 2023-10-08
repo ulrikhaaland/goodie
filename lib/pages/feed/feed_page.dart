@@ -119,6 +119,8 @@ class _HomePageState extends State<HomePage>
   }
 
   void _handleOnTapTab() {
+    if (!mounted) return;
+
     if (bottomNavigationProvider.currentIndexListener.value == 0) {
       // If the user is on the home page, scroll to the top
       _scrollController.animateTo(

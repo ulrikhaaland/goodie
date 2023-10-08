@@ -263,6 +263,7 @@ class _ReviewListItemState extends State<ReviewListItem>
                                   style: TextStyle(color: Colors.grey[600])),
                             ],
                           ),
+                          //TODO: Add share functionality
                           // const SizedBox(width: 15),
                           // Icon(Icons.send_outlined,
                           //     color: Colors.grey[600]),
@@ -302,19 +303,6 @@ class _ReviewListItemState extends State<ReviewListItem>
                           ),
                         ),
                       ),
-
-                      // const Text("brukernavn ",
-                      //     style: TextStyle(fontWeight: FontWeight.bold)),
-                      // Flexible(
-                      //   child: Text(
-                      //     widget.review.description! +
-                      //         'Dette er en beskrivelse' +
-                      //         "asdasdasdasdasdasdasdasdas ",
-                      //     maxLines: 3,
-                      //     overflow: TextOverflow.clip,
-                      //     style: const TextStyle(fontSize: 14),
-                      //   ),
-                      // ),
                     ],
                   ),
                 ),

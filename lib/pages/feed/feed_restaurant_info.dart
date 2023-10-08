@@ -107,7 +107,7 @@ class _FeedRestaurantInfoState extends State<FeedRestaurantInfo> {
               width: 8,
             ),
             Text(
-              restaurant.rating.toString(),
+              review.rating.overall!.toStringAsPrecision(2).toString(),
               style: const TextStyle(
                 fontWeight: FontWeight.w500,
                 fontSize: 16,

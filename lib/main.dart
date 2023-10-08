@@ -4,6 +4,8 @@ import 'package:goodie/bloc/bottom_nav_provider.dart';
 import 'package:goodie/bloc/restaurant_provider.dart';
 import 'package:goodie/bloc/user_review_provider.dart';
 import 'package:goodie/pages/feed/feed_page.dart';
+import 'package:goodie/pages/intro/intro_page.dart';
+import 'package:goodie/pages/loading_page.dart';
 import 'package:goodie/pages/login/login.dart';
 import 'package:goodie/pages/review/review_page.dart';
 import 'package:provider/provider.dart';
@@ -12,6 +14,7 @@ import 'bloc/auth_provider.dart';
 import 'bloc/filter_provider.dart';
 import 'bloc/location_provider.dart';
 import 'data/migration.dart';
+import 'model/user.dart';
 import 'pages/restaurants/shops/shop_page.dart';
 
 void main() async {
@@ -83,9 +86,11 @@ class _MainAppState extends State<MainApp> {
   LocationProvider? _locationProvider;
   bool loggedIn = false;
 
+  User? get user => widget.authProvider.user.value;
+
   @override
   void initState() {
-    widget.authProvider.addListener(_handleOnLogin);
+    widget.authProvider.user.addListener(_handleOnLogin);
 
     if (widget.authProvider.firebaseUser != null) {
       _locationProvider = LocationProvider();
@@ -97,7 +102,7 @@ class _MainAppState extends State<MainApp> {
 
   @override
   void dispose() {
-    widget.authProvider.removeListener(_handleOnLogin);
+    widget.authProvider.user.removeListener(_handleOnLogin);
     super.dispose();
   }
 
@@ -123,23 +128,11 @@ class _MainAppState extends State<MainApp> {
     );
 
     return MaterialApp(
-      key: const Key("mainApp"),
-      theme: customTheme,
-      home: loggedIn
-          ? ChangeNotifierProvider.value(
-              value: _locationProvider!,
-              child: HomeWithBottomNavigation(
-                key: Key(
-                    widget.authProvider.firebaseUser!.refreshToken.toString()),
-              ))
-          : const LoginPage(
-              key: Key('loginPage'),
-            ),
-    );
+        key: const Key("mainApp"), theme: customTheme, home: _getPage());
   }
 
   _handleOnLogin() async {
-    if (widget.authProvider.firebaseUser != null) {
+    if (user != null) {
       _locationProvider = LocationProvider();
       await _locationProvider!.initializeLocation();
       UserReviewProvider reviewProvider =
@@ -154,6 +147,27 @@ class _MainAppState extends State<MainApp> {
       setState(() {
         loggedIn = false;
       });
+    }
+  }
+
+  _getPage() {
+    if (loggedIn) {
+      if (user == null) {
+        return const LoadingPage();
+      }
+      if (user!.isNewUser) {
+        return const IntroPage();
+      } else {
+        return ChangeNotifierProvider.value(
+            value: _locationProvider!,
+            child: HomeWithBottomNavigation(
+              key: UniqueKey(),
+            ));
+      }
+    } else {
+      return LoginPage(
+        key: UniqueKey(),
+      );
     }
   }
 }
@@ -173,6 +187,8 @@ class HomeWithBottomNavigation extends StatelessWidget {
   Widget build(BuildContext context) {
     final BottomNavigationProvider bottomNavigationProvider =
         Provider.of<BottomNavigationProvider>(context);
+
+    bottomNavigationProvider.index = 0;
 
     return Scaffold(
         body: ValueListenableBuilder(

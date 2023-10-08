@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:goodie/main.dart';
 import 'package:otp_text_field/otp_field_style.dart';
+import 'package:phone_text_field/phone_text_field.dart';
 import 'package:provider/provider.dart';
 import 'package:otp_text_field/otp_field.dart';
 import 'package:otp_text_field/style.dart';
@@ -23,12 +24,27 @@ class _LoginPageState extends State<LoginPage> {
 
   bool otpHasGottenFocus = false;
 
+  String? errorMessage;
+
+  late final AuthProvider authProvider;
+
+  @override
+  void initState() {
+    authProvider = Provider.of<AuthProvider>(context, listen: false);
+    authProvider.verificationId.addListener(_rebuild);
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    authProvider.verificationId.removeListener(_rebuild);
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final authProvider = Provider.of<AuthProvider>(context);
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (authProvider.verificationId != null) {
+      if (authProvider.verificationId.value != null) {
         if (otpFieldKey.currentState != null && !otpHasGottenFocus) {
           _otpFieldController.setFocus(0);
           otpHasGottenFocus = true;
@@ -66,7 +82,7 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                         // text saying we will send you and sms with a verification code
                         const SizedBox(height: 50),
-                        if (authProvider.verificationId == null)
+                        if (authProvider.verificationId.value == null)
                           const Text(
                             'Vi sender deg en SMS med en verifiseringskode...',
                             textAlign: TextAlign.center,
@@ -106,56 +122,95 @@ class _LoginPageState extends State<LoginPage> {
                           color: accent1Color,
                         ),
                         const SizedBox(height: 20),
-                        if (authProvider.verificationId == null) ...[
+                        if (authProvider.verificationId.value == null) ...[
                           Row(
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              const Text("+47",
-                                  style: TextStyle(
-                                      fontSize: 16, color: Colors.black)),
-                              const SizedBox(width: 8),
+                              // const Text("+47",
+                              //     style: TextStyle(
+                              //         fontSize: 16, color: Colors.black)),
+                              // const SizedBox(width: 8),
                               Expanded(
-                                child: TextField(
-                                  onChanged: (value) {
-                                    phoneNumber = "+47$value";
-                                  },
-                                  style: const TextStyle(color: Colors.black),
+                                child: PhoneTextField(
+                                  disableLengthCheck: true,
+                                  dialogTitle: "Velg land",
+                                  invalidNumberMessage: "Ugyldig telefonnummer",
+                                  locale: const Locale('no'),
                                   decoration: InputDecoration(
-                                    labelText: 'Telefonnummer',
-                                    labelStyle:
-                                        TextStyle(color: Colors.grey[600]),
-                                    hintText: 'Skriv inn telefonnummeret ditt',
-                                    hintStyle:
-                                        TextStyle(color: Colors.grey[600]),
-                                    enabledBorder: const UnderlineInputBorder(
+                                    filled: true,
+                                    // contentPadding: const EdgeInsets.all(12),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: const BorderRadius.all(
+                                          Radius.circular(10.0)),
                                       borderSide:
-                                          BorderSide(color: accent1Color),
+                                          BorderSide(color: Colors.grey[600]!),
+                                    ),
+                                    focusedBorder: const OutlineInputBorder(
+                                      borderRadius: BorderRadius.all(
+                                          Radius.circular(10.0)),
+                                      borderSide: BorderSide(),
+                                    ),
+                                    labelText: "Telefonnummer",
+                                    labelStyle: TextStyle(
+                                      color: Colors.grey[600],
+                                      fontSize: 16,
                                     ),
                                   ),
-                                  keyboardType: TextInputType.phone,
+                                  searchFieldInputDecoration:
+                                      const InputDecoration(
+                                    filled: true,
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.all(
+                                          Radius.circular(10.0)),
+                                      borderSide: BorderSide(),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.all(
+                                          Radius.circular(10.0)),
+                                      borderSide: BorderSide(),
+                                    ),
+                                    suffixIcon: Icon(Icons.search),
+                                    hintText: "Søk etter land",
+                                  ),
+                                  initialCountryCode: "NO",
+                                  onChanged: (value) {
+                                    if (!isLoadingSignIn) {
+                                      phoneNumber = value.completeNumber;
+                                    }
+                                  },
                                 ),
-                              ),
+                              )
                             ],
                           ),
                           const SizedBox(height: 8),
                           ElevatedButton(
-                            onPressed: () async {
-                              setState(() {
-                                isLoadingVerify = true;
-                              });
-                              await authProvider.verifyPhoneNumber(phoneNumber);
-                              setState(() {
-                                isLoadingVerify = false;
-                              });
-                            },
+                            onPressed: isLoadingSignIn
+                                ? null
+                                : () async {
+                                    // remove focus
+                                    FocusScope.of(context).unfocus();
+                                    setState(() {
+                                      isLoadingSignIn = true;
+                                    });
+                                    try {
+                                      await authProvider
+                                          .verifyPhoneNumber(phoneNumber);
+                                    } catch (e) {
+                                      errorMessage =
+                                          "Verification failed. Please try again.";
+                                    }
+                                    setState(() {
+                                      isLoadingSignIn = false;
+                                    });
+                                  },
                             style: ElevatedButton.styleFrom(
                               foregroundColor: Colors.white,
-                              backgroundColor: primaryColor,
+                              backgroundColor: isLoadingSignIn
+                                  ? Colors
+                                      .grey // Change the background color to grey when disabled
+                                  : primaryColor,
                             ),
-                            child: isLoadingVerify
-                                ? const CircularProgressIndicator(
-                                    color: Colors.white)
-                                : const Text('Verifiser telefonnummer'),
+                            child: const Text('Verifiser telefonnummer'),
                           ),
                         ] else ...[
                           OTPTextField(
@@ -175,18 +230,25 @@ class _LoginPageState extends State<LoginPage> {
                               setState(() {
                                 isLoadingSignIn = true;
                               });
-                              await authProvider
-                                  .signInWithVerificationCode(pin);
-                              setState(() {
-                                isLoadingSignIn = false;
-                              });
+                              try {
+                                await authProvider
+                                    .signInWithVerificationCode(pin);
+                              } catch (e) {
+                                errorMessage =
+                                    "Sign in failed. Please try again.";
+                              }
+                              if (mounted) {
+                                setState(() {
+                                  isLoadingSignIn = false;
+                                });
+                              }
                             },
                           ),
                           const SizedBox(height: 20),
                           TextButton(
                             onPressed: () async {
                               setState(() {
-                                authProvider.verificationId = null;
+                                authProvider.verificationId.value = null;
                               });
                             },
                             child: const Text(
@@ -198,6 +260,11 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                           ),
                         ],
+                        if (errorMessage != null)
+                          Text(
+                            errorMessage!,
+                            style: TextStyle(color: Colors.red),
+                          ),
                       ],
                     ),
                     if (isLoadingSignIn)
@@ -215,5 +282,10 @@ class _LoginPageState extends State<LoginPage> {
         ),
       ),
     );
+  }
+
+  void _rebuild() {
+    isLoadingSignIn = false;
+    setState(() {});
   }
 }

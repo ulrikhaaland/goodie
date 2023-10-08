@@ -117,7 +117,6 @@ class UserReviewProvider with ChangeNotifier {
       }
       review.likes = likes;
     }
-    reviews.notifyListeners();
   }
 }
 

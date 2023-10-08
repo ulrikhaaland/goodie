@@ -5,6 +5,11 @@ class User {
   firebase.User? firebaseUser;
   List<RestaurantReview> reviews;
   List<Restaurant> favorites;
+  bool isNewUser;
 
-  User({this.firebaseUser, required this.reviews, required this.favorites});
+  User(
+      {this.firebaseUser,
+      required this.reviews,
+      required this.favorites,
+      required this.isNewUser});
 }

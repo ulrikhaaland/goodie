@@ -1,3 +1,7 @@
+import 'dart:async';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase;
 import 'package:goodie/model/user.dart';
@@ -7,46 +11,87 @@ class AuthProvider with ChangeNotifier {
 
   firebase.User? get firebaseUser => _auth.currentUser;
 
-  User? user;
+  ValueNotifier<User?> user = ValueNotifier(null);
 
-  String? verificationId;
+  ValueNotifier<String?> verificationId = ValueNotifier(null);
 
-  // Trigger phone number verification
+  AuthProvider() {
+    _auth.authStateChanges().listen((firebase.User? firebaseUser) {
+      if (firebaseUser != null) {
+        _initUser();
+      } else {
+        user.value = null;
+      }
+    });
+  }
+
   Future<void> verifyPhoneNumber(String phoneNumber) async {
+    final Completer<void> completer = Completer<void>();
+
     await _auth.verifyPhoneNumber(
       phoneNumber: phoneNumber,
       verificationCompleted: (firebase.PhoneAuthCredential credential) async {
-        await _auth.signInWithCredential(credential);
-        notifyListeners();
+        try {
+          await _auth.signInWithCredential(credential);
+          completer.complete();
+        } catch (e) {
+          completer.completeError(e);
+        }
       },
       verificationFailed: (firebase.FirebaseAuthException e) {
-        throw e;
-        // Handle error
+        completer.completeError(e);
       },
       codeSent: (String verificationId, int? resendToken) {
-        this.verificationId = verificationId;
-        notifyListeners();
+        this.verificationId.value = verificationId;
       },
       codeAutoRetrievalTimeout: (String verificationId) {
-        this.verificationId = verificationId;
-        notifyListeners();
+        this.verificationId.value = verificationId;
       },
     );
+
+    return completer.future;
   }
 
   // Trigger sign in with a verification code
   Future<void> signInWithVerificationCode(String smsCode) async {
     final credential = firebase.PhoneAuthProvider.credential(
-        verificationId: verificationId!, smsCode: smsCode);
+        verificationId: verificationId.value!, smsCode: smsCode);
     await _auth.signInWithCredential(credential);
-    user = User(firebaseUser: _auth.currentUser!, reviews: [], favorites: []);
-    notifyListeners();
+    _initUser();
   }
 
   // Sign out
   Future<void> signOut() async {
-    verificationId = null;
+    user.value = null;
+    verificationId.value = null;
     await _auth.signOut();
-    notifyListeners();
+  }
+
+  void _initUser() async {
+    if (firebaseUser == null) return;
+
+    final FirebaseFirestore firestore = FirebaseFirestore.instance;
+    final String userId =
+        firebaseUser!.uid; // Make sure firebaseUser is not null
+
+    DocumentSnapshot docSnap =
+        await firestore.collection('users').doc(userId).get();
+
+    if (docSnap.exists) {
+      // Initialize from Firestore document
+      Map<String, dynamic> data = docSnap.data() as Map<String, dynamic>;
+      user.value = User(
+          firebaseUser: firebaseUser,
+          reviews: data['reviews'] ?? [],
+          favorites: data['favorites'] ?? [],
+          isNewUser: false);
+    } else {
+      // Initialize as you did before
+      user.value = User(
+          firebaseUser: firebaseUser,
+          reviews: [],
+          favorites: [],
+          isNewUser: true);
+    }
   }
 }
