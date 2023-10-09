@@ -18,7 +18,14 @@ class RestaurantProvider with ChangeNotifier {
     final restaurantCollection =
         FirebaseFirestore.instance.collection('restaurants');
 
-    final restaurantSnapshot = await restaurantCollection.limit(50).get();
+    QuerySnapshot restaurantSnapshot;
+
+    try {
+      restaurantSnapshot = await restaurantCollection.limit(50).get();
+    } catch (e) {
+      print(e);
+      return;
+    }
 
     for (var restaurantDoc in restaurantSnapshot.docs) {
       Restaurant restaurant = Restaurant(

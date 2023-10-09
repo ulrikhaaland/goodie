@@ -29,14 +29,12 @@ void main() async {
 
   // Move restaurant fetching to a method that can be called on auth changes.
   void fetchRestaurants() async {
-    if (authProvider.firebaseUser != null) {
-      await restaurantProvider.fetchRestaurants(); // Fetch restaurants
-      restaurantProvider.fetchMoreRestaurants(500).then((value) {
-        filterProvider.countCategoryAppearances(restaurantProvider.restaurants);
-        restaurantProvider
-            .sortRestaurantCategories(filterProvider.categoryCounts);
-      });
-    }
+    await restaurantProvider.fetchRestaurants(); // Fetch restaurants
+    restaurantProvider.fetchMoreRestaurants(500).then((value) {
+      filterProvider.countCategoryAppearances(restaurantProvider.restaurants);
+      restaurantProvider
+          .sortRestaurantCategories(filterProvider.categoryCounts);
+    });
   }
 
   authProvider
@@ -90,13 +88,15 @@ class _MainAppState extends State<MainApp> {
 
   @override
   void initState() {
-    widget.authProvider.user.addListener(_handleOnLogin);
-
     if (widget.authProvider.firebaseUser != null) {
+      loggedIn = true;
+
       _locationProvider = LocationProvider();
       _locationProvider!.initializeLocation();
-      loggedIn = true;
     }
+
+    widget.authProvider.user.addListener(_handleOnLogin);
+
     super.initState();
   }
 
@@ -133,16 +133,17 @@ class _MainAppState extends State<MainApp> {
 
   _handleOnLogin() async {
     if (user != null) {
-      _locationProvider = LocationProvider();
-      await _locationProvider!.initializeLocation();
+      setState(() {
+        loggedIn = true;
+      });
       UserReviewProvider reviewProvider =
           // ignore: use_build_context_synchronously
           Provider.of<UserReviewProvider>(context, listen: false);
 
       reviewProvider.fetchReviews();
-      setState(() {
-        loggedIn = true;
-      });
+
+      _locationProvider = LocationProvider();
+      await _locationProvider!.initializeLocation();
     } else {
       setState(() {
         loggedIn = false;

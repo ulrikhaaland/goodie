@@ -94,8 +94,9 @@ class _FeedMediaItemState extends State<FeedMediaItem>
       return CachedNetworkImage(
         imageUrl: mediaItem.url,
         fit: BoxFit.cover,
-        placeholder: (context, url) =>
-            const SizedBox.shrink(child: CircularProgressIndicator()),
+        placeholder: (context, url) => const Center(
+          child: CircularProgressIndicator(),
+        ),
         errorWidget: (context, url, error) => const Icon(Icons.error),
       );
     } else {

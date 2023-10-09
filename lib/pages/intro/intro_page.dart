@@ -146,6 +146,9 @@ class _IntroPageWidgetState extends State<_IntroPageWidget> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   bool hasSubmitted = false;
 
+  // Add a focus node
+  final FocusNode _focusNode = FocusNode();
+
   // Add a variable to hold the stream
   Stream<QuerySnapshot>? usernameStream;
 
@@ -162,6 +165,7 @@ class _IntroPageWidgetState extends State<_IntroPageWidget> {
   @override
   void initState() {
     _textController.text = widget.value ?? "";
+    _focusNode.requestFocus();
     super.initState();
   }
 
@@ -222,7 +226,7 @@ class _IntroPageWidgetState extends State<_IntroPageWidget> {
               });
             } else {
               // unfocus the text field
-              FocusScope.of(context).unfocus();
+              if (widget.shouldCheckFirestore) FocusScope.of(context).unfocus();
               hasSubmitted = true;
               widget.onButtonPressed();
             }
@@ -243,8 +247,11 @@ class _IntroPageWidgetState extends State<_IntroPageWidget> {
 
   TextField buildTextField() {
     return TextField(
+      focusNode: _focusNode,
       controller: _textController,
-      autofocus: true,
+      textCapitalization: widget.shouldCheckFirestore
+          ? TextCapitalization.none
+          : TextCapitalization.words,
       onChanged: (text) {
         widget.onTextFieldChange(text);
         if (widget.shouldCheckFirestore) {
@@ -267,6 +274,7 @@ class _IntroPageWidgetState extends State<_IntroPageWidget> {
           borderSide: BorderSide(),
         ),
         labelText: widget.label,
+        hintText: widget.shouldCheckFirestore ? null : "Ola Nordmann",
         labelStyle: TextStyle(
           color: Colors.grey[600],
           fontSize: 16,

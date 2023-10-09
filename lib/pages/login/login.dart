@@ -64,216 +64,243 @@ class _LoginPageState extends State<LoginPage> {
               color: Colors.white,
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 32.0),
-                child: Stack(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const SizedBox(height: 60),
-                        // title with appname 'Goodie
-                        const Text(
-                          'Goodie',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 40,
-                            fontWeight: FontWeight.bold,
-                            color: accent2Color,
-                          ),
+                    const SizedBox(height: 60),
+                    // title with appname 'Goodie
+                    const Text(
+                      'Goodie',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 40,
+                        fontWeight: FontWeight.bold,
+                        color: accent2Color,
+                      ),
+                    ),
+                    const SizedBox(height: 50),
+                    if (authProvider.verificationId.value == null) ...[
+                      const Text(
+                        'Vi sender deg en SMS med en verifiseringskode...',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 22,
+                          color: Colors.black,
                         ),
-                        // text saying we will send you and sms with a verification code
-                        const SizedBox(height: 50),
-                        if (authProvider.verificationId.value == null)
-                          const Text(
-                            'Vi sender deg en SMS med en verifiseringskode...',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 22,
-                              color: Colors.black,
-                            ),
-                          )
-                        else
-
-                          /// use rich text and make phonenumber bold 'Vi har sendt en SMS med en verifiseringskode til $phoneNumber'
-                          RichText(
-                            textAlign: TextAlign.center,
-                            text: TextSpan(
-                              text:
-                                  'Vi har sendt en SMS med en verifiseringskode til ',
+                      )
+                    ] else ...[
+                      RichText(
+                        textAlign: TextAlign.center,
+                        text: TextSpan(
+                          text:
+                              'Vi har sendt en SMS med en verifiseringskode til ',
+                          style: const TextStyle(
+                            fontSize: 22,
+                            color: Colors.black,
+                          ),
+                          children: [
+                            TextSpan(
+                              text: phoneNumber,
                               style: const TextStyle(
-                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
                                 color: Colors.black,
                               ),
-                              children: [
-                                TextSpan(
-                                  text: phoneNumber,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black,
-                                  ),
-                                ),
-                              ],
                             ),
-                          ),
-
-                        const SizedBox(height: 50),
-                        const Icon(
-                          Icons.phone,
-                          size: 80,
-                          color: accent1Color,
+                          ],
                         ),
-                        const SizedBox(height: 20),
-                        if (authProvider.verificationId.value == null) ...[
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              // const Text("+47",
-                              //     style: TextStyle(
-                              //         fontSize: 16, color: Colors.black)),
-                              // const SizedBox(width: 8),
-                              Expanded(
-                                child: PhoneTextField(
-                                  disableLengthCheck: true,
-                                  dialogTitle: "Velg land",
-                                  invalidNumberMessage: "Ugyldig telefonnummer",
-                                  locale: const Locale('no'),
-                                  decoration: InputDecoration(
-                                    filled: true,
-                                    // contentPadding: const EdgeInsets.all(12),
-                                    enabledBorder: OutlineInputBorder(
-                                      borderRadius: const BorderRadius.all(
-                                          Radius.circular(10.0)),
-                                      borderSide:
-                                          BorderSide(color: Colors.grey[600]!),
-                                    ),
-                                    focusedBorder: const OutlineInputBorder(
-                                      borderRadius: BorderRadius.all(
-                                          Radius.circular(10.0)),
-                                      borderSide: BorderSide(),
-                                    ),
-                                    labelText: "Telefonnummer",
-                                    labelStyle: TextStyle(
-                                      color: Colors.grey[600],
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                                  searchFieldInputDecoration:
-                                      const InputDecoration(
-                                    filled: true,
-                                    enabledBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.all(
-                                          Radius.circular(10.0)),
-                                      borderSide: BorderSide(),
-                                    ),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.all(
-                                          Radius.circular(10.0)),
-                                      borderSide: BorderSide(),
-                                    ),
-                                    suffixIcon: Icon(Icons.search),
-                                    hintText: "Søk etter land",
-                                  ),
-                                  initialCountryCode: "NO",
-                                  onChanged: (value) {
-                                    if (!isLoadingSignIn) {
-                                      phoneNumber = value.completeNumber;
-                                    }
-                                  },
-                                ),
-                              )
-                            ],
+                      )
+                    ],
+
+                    const SizedBox(height: 50),
+                    if (isLoadingSignIn || isLoadingVerify) ...[
+                      const Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          Icon(
+                            Icons.phone,
+                            size: 80,
+                            color: Colors.transparent,
                           ),
-                          const SizedBox(height: 8),
-                          ElevatedButton(
-                            onPressed: isLoadingSignIn
-                                ? null
-                                : () async {
-                                    // remove focus
-                                    FocusScope.of(context).unfocus();
-                                    setState(() {
-                                      isLoadingSignIn = true;
-                                    });
-                                    try {
-                                      await authProvider
-                                          .verifyPhoneNumber(phoneNumber);
-                                    } catch (e) {
-                                      errorMessage =
-                                          "Verification failed. Please try again.";
-                                    }
-                                    setState(() {
-                                      isLoadingSignIn = false;
-                                    });
-                                  },
-                            style: ElevatedButton.styleFrom(
-                              foregroundColor: Colors.white,
-                              backgroundColor: isLoadingSignIn
-                                  ? Colors
-                                      .grey // Change the background color to grey when disabled
-                                  : primaryColor,
-                            ),
-                            child: const Text('Verifiser telefonnummer'),
-                          ),
-                        ] else ...[
-                          OTPTextField(
-                            key: otpFieldKey,
-                            otpFieldStyle: OtpFieldStyle(
-                              borderColor: accent1Color,
-                            ),
-                            length: 6,
-                            fieldWidth: 40,
-                            style: const TextStyle(
-                                fontSize: 17, color: Colors.black),
-                            textFieldAlignment: MainAxisAlignment.spaceAround,
-                            fieldStyle: FieldStyle.underline,
-                            controller: _otpFieldController,
-                            onChanged: (pin) {},
-                            onCompleted: (pin) async {
-                              setState(() {
-                                isLoadingSignIn = true;
-                              });
-                              try {
-                                await authProvider
-                                    .signInWithVerificationCode(pin);
-                              } catch (e) {
-                                errorMessage =
-                                    "Sign in failed. Please try again.";
-                              }
-                              if (mounted) {
-                                setState(() {
-                                  isLoadingSignIn = false;
-                                });
-                              }
-                            },
-                          ),
-                          const SizedBox(height: 20),
-                          TextButton(
-                            onPressed: () async {
-                              setState(() {
-                                authProvider.verificationId.value = null;
-                              });
-                            },
-                            child: const Text(
-                              'Fikk du ingen SMS? Trykk her',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.black,
-                              ),
-                            ),
+                          CircularProgressIndicator(
+                            color: primaryColor,
                           ),
                         ],
-                        if (errorMessage != null)
-                          Text(
-                            errorMessage!,
-                            style: TextStyle(color: Colors.red),
+                      ),
+                    ] else ...[
+                      const Icon(
+                        Icons.phone,
+                        size: 80,
+                        color: accent1Color,
+                      ),
+                    ],
+
+                    const SizedBox(height: 20),
+                    if (authProvider.verificationId.value == null) ...[
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          // const Text("+47",
+                          //     style: TextStyle(
+                          //         fontSize: 16, color: Colors.black)),
+                          // const SizedBox(width: 8),
+                          Flexible(
+                            child: PhoneTextField(
+                              autofocus: true,
+                              disableLengthCheck: true,
+                              dialogTitle: "Velg land",
+                              invalidNumberMessage: "Ugyldig telefonnummer",
+                              locale: const Locale('no'),
+                              decoration: InputDecoration(
+                                  filled: true,
+                                  // contentPadding: const EdgeInsets.all(12),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: const BorderRadius.all(
+                                        Radius.circular(10.0)),
+                                    borderSide:
+                                        BorderSide(color: Colors.grey[600]!),
+                                  ),
+                                  focusedBorder: const OutlineInputBorder(
+                                    borderRadius:
+                                        BorderRadius.all(Radius.circular(10.0)),
+                                    borderSide: BorderSide(),
+                                  ),
+                                  labelText: "Telefonnummer",
+                                  labelStyle: TextStyle(
+                                    color: Colors.grey[600],
+                                    fontSize: 16,
+                                  ),
+                                  errorText: errorMessage),
+                              searchFieldInputDecoration: const InputDecoration(
+                                filled: true,
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(10.0)),
+                                  borderSide: BorderSide(),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(10.0)),
+                                  borderSide: BorderSide(),
+                                ),
+                                suffixIcon: Icon(Icons.search),
+                                hintText: "Søk etter land",
+                              ),
+                              initialCountryCode: "NO",
+                              onChanged: (value) {
+                                if (!isLoadingSignIn) {
+                                  if (errorMessage != null) {
+                                    setState(() {
+                                      errorMessage = null;
+                                    });
+                                  }
+                                  phoneNumber = value.completeNumber;
+                                }
+                              },
+                            ),
+                          )
+                        ],
+                      ),
+                      const SizedBox(height: 18),
+                      ElevatedButton(
+                        onPressed: isLoadingSignIn
+                            ? null
+                            : () async {
+                                // remove focus
+                                FocusScope.of(context).unfocus();
+                                if (phoneNumber.length < 8) {
+                                  setState(() {
+                                    errorMessage = "Ugyldig telefonnummer";
+                                  });
+                                  return;
+                                } else if (phoneNumber.isEmpty) {
+                                  setState(() {
+                                    errorMessage =
+                                        "Telefonnummer kan ikke være tomt";
+                                  });
+                                  return;
+                                }
+
+                                setState(() {
+                                  isLoadingSignIn = true;
+                                });
+                                try {
+                                  await authProvider
+                                      .verifyPhoneNumber(phoneNumber);
+                                } catch (e) {
+                                  errorMessage =
+                                      "Verifiseringen feilet, vennligst prøv igjen.";
+                                }
+                                if (mounted) {
+                                  setState(() {
+                                    isLoadingSignIn = false;
+                                  });
+                                }
+                              },
+                        style: ElevatedButton.styleFrom(
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(32.0),
                           ),
-                      ],
-                    ),
-                    if (isLoadingSignIn)
-                      const Align(
-                        alignment: Alignment.center,
-                        child: CircularProgressIndicator(
-                          color: primaryColor,
+                          minimumSize: const Size(double.infinity, 48),
+                          backgroundColor: isLoadingSignIn
+                              ? Colors
+                                  .grey // Change the background color to grey when disabled
+                              : primaryColor,
+                        ),
+                        child: const Text('Verifiser telefonnummer'),
+                      ),
+                    ] else ...[
+                      Flexible(
+                        child: OTPTextField(
+                          key: otpFieldKey,
+                          otpFieldStyle: OtpFieldStyle(
+                            borderColor: accent1Color,
+                          ),
+                          length: 6,
+                          fieldWidth: 40,
+                          style: const TextStyle(
+                              fontSize: 17, color: Colors.black),
+                          textFieldAlignment: MainAxisAlignment.spaceAround,
+                          fieldStyle: FieldStyle.underline,
+                          controller: _otpFieldController,
+                          onChanged: (pin) {},
+                          onCompleted: (pin) async {
+                            setState(() {
+                              isLoadingVerify = true;
+                            });
+                            try {
+                              await authProvider
+                                  .signInWithVerificationCode(pin);
+                            } catch (e) {
+                              errorMessage =
+                                  "Sign in failed. Please try again.";
+                            }
+                            if (mounted) {
+                              setState(() {
+                                isLoadingVerify = false;
+                              });
+                            }
+                          },
                         ),
                       ),
+                      const SizedBox(height: 20),
+                      TextButton(
+                        onPressed: () async {
+                          if (!isLoadingVerify) {
+                            setState(() {
+                              authProvider.verificationId.value = null;
+                            });
+                          }
+                        },
+                        child: const Text(
+                          'Fikk du ingen SMS? Trykk her',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.black,
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),

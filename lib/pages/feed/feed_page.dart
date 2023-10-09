@@ -39,7 +39,7 @@ class _HomePageState extends State<HomePage>
   }
 
   @override
-  dispose() {
+  void dispose() {
     bottomNavigationProvider.onTapCurrentTabListener
         .removeListener(_handleOnTapTab);
     _scrollController.dispose();
