@@ -4,7 +4,8 @@ import 'package:goodie/model/restaurant.dart';
 class User {
   firebase.User? firebaseUser;
   List<RestaurantReview> reviews;
-  List<Restaurant> favorites;
+  List<String> favoriteReviews;
+  List<String> favoriteRestaurants;
   bool isNewUser;
   String? fullName;
   String? username;
@@ -14,6 +15,7 @@ class User {
       this.fullName,
       this.username,
       required this.reviews,
-      required this.favorites,
+      required this.favoriteReviews,
+      required this.favoriteRestaurants,
       required this.isNewUser});
 }

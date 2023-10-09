@@ -83,7 +83,10 @@ class AuthProvider with ChangeNotifier {
       user.value = User(
           firebaseUser: firebaseUser,
           reviews: data['reviews'] ?? [],
-          favorites: data['favorites'] ?? [],
+          favoriteRestaurants: data['favoriteRestaurants'] ?? [],
+          favoriteReviews: data['favoriteReviews'] != null
+              ? (data['favoriteReviews'] as List).cast<String>()
+              : [],
           fullName: data['fullName'],
           username: data['username'],
           isNewUser: false);
@@ -92,7 +95,8 @@ class AuthProvider with ChangeNotifier {
       user.value = User(
           firebaseUser: firebaseUser,
           reviews: [],
-          favorites: [],
+          favoriteRestaurants: [],
+          favoriteReviews: [],
           isNewUser: true);
     }
   }
@@ -102,24 +106,26 @@ class AuthProvider with ChangeNotifier {
         firebaseUser!.uid; // Make sure firebaseUser is not null
     final FirebaseFirestore firestore = FirebaseFirestore.instance;
 
+    final User updatedUser = user.value!; // Make sure user is not null
+
     try {
       await firestore.collection('users').doc(userId).set(
           {
             // 'reviews': updatedUser.reviews
             //     .map((review) => review.toJson())
             //     .toList(), // Replace with your logic to serialize
-            // 'favorites': updatedUser.favorites
-            //     .map((fav) => fav.toJson())
-            //     .toList(), // Replace with your logic to serialize
-            'isNewUser': user.value!.isNewUser,
-            'fullName': user.value!.fullName,
-            'username': user.value!.username,
+            'favoriteReviews': updatedUser.favoriteReviews
+                .map((fav) => fav)
+                .toList(), // Replace with your logic to serialize
+            'isNewUser': updatedUser.isNewUser,
+            'fullName': updatedUser.fullName,
+            'username': updatedUser.username,
           },
           SetOptions(
               merge:
                   true)); // Using SetOptions(merge: true) to only update fields that are passed
 
-      user.value = user.value!; // Optionally update the local user value
+      user.value = updatedUser; // Optionally update the local user value
       notifyListeners(); // Notify listeners to rebuild UI if needed
     } catch (e) {
       print("Error updating user: $e");

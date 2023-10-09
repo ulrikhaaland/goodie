@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:goodie/bloc/auth_provider.dart';
 import 'package:goodie/main.dart';
 import 'package:goodie/utils/image.dart';
 import 'package:preload_page_view/preload_page_view.dart';
@@ -10,6 +11,7 @@ import 'package:preload_page_view/preload_page_view.dart';
 import '../../bloc/restaurant_provider.dart';
 import '../../bloc/user_review_provider.dart';
 import '../../model/restaurant.dart';
+import '../../model/user.dart';
 import 'feed_media_item.dart';
 import 'feed_restaurant_info.dart';
 
@@ -20,6 +22,7 @@ class ReviewListItem extends StatefulWidget {
   final Restaurant restaurant;
   final RestaurantProvider restaurantProvider;
   final UserReviewProvider reviewProvider;
+  final User user;
 
   const ReviewListItem({
     super.key,
@@ -27,6 +30,7 @@ class ReviewListItem extends StatefulWidget {
     required this.restaurant,
     required this.restaurantProvider,
     required this.reviewProvider,
+    required this.user,
   });
 
   @override
@@ -52,8 +56,11 @@ class _ReviewListItemState extends State<ReviewListItem>
   late final Animation<double> _sizeAnimation;
   late final Animation<double> _opacityAnimation;
 
+  User get user => widget.user;
+
   @override
   void initState() {
+    isLiked = widget.user.favoriteReviews.contains(widget.review.id);
     _initAnimation();
     _pageController.addListener(() {
       setState(() {
@@ -145,7 +152,7 @@ class _ReviewListItemState extends State<ReviewListItem>
                       mediaItem: media,
                       reviewProvider: widget.reviewProvider,
                       onDoubleTap: () {
-                        isLiked = true;
+                        if (isLiked != true) isLiked = true;
                         _controller
                             .forward(from: _animationForwardValue)
                             .then((_) {
@@ -222,6 +229,13 @@ class _ReviewListItemState extends State<ReviewListItem>
                               setState(() {
                                 isLiked = !isLiked;
                               });
+                              widget.user.favoriteReviews
+                                      .contains(widget.review.id)
+                                  ? widget.user.favoriteReviews
+                                      .remove(widget.review.id)
+                                  : widget.user.favoriteReviews
+                                      .add(widget.review.id!);
+
                               if (isLiked) {
                                 _controller
                                     .forward(from: _animationForwardValue)

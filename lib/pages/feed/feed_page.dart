@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:goodie/bloc/auth_provider.dart';
 import 'package:goodie/bloc/bottom_nav_provider.dart';
 import 'package:goodie/main.dart';
+import 'package:goodie/model/user.dart';
 import 'package:goodie/pages/feed/feed_list_item.dart';
 import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
 import 'package:provider/provider.dart';
@@ -28,10 +30,16 @@ class _HomePageState extends State<HomePage>
 
   late final BottomNavigationProvider bottomNavigationProvider;
 
+  late final AuthProvider authProvider;
+
+  User get user => authProvider.user.value!;
+
   @override
   void initState() {
     bottomNavigationProvider =
         Provider.of<BottomNavigationProvider>(context, listen: false);
+
+    authProvider = Provider.of<AuthProvider>(context, listen: false);
 
     bottomNavigationProvider.onTapCurrentTabListener
         .addListener(_handleOnTapTab);
@@ -62,6 +70,8 @@ class _HomePageState extends State<HomePage>
               .fetchReviews();
         },
         child: CustomScrollView(
+          shrinkWrap: false,
+          cacheExtent: 10000,
           controller: _scrollController,
           slivers: [
             const SliverAppBar(
@@ -103,6 +113,7 @@ class _HomePageState extends State<HomePage>
                             restaurant: restaurant,
                             restaurantProvider: restaurantProvider,
                             reviewProvider: reviewProvider,
+                            user: user,
                           );
                         }
                       },
