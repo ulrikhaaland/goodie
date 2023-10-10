@@ -252,14 +252,14 @@ class _ReviewListItemState extends State<ReviewListItem>
                                                 ? Icons.favorite
                                                 : Icons.favorite_border,
                                             color: isLiked
-                                                ? Colors.red
+                                                ? accent2Color
                                                 : Colors.grey[600],
                                           ),
                                           Text(
                                             ' $likeCount',
                                             style: TextStyle(
                                                 color: isLiked
-                                                    ? Colors.red
+                                                    ? accent2Color
                                                     : Colors.grey[600]),
                                           ),
                                         ],
@@ -311,13 +311,13 @@ class _ReviewListItemState extends State<ReviewListItem>
                                         ? Icons.bookmark
                                         : Icons.bookmark_border,
                                     color: isBookmarked
-                                        ? Colors.blue
+                                        ? bookmarkColorRoyalBlue
                                         : Colors.grey[600],
                                   ),
                                   Text(' $bookmarkCount',
                                       style: TextStyle(
                                           color: isBookmarked
-                                              ? Colors.blue
+                                              ? bookmarkColorRoyalBlue
                                               : Colors.grey[600]))
                                 ],
                               );

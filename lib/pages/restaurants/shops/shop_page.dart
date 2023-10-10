@@ -58,6 +58,8 @@ class _ListPageState extends State<ListPage>
     _filterProvider = Provider.of<FilterProvider>(context, listen: false);
     _filterProvider.addListener(_updateFilteredRestaurants);
 
+    _updateFilteredRestaurants();
+
     super.initState();
   }
 

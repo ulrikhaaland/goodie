@@ -91,6 +91,8 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
     final selectedAssetHeight = screenWidth.floor();
     final selectedAssetWidth = (selectedAssetHeight * 0.8).floor();
 
+    final ThemeData themeData = Theme.of(context);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12.0),
       child: SizedBox(
@@ -100,12 +102,12 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
               ? const AlwaysScrollableScrollPhysics()
               : const NeverScrollableScrollPhysics(),
           slivers: [
-            const SliverAppBar(
-              backgroundColor: Colors.white,
+            SliverAppBar(
+              backgroundColor: themeData.scaffoldBackgroundColor,
               elevation: 0,
               floating: true, // Add this line
               expandedHeight: 54,
-              flexibleSpace: FlexibleSpaceBar(
+              flexibleSpace: const FlexibleSpaceBar(
                 background: Column(
                   children: [
                     SizedBox(height: 12.0),

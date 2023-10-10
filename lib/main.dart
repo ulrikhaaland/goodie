@@ -71,6 +71,38 @@ const bgColor = Color(0xFFFFF2F2); // Very light shade for background
 const textColor = Color(0xFF7B3F3F); // Dark shade for text
 const highlightColor = Color(0xFFFFB9B9); // Pastel shade for highlights
 
+// Option 1: Contrast
+const bookmarkColorContrast = Color(0xFF4CAF50); // Green
+
+// Option 2: Complementary
+const bookmarkColorComplementary = Color(0xFFFCD116); // Light yellow
+
+// Option 3: In Palette
+const bookmarkColorInPalette = Color(0xFFFFB9B9); // Same as highlightColor
+
+// Option 4: Neutral
+const bookmarkColorNeutral = Color(0xFFA9A9A9); // DarkGray
+
+// Additional Options
+// Option 1: Cool Blue
+const bookmarkColorCoolBlue = Color(0xFF2196F3); // Blue
+
+// Option 2: Earthy Tone
+const bookmarkColorEarthy = Color(0xFF6B8E23); // Olive
+
+// Option 3: Muted Purple
+const bookmarkColorPurple = Color(0xFF9370DB); // Medium Purple
+
+// New Additional Options for Natural White Background
+// Option 1: Dark Teal
+const bookmarkColorDarkTeal = Color(0xFF008080); // Teal
+
+// Option 2: Dark Orange
+const bookmarkColorDarkOrange = Color(0xFFFF8C00); // Dark Orange
+
+// Option 3: Royal Blue
+const bookmarkColorRoyalBlue = Color(0xFF4169E1); // Royal Blue
+
 class MainApp extends StatefulWidget {
   final AuthProvider authProvider;
 
@@ -202,7 +234,7 @@ class HomeWithBottomNavigation extends StatelessWidget {
         bottomNavigationBar: ValueListenableBuilder(
           valueListenable: bottomNavigationProvider.currentIndexListener,
           builder: (context, value, child) => BottomNavigationBar(
-            type: BottomNavigationBarType.fixed,
+            type: BottomNavigationBarType.shifting,
             backgroundColor: Colors.white,
             selectedItemColor: primaryColor,
             unselectedItemColor: Colors.grey[600],

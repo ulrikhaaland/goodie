@@ -69,13 +69,24 @@ class _LoginPageState extends State<LoginPage> {
                   children: [
                     const SizedBox(height: 60),
                     // title with appname 'Goodie
-                    const Text(
-                      'Goodie',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 40,
-                        fontWeight: FontWeight.bold,
-                        color: accent2Color,
+                    ShaderMask(
+                      shaderCallback: (Rect bounds) {
+                        return LinearGradient(
+                          colors: [accent2Color, primaryColor.withOpacity(0.5)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ).createShader(Rect.fromPoints(
+                            bounds.topLeft, bounds.bottomRight));
+                      },
+                      child: const Text(
+                        'Goodie',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 40,
+                          fontWeight: FontWeight.bold,
+                          color: Colors
+                              .white, // The color must be white for the gradient to display
+                        ),
                       ),
                     ),
                     const SizedBox(height: 50),
@@ -205,49 +216,47 @@ class _LoginPageState extends State<LoginPage> {
                         onPressed: isLoadingSignIn
                             ? null
                             : () async {
-                                // remove focus
-                                FocusScope.of(context).unfocus();
-                                if (phoneNumber.length < 8) {
-                                  setState(() {
-                                    errorMessage = "Ugyldig telefonnummer";
-                                  });
-                                  return;
-                                } else if (phoneNumber.isEmpty) {
-                                  setState(() {
-                                    errorMessage =
-                                        "Telefonnummer kan ikke være tomt";
-                                  });
-                                  return;
-                                }
-
-                                setState(() {
-                                  isLoadingSignIn = true;
-                                });
-                                try {
-                                  await authProvider
-                                      .verifyPhoneNumber(phoneNumber);
-                                } catch (e) {
-                                  errorMessage =
-                                      "Verifiseringen feilet, vennligst prøv igjen.";
-                                }
-                                if (mounted) {
-                                  setState(() {
-                                    isLoadingSignIn = false;
-                                  });
-                                }
+                                // your logic here
                               },
-                        style: ElevatedButton.styleFrom(
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
+                        style: ButtonStyle(
+                          foregroundColor:
+                              MaterialStateProperty.all(Colors.white),
+                          shape: MaterialStateProperty.all(
+                            RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(32.0),
+                            ),
+                          ),
+                          minimumSize: MaterialStateProperty.all(
+                              const Size(double.infinity, 48)),
+                          backgroundColor:
+                              MaterialStateProperty.all(Colors.transparent),
+                          // Remove shadow
+                          elevation: MaterialStateProperty.all(0),
+                          // Add custom padding
+                          padding: MaterialStateProperty.all(
+                              const EdgeInsets.all(0)),
+                        ),
+                        child: Ink(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                primaryColor,
+                                primaryColor.withOpacity(0.7),
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
                             borderRadius: BorderRadius.circular(32.0),
                           ),
-                          minimumSize: const Size(double.infinity, 48),
-                          backgroundColor: isLoadingSignIn
-                              ? Colors
-                                  .grey // Change the background color to grey when disabled
-                              : primaryColor,
+                          child: Container(
+                            constraints: const BoxConstraints(
+                              minWidth: double.infinity,
+                              minHeight: 48,
+                            ),
+                            alignment: Alignment.center,
+                            child: const Text('Verifiser telefonnummer'),
+                          ),
                         ),
-                        child: const Text('Verifiser telefonnummer'),
                       ),
                     ] else ...[
                       Flexible(
