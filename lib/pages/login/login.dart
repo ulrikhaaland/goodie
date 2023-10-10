@@ -72,7 +72,10 @@ class _LoginPageState extends State<LoginPage> {
                     ShaderMask(
                       shaderCallback: (Rect bounds) {
                         return LinearGradient(
-                          colors: [accent2Color, primaryColor.withOpacity(0.5)],
+                          colors: [
+                            accent2Color,
+                            Colors.amber[900]!.withOpacity(0.7)
+                          ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ).createShader(Rect.fromPoints(
@@ -216,7 +219,7 @@ class _LoginPageState extends State<LoginPage> {
                         onPressed: isLoadingSignIn
                             ? null
                             : () async {
-                                // your logic here
+                                _handlePhoneAuth();
                               },
                         style: ButtonStyle(
                           foregroundColor:
@@ -241,7 +244,7 @@ class _LoginPageState extends State<LoginPage> {
                             gradient: LinearGradient(
                               colors: [
                                 primaryColor,
-                                primaryColor.withOpacity(0.7),
+                                Colors.amber[900]!.withOpacity(0.7),
                               ],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
@@ -264,6 +267,7 @@ class _LoginPageState extends State<LoginPage> {
                           key: otpFieldKey,
                           otpFieldStyle: OtpFieldStyle(
                             borderColor: accent1Color,
+                            focusBorderColor: accent1Color,
                           ),
                           length: 6,
                           fieldWidth: 40,
@@ -323,5 +327,34 @@ class _LoginPageState extends State<LoginPage> {
   void _rebuild() {
     isLoadingSignIn = false;
     setState(() {});
+  }
+
+  Future<void> _handlePhoneAuth() async {
+    FocusScope.of(context).unfocus();
+    if (phoneNumber.length < 8) {
+      setState(() {
+        errorMessage = "Ugyldig telefonnummer";
+      });
+      return;
+    } else if (phoneNumber.isEmpty) {
+      setState(() {
+        errorMessage = "Telefonnummer kan ikke være tomt";
+      });
+      return;
+    }
+
+    setState(() {
+      isLoadingSignIn = true;
+    });
+    try {
+      await authProvider.verifyPhoneNumber(phoneNumber);
+    } catch (e) {
+      errorMessage = "Verifiseringen feilet, vennligst prøv igjen.";
+    }
+    if (mounted) {
+      setState(() {
+        isLoadingSignIn = false;
+      });
+    }
   }
 }
