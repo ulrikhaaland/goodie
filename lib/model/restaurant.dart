@@ -84,7 +84,7 @@ class RestaurantReview {
   List<MediaItem>? media; // media of the review
   // Below are not for making a review, but for other users to interact with the review
   List<Comment>? comments; // Comments on the review
-  List<Like>? likes; // Likes on the review
+  List<String>? likes; // Likes on the review
 
   RestaurantReview(
       {required this.restaurantId,
@@ -116,17 +116,17 @@ class Comment {
       required this.timestamp});
 }
 
-class Like {
-  final String id;
-  final String userId;
-  final String userName;
-  final String? userImgUrl;
-  final DateTime timestamp;
+// class Like {
+//   final String id;
+//   final String userId;
+//   final String userName;
+//   final String? userImgUrl;
+//   final DateTime timestamp;
 
-  Like(
-      {required this.id,
-      required this.userId,
-      required this.userName,
-      required this.userImgUrl,
-      required this.timestamp});
-}
+//   Like(
+//       {required this.id,
+//       required this.userId,
+//       required this.userName,
+//       required this.userImgUrl,
+//       required this.timestamp});
+// }

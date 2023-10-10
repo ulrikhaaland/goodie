@@ -103,17 +103,9 @@ class UserReviewProvider with ChangeNotifier {
 
       // Generate imaginary likes
       int likeCount = random.nextInt(20); // Generate up to 20 likes
-      List<Like> likes = [];
+      List<String> likes = [];
       for (int i = 0; i < likeCount; i++) {
-        likes.add(
-          Like(
-            id: 'likeId$i',
-            userId: 'userId$i',
-            userName: 'User $i',
-            userImgUrl: null,
-            timestamp: DateTime.now(),
-          ),
-        );
+        likes.add('likeId$i');
       }
       review.likes = likes;
     }

@@ -5,7 +5,8 @@ class User {
   firebase.User? firebaseUser;
   List<RestaurantReview> reviews;
   List<String> favoriteReviews;
-  List<String> favoriteRestaurants;
+  List<String> bookmarkedReviews;
+  List<String> bookmarkedRestaurants;
   bool isNewUser;
   String? fullName;
   String? username;
@@ -16,6 +17,7 @@ class User {
       this.username,
       required this.reviews,
       required this.favoriteReviews,
-      required this.favoriteRestaurants,
+      required this.bookmarkedReviews,
+      required this.bookmarkedRestaurants,
       required this.isNewUser});
 }

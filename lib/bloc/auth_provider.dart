@@ -83,7 +83,10 @@ class AuthProvider with ChangeNotifier {
       user.value = User(
           firebaseUser: firebaseUser,
           reviews: data['reviews'] ?? [],
-          favoriteRestaurants: data['favoriteRestaurants'] ?? [],
+          bookmarkedRestaurants: data['bookmarkedRestaurants'] ?? [],
+          bookmarkedReviews: data['bookmarkedReviews'] != null
+              ? (data['bookmarkedReviews'] as List).cast<String>()
+              : [],
           favoriteReviews: data['favoriteReviews'] != null
               ? (data['favoriteReviews'] as List).cast<String>()
               : [],
@@ -95,8 +98,9 @@ class AuthProvider with ChangeNotifier {
       user.value = User(
           firebaseUser: firebaseUser,
           reviews: [],
-          favoriteRestaurants: [],
+          bookmarkedRestaurants: [],
           favoriteReviews: [],
+          bookmarkedReviews: [],
           isNewUser: true);
     }
   }
@@ -114,9 +118,12 @@ class AuthProvider with ChangeNotifier {
             // 'reviews': updatedUser.reviews
             //     .map((review) => review.toJson())
             //     .toList(), // Replace with your logic to serialize
+            'bookmarkedReviews': updatedUser.bookmarkedReviews
+                .map((bookmarkedReview) => bookmarkedReview)
+                .toList(),
             'favoriteReviews': updatedUser.favoriteReviews
-                .map((fav) => fav)
-                .toList(), // Replace with your logic to serialize
+                .map((favoriteReview) => favoriteReview)
+                .toList(),
             'isNewUser': updatedUser.isNewUser,
             'fullName': updatedUser.fullName,
             'username': updatedUser.username,

@@ -2,8 +2,10 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:goodie/bloc/auth_provider.dart';
+import 'package:goodie/data/review_gesture_data.dart';
 import 'package:goodie/main.dart';
 import 'package:goodie/utils/image.dart';
 import 'package:preload_page_view/preload_page_view.dart';
@@ -47,6 +49,8 @@ class _ReviewListItemState extends State<ReviewListItem>
 
   bool isLiked = false;
 
+  bool isBookmarked = false;
+
   final PreloadPageController _pageController = PreloadPageController();
   int _currentPage = 0;
 
@@ -60,7 +64,9 @@ class _ReviewListItemState extends State<ReviewListItem>
 
   @override
   void initState() {
-    isLiked = widget.user.favoriteReviews.contains(widget.review.id);
+    isLiked = user.favoriteReviews.contains(widget.review.id);
+    isBookmarked = user.bookmarkedReviews.contains(widget.review.id);
+
     _initAnimation();
     _pageController.addListener(() {
       setState(() {
@@ -149,17 +155,9 @@ class _ReviewListItemState extends State<ReviewListItem>
                   itemBuilder: (context, index) {
                     final media = _mediaItems[index];
                     return FeedMediaItem(
-                      mediaItem: media,
-                      reviewProvider: widget.reviewProvider,
-                      onDoubleTap: () {
-                        if (isLiked != true) isLiked = true;
-                        _controller
-                            .forward(from: _animationForwardValue)
-                            .then((_) {
-                          _controller.reverse();
-                        });
-                      },
-                    );
+                        mediaItem: media,
+                        reviewProvider: widget.reviewProvider,
+                        onDoubleTap: () => _handleOnLike(isDoubleTap: true));
                   }),
               if (_mediaItems.length > 1)
                 Positioned(
@@ -225,48 +223,52 @@ class _ReviewListItemState extends State<ReviewListItem>
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                isLiked = !isLiked;
-                              });
-                              widget.user.favoriteReviews
-                                      .contains(widget.review.id)
-                                  ? widget.user.favoriteReviews
-                                      .remove(widget.review.id)
-                                  : widget.user.favoriteReviews
-                                      .add(widget.review.id!);
+                            onTap: _handleOnLike,
+                            child: StreamBuilder<int>(
+                              stream: getLikeCount(widget.review.id!),
+                              builder: (context, snapshot) {
+                                int likeCount = 0;
+                                if (snapshot.hasData) {
+                                  likeCount = snapshot.data!;
+                                }
 
-                              if (isLiked) {
-                                _controller
-                                    .forward(from: _animationForwardValue)
-                                    .then((_) {
-                                  _controller.reverse();
-                                });
-                              }
-                            },
-                            child: AnimatedBuilder(
-                                animation: _controller,
-                                builder: (context, child) {
-                                  return Row(
-                                    children: [
-                                      Icon(
-                                        isLiked
-                                            ? Icons.favorite
-                                            : Icons.favorite_border,
-                                        color: isLiked
-                                            ? Colors.red
-                                            : Colors.grey[600],
-                                      ),
-                                      Text(
-                                          ' ${widget.review.likes?.length ?? 0}',
-                                          style: TextStyle(
-                                              color: isLiked
-                                                  ? Colors.red
-                                                  : Colors.grey[600])),
-                                    ],
-                                  );
-                                }),
+                                if (likeCount == 0) {
+                                  if (isLiked) {
+                                    likeCount = 1;
+                                  }
+                                } else if (likeCount == 1) {
+                                  if (!isLiked) {
+                                    likeCount = 0;
+                                  }
+                                }
+
+                                return AnimatedBuilder(
+                                    animation: _controller,
+                                    builder: (context, child) {
+                                      return Row(
+                                        children: [
+                                          Icon(
+                                            isLiked
+                                                ? Icons.favorite
+                                                : Icons.favorite_border,
+                                            color: isLiked
+                                                ? Colors.red
+                                                : Colors.grey[600],
+                                          ),
+                                          Text(
+                                            ' $likeCount',
+                                            style: TextStyle(
+                                                color: isLiked
+                                                    ? Colors.red
+                                                    : Colors.grey[600]),
+                                          ),
+                                        ],
+                                      );
+                                    });
+                              },
+                            ),
                           ),
+
                           const SizedBox(width: 15),
                           Row(
                             crossAxisAlignment: CrossAxisAlignment.center,
@@ -283,7 +285,44 @@ class _ReviewListItemState extends State<ReviewListItem>
                           //     color: Colors.grey[600]),
                         ],
                       ),
-                      Icon(Icons.bookmark_border, color: Colors.grey[600]),
+                      GestureDetector(
+                        onTap: _handleOnBookmark,
+                        child: StreamBuilder<int>(
+                            stream: getBookmarkCount(widget.review.id!),
+                            builder: (context, snapshot) {
+                              int bookmarkCount = 0;
+                              if (snapshot.hasData) {
+                                bookmarkCount = snapshot.data!;
+                              }
+
+                              if (bookmarkCount == 0) {
+                                if (isBookmarked) {
+                                  bookmarkCount = 1;
+                                }
+                              } else if (bookmarkCount == 1) {
+                                if (!isBookmarked) {
+                                  bookmarkCount = 0;
+                                }
+                              }
+                              return Row(
+                                children: [
+                                  Icon(
+                                    isBookmarked
+                                        ? Icons.bookmark
+                                        : Icons.bookmark_border,
+                                    color: isBookmarked
+                                        ? Colors.blue
+                                        : Colors.grey[600],
+                                  ),
+                                  Text(' $bookmarkCount',
+                                      style: TextStyle(
+                                          color: isBookmarked
+                                              ? Colors.blue
+                                              : Colors.grey[600]))
+                                ],
+                              );
+                            }),
+                      ),
                     ],
                   ),
                   // Dots indicator
@@ -336,6 +375,24 @@ class _ReviewListItemState extends State<ReviewListItem>
     );
   }
 
+  Stream<int> getLikeCount(String reviewId) {
+    // Reference to the "likes" subcollection for the given review
+    CollectionReference likesRef = FirebaseFirestore.instance
+        .collection('reviews')
+        .doc(reviewId)
+        .collection('likes');
+    // Listen to the collection and count the number of documents (likes)
+    return likesRef.snapshots().map((snapshot) => snapshot.docs.length);
+  }
+
+  Stream<int> getBookmarkCount(String reviewId) {
+    CollectionReference bookmarksRef = FirebaseFirestore.instance
+        .collection('reviews')
+        .doc(reviewId)
+        .collection('bookmarks');
+    return bookmarksRef.snapshots().map((snapshot) => snapshot.docs.length);
+  }
+
   Future<void> _handleImages() async {
     if (widget.review.media != null && widget.review.media!.isNotEmpty) {
       // Assuming widget.review.media is a list of MediaItem
@@ -350,24 +407,6 @@ class _ReviewListItemState extends State<ReviewListItem>
             url: restaurant.coverImg!,
             type: MediaType.Image));
       }
-
-      // if (restaurant.dishes.isEmpty) {
-      //   widget.restaurantProvider
-      //       .fetchDishesAndPrecacheImages(restaurant.id, context)
-      //       .then((value) {
-      //     for (var dish in restaurant.dishes) {
-      //       if (_mediaItems.length < 3) {
-      //         _mediaItems.add(MediaItem(
-      //             url: dish.imgUrl!,
-      //             type: MediaType.Image,
-      //             index: _mediaItems.length));
-      //       } else {
-      //         break;
-      //       }
-      //     }
-      //     if (mounted) setState(() {});
-      //   });
-      // }
     }
   }
 
@@ -416,5 +455,39 @@ class _ReviewListItemState extends State<ReviewListItem>
       );
     }
     return Container();
+  }
+
+  void _handleOnLike({bool isDoubleTap = false}) {
+    bool previous = isLiked;
+    bool liked = isDoubleTap ? true : !isLiked;
+
+    setState(() {
+      isLiked = liked;
+    });
+
+    if (liked) {
+      _controller.forward(from: _animationForwardValue).then((_) {
+        _controller.reverse();
+      });
+
+      if (previous == false) likeReview(widget.review.id!, user);
+    } else {
+      unlikeReview(widget.review.id!, user);
+    }
+  }
+
+  void _handleOnBookmark() {
+    bool previous = isBookmarked;
+    bool bookmarked = !isBookmarked;
+
+    setState(() {
+      isBookmarked = bookmarked;
+    });
+
+    if (bookmarked) {
+      if (previous == false) bookmarkReview(widget.review.id!, user);
+    } else {
+      unbookmarkReview(widget.review.id!, user);
+    }
   }
 }
