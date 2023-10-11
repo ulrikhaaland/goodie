@@ -69,7 +69,11 @@ const accent1Color = Color(0xFFFF8D8D); // Slightly different shade of primary
 const accent2Color = Color(0xFFFF4A4A); // Darker shade of primary
 const bgColor = Color(0xFFFFF2F2); // Very light shade for background
 const textColor = Color(0xFF7B3F3F); // Dark shade for text
+// amber [900]
+const amberColor = Color(0xDDFF6F00);
 const highlightColor = Color(0xFFFFB9B9); // Pastel shade for highlights
+const highlightColor2 = Color(0xFFFFE3E3); // Pastel shade for highlights
+const highlightColor3 = Color(0xFFFFF2F2); // Pastel shade for highlights
 
 // Option 1: Contrast
 const bookmarkColorContrast = Color(0xFF4CAF50); // Green

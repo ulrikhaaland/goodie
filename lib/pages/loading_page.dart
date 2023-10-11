@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:goodie/widgets/gradient_circular_progress.dart';
 
 class LoadingPage extends StatelessWidget {
   const LoadingPage({super.key});
@@ -8,7 +9,7 @@ class LoadingPage extends StatelessWidget {
     return Container(
       color: Colors.white,
       child: const Center(
-        child: CircularProgressIndicator(),
+        child: GradientCircularProgressIndicator(),
       ),
     );
   }

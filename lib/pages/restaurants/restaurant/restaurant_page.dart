@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 
 import '../../../bloc/restaurant_provider.dart';
 import '../../../model/restaurant.dart';
+import '../../../widgets/gradient_circular_progress.dart';
 import 'dish_list_view.dart';
 
 class RestaurantPage extends StatefulWidget {
@@ -60,9 +61,7 @@ class _RestaurantPageState extends State<RestaurantPage> {
                         child: CachedNetworkImage(
                           imageUrl: widget.restaurant.coverImg ?? '',
                           placeholder: (context, url) => const Center(
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2.0,
-                            ),
+                            child: GradientCircularProgressIndicator(),
                           ),
                           errorWidget: (context, url, error) =>
                               const Icon(Icons.error),
@@ -135,7 +134,7 @@ class _RestaurantPageState extends State<RestaurantPage> {
                             if (snapshot.connectionState ==
                                 ConnectionState.waiting) {
                               return const Center(
-                                  child: CircularProgressIndicator());
+                                  child: GradientCircularProgressIndicator());
                             } else if (snapshot.hasError) {
                               return const Center(
                                   child: Text('Error loading dishes'));

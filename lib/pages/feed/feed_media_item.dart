@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../../bloc/user_review_provider.dart';
 import '../../utils/image.dart';
+import '../../widgets/gradient_circular_progress.dart';
 import 'feed_video_media_item.dart';
 
 class FeedMediaItem extends StatefulWidget {
@@ -95,7 +96,7 @@ class _FeedMediaItemState extends State<FeedMediaItem>
         imageUrl: mediaItem.url,
         fit: BoxFit.cover,
         placeholder: (context, url) => const Center(
-          child: CircularProgressIndicator(),
+          child: GradientCircularProgressIndicator(),
         ),
         errorWidget: (context, url, error) => const Icon(Icons.error),
       );

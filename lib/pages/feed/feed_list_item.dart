@@ -192,9 +192,19 @@ class _ReviewListItemState extends State<ReviewListItem>
                       child: ScaleTransition(
                         scale: _sizeAnimation
                             .drive(Tween<double>(begin: 0, end: 1)),
-                        child: const Icon(
-                          Icons.favorite,
-                          color: Colors.red,
+                        child: ShaderMask(
+                          shaderCallback: (Rect bounds) {
+                            return LinearGradient(
+                              colors: [
+                                accent2Color,
+                                amberColor.withOpacity(0.7)
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ).createShader(bounds);
+                          },
+                          child:
+                              const Icon(Icons.favorite, color: Colors.white),
                         ),
                       ),
                     ),
@@ -311,13 +321,13 @@ class _ReviewListItemState extends State<ReviewListItem>
                                         ? Icons.bookmark
                                         : Icons.bookmark_border,
                                     color: isBookmarked
-                                        ? bookmarkColorRoyalBlue
+                                        ? amberColor
                                         : Colors.grey[600],
                                   ),
                                   Text(' $bookmarkCount',
                                       style: TextStyle(
                                           color: isBookmarked
-                                              ? bookmarkColorRoyalBlue
+                                              ? amberColor
                                               : Colors.grey[600]))
                                 ],
                               );

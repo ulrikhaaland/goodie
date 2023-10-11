@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../bloc/auth_provider.dart';
 import '../../model/restaurant.dart';
 import '../../utils/rating.dart';
+import '../../widgets/gradient_button.dart';
 import 'review_rate.dart';
 
 class RestaurantReviewRatingPage extends StatefulWidget {
@@ -236,60 +237,32 @@ class _RestaurantReviewReviewState extends State<RestaurantReviewRatingPage> {
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
             Expanded(
-              child: ElevatedButton(
-                style: ButtonStyle(
-                  elevation: MaterialStateProperty.all(5.0),
-                  shape: MaterialStateProperty.all(
-                    RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                  ),
-                  backgroundColor: MaterialStateProperty.all(
-                    review.dineIn ? accent1Color : Colors.grey[200],
-                  ),
-                ),
+              child: GradientButton(
+                padding:
+                    const EdgeInsets.symmetric(vertical: 8, horizontal: 32),
                 onPressed: () {
                   setState(() {
                     review.dineIn = true;
                   });
                   _setCanSubmit();
                 },
-                child: Text(
-                  "Dine-In",
-                  style: TextStyle(
-                    color: review.dineIn ? Colors.white : Colors.black,
-                    fontSize: 16,
-                  ),
-                ),
+                label: "Dine-In",
+                isEnabled: review.dineIn ? true : false,
               ),
             ),
             const SizedBox(width: 10), // Gap between buttons
             Expanded(
-              child: ElevatedButton(
-                style: ButtonStyle(
-                  elevation: MaterialStateProperty.all(5.0),
-                  shape: MaterialStateProperty.all(
-                    RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                  ),
-                  backgroundColor: MaterialStateProperty.all(
-                    !review.dineIn ? accent1Color : Colors.grey[200],
-                  ),
-                ),
+              child: GradientButton(
+                padding:
+                    const EdgeInsets.symmetric(vertical: 8, horizontal: 32),
                 onPressed: () {
                   setState(() {
                     review.dineIn = false;
                   });
                   _setCanSubmit();
                 },
-                child: Text(
-                  "Takeout",
-                  style: TextStyle(
-                    color: !review.dineIn ? Colors.white : Colors.black,
-                    fontSize: 16,
-                  ),
-                ),
+                label: "Takeout",
+                isEnabled: !review.dineIn ? true : false,
               ),
             ),
           ],

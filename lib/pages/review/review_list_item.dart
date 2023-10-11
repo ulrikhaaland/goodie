@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../model/restaurant.dart';
+import '../../widgets/gradient_circular_progress.dart';
 
 class RestaurantReviewListItem extends StatelessWidget {
   final Restaurant? selectedRestaurant;
@@ -24,9 +25,7 @@ class RestaurantReviewListItem extends StatelessWidget {
               placeholder: (context, url) => const SizedBox(
                 width: 50, // Set the width
                 height: 50, // Set the height
-                child: CircularProgressIndicator(
-                  strokeWidth: 2.0,
-                ),
+                child: GradientCircularProgressIndicator(),
               ),
               errorWidget: (context, url, error) => const Icon(Icons.error),
               width: 50, // Set the width

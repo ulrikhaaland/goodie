@@ -8,19 +8,30 @@ class RatingWidget extends StatelessWidget {
   final Function(int) onRatingSelected;
   final bool isTotalRating;
 
-  const RatingWidget(
-      {super.key,
-      required this.rating,
-      required this.onRatingSelected,
-      this.isTotalRating = false});
+  const RatingWidget({
+    Key? key,
+    required this.rating,
+    required this.onRatingSelected,
+    this.isTotalRating = false,
+  }) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: List.generate(
-        5,
-        (index) => Padding(
-          padding: const EdgeInsets.only(left: 2.0),
-          child: _buildCircle(index + 1),
+    return ShaderMask(
+      shaderCallback: (Rect bounds) {
+        return LinearGradient(
+          colors: [Colors.blue, Colors.purple],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ).createShader(bounds);
+      },
+      child: Row(
+        children: List.generate(
+          5,
+          (index) => Padding(
+            padding: const EdgeInsets.only(left: 2.0),
+            child: _buildCircle(index + 1),
+          ),
         ),
       ),
     );
@@ -35,23 +46,7 @@ class RatingWidget extends StatelessWidget {
       isSelected = circleRating == trunc;
     }
 
-    Color getCircleColor(num? rating) {
-      if (rating == null) return bgColor; // Use bgColor for null rating
-      if (rating < 2) {
-        return highlightColor; // Use highlightColor for low rating
-      }
-      if (rating < 3) {
-        return secondaryColor; // Use secondaryColor for medium-low rating
-      }
-      if (rating < 4) return accent1Color; // Use accent1Color for medium rating
-      if (rating < 5) {
-        return primaryColor; // Use accent2Color for medium-high rating
-      }
-      return accent2Color; // Use primaryColor for high rating
-    }
-
-    double circleSize =
-        isTotalRating ? 35 : 25; // Increased size for total rating
+    double circleSize = isTotalRating ? 35 : 25;
 
     return GestureDetector(
       onTap: () => onRatingSelected(circleRating),
@@ -60,17 +55,21 @@ class RatingWidget extends StatelessWidget {
         height: circleSize,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: isColored ? getCircleColor(rating) : Colors.grey.shade300,
         ),
-        child: isSelected
-            ? Center(
-                child: Icon(
-                  getRatingData(circleRating.toDouble())?.icon,
-                  color: Colors.white,
-                  size: isTotalRating ? 20 : 15, // Adjust icon size
-                ),
-              )
-            : null,
+        child: Material(
+          color: isColored
+              ? Colors.white
+              : Colors.grey.shade300, // Important for ShaderMask
+          child: isSelected
+              ? Center(
+                  child: Icon(
+                    Icons.star, // Replace with your actual icon
+                    color: Colors.white,
+                    size: isTotalRating ? 20 : 15,
+                  ),
+                )
+              : null,
+        ),
       ),
     );
   }

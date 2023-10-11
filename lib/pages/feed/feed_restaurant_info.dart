@@ -101,7 +101,7 @@ class _FeedRestaurantInfoState extends State<FeedRestaurantInfo> {
           children: [
             Icon(
               Icons.star_outline_outlined,
-              color: Colors.amber[600],
+              color: Colors.amber[500],
             ),
             const SizedBox(
               width: 8,

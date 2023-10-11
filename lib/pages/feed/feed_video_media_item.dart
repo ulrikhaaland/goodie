@@ -8,6 +8,7 @@ import 'package:video_player/video_player.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 
 import '../../bloc/create_review_provider.dart';
+import '../../widgets/gradient_circular_progress.dart';
 
 class ReviewListItemVideo extends StatefulWidget {
   final MediaItem item;
@@ -68,7 +69,7 @@ class _ReviewListItemVideoState extends State<ReviewListItemVideo>
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     if (controller.value.isInitialized == false) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(child: GradientCircularProgressIndicator());
     }
 
     return Stack(

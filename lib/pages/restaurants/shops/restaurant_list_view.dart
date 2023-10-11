@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../../bloc/bottom_nav_provider.dart';
 import '../../../model/restaurant.dart';
+import '../../../widgets/gradient_circular_progress.dart';
 import '../restaurant/restaurant_page.dart';
 
 class RestaurantListView extends StatefulWidget {
@@ -78,9 +79,7 @@ class _RestaurantListViewState extends State<RestaurantListView>
               placeholder: (context, url) => const SizedBox(
                 width: 50, // Set the width
                 height: 50, // Set the height
-                child: CircularProgressIndicator(
-                  strokeWidth: 2.0,
-                ),
+                child: GradientCircularProgressIndicator(),
               ),
               errorWidget: (context, url, error) => const Icon(Icons.error),
               width: 50, // Set the width

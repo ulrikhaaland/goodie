@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:goodie/main.dart';
 
+import '../../widgets/gradient_button.dart';
+
 class ReviewPageButtons extends StatefulWidget {
   final VoidCallback onLeftPressed;
   final VoidCallback onRightPressed;
@@ -41,21 +43,10 @@ class _ReviewPageButtonsState extends State<ReviewPageButtons> {
   Widget _buildRightButton(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(16.0),
-      child: ElevatedButton(
-        style: _rightButtonStyle(),
-        onPressed: widget.onRightPressed,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 20.0),
-          child: Text(
-            widget.rightButtonText,
-            style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: widget.isSubmit && widget.canSubmit == false
-                    ? Colors.grey
-                    : Colors.white),
-          ),
-        ),
+      child: GradientButton(
+        onPressed: widget.canSubmit == true ? widget.onRightPressed : null,
+        label: widget.rightButtonText,
+        isEnabled: widget.canSubmit == true,
       ),
     );
   }
@@ -83,34 +74,38 @@ class _ReviewPageButtonsState extends State<ReviewPageButtons> {
   Widget _buildLeftButton() {
     return Padding(
       padding: const EdgeInsets.all(16.0),
-      child: ElevatedButton(
-        style: _leftButtonStyle(),
-        onPressed: widget.onLeftPressed,
-        child: const Padding(
-          padding: EdgeInsets.symmetric(vertical: 12.0, horizontal: 20.0),
-          child: Text(
-            "Tilbake",
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
+      child: GestureDetector(
+        onTap: widget.onLeftPressed,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 32.0),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            gradient: LinearGradient(
+              colors: [Colors.white, Colors.grey.shade300],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                offset: Offset(0, 8),
+                blurRadius: 8,
+              ),
+            ],
+            border: Border.all(color: Colors.grey[600]!, width: 1),
+          ),
+          child: Center(
+            child: Text(
+              "Tilbake",
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
             ),
           ),
         ),
       ),
-    );
-  }
-
-  ButtonStyle _leftButtonStyle() {
-    return ButtonStyle(
-      elevation: MaterialStateProperty.all(8.0),
-      shape: MaterialStateProperty.all(
-        RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: const BorderSide(color: textColor, width: 2),
-        ),
-      ),
-      backgroundColor: MaterialStateProperty.all(Colors.white),
     );
   }
 }

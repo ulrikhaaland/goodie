@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../../model/restaurant.dart';
+import '../../../widgets/gradient_circular_progress.dart';
 
 class DishListView extends StatefulWidget {
   final List<Dish> dishes;
@@ -107,9 +108,7 @@ class _DishListViewState extends State<DishListView>
                                 child: CachedNetworkImage(
                                   imageUrl: dish.imgUrl ?? '',
                                   placeholder: (context, url) => const Center(
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2.0,
-                                    ),
+                                    child: GradientCircularProgressIndicator(),
                                   ),
                                   errorWidget: (context, url, error) =>
                                       const Icon(Icons.error),

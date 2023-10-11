@@ -7,6 +7,7 @@ import 'package:otp_text_field/otp_field.dart';
 import 'package:otp_text_field/style.dart';
 
 import '../../bloc/auth_provider.dart';
+import '../../widgets/gradient_circular_progress.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -135,9 +136,7 @@ class _LoginPageState extends State<LoginPage> {
                             size: 80,
                             color: Colors.transparent,
                           ),
-                          CircularProgressIndicator(
-                            color: primaryColor,
-                          ),
+                          GradientCircularProgressIndicator()
                         ],
                       ),
                     ] else ...[
@@ -153,10 +152,6 @@ class _LoginPageState extends State<LoginPage> {
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          // const Text("+47",
-                          //     style: TextStyle(
-                          //         fontSize: 16, color: Colors.black)),
-                          // const SizedBox(width: 8),
                           Flexible(
                             child: PhoneTextField(
                               autofocus: true,
@@ -244,7 +239,7 @@ class _LoginPageState extends State<LoginPage> {
                             gradient: LinearGradient(
                               colors: [
                                 primaryColor,
-                                Colors.amber[900]!.withOpacity(0.7),
+                                amberColor.withOpacity(0.7),
                               ],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
@@ -266,8 +261,8 @@ class _LoginPageState extends State<LoginPage> {
                         child: OTPTextField(
                           key: otpFieldKey,
                           otpFieldStyle: OtpFieldStyle(
-                            borderColor: accent1Color,
-                            focusBorderColor: accent1Color,
+                            borderColor: accent2Color,
+                            focusBorderColor: accent2Color,
                           ),
                           length: 6,
                           fieldWidth: 40,

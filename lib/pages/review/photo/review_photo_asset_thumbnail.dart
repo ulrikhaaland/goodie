@@ -6,6 +6,7 @@ import 'package:photo_view/photo_view.dart';
 import 'package:video_player/video_player.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
 import '../../../bloc/create_review_provider.dart';
+import '../../../widgets/gradient_circular_progress.dart';
 
 class AssetThumbnail extends StatefulWidget {
   final GoodieAsset asset;
@@ -167,7 +168,7 @@ class _AssetThumbnailState extends State<AssetThumbnail> {
                 fileSnapshot.data != null) {
               return buildVideoView(fileSnapshot.data!, screenWidth);
             } else {
-              return const Center(child: CircularProgressIndicator());
+              return const Center(child: GradientCircularProgressIndicator());
             }
           },
         );
@@ -182,7 +183,7 @@ class _AssetThumbnailState extends State<AssetThumbnail> {
             widget.cache[widget.asset] = snapshot.data!;
             return _buildCachedImage(screenWidth, snapshot.data!);
           }
-          return const Center(child: CircularProgressIndicator());
+          return const Center(child: GradientCircularProgressIndicator());
         },
       );
     }
@@ -203,7 +204,7 @@ class _AssetThumbnailState extends State<AssetThumbnail> {
           widget.cache[widget.asset] = snapshot.data!;
           return _buildCachedImage(screenWidth, snapshot.data!);
         } else {
-          return const Center(child: CircularProgressIndicator());
+          return const Center(child: GradientCircularProgressIndicator());
         }
       },
     );

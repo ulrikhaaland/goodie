@@ -74,8 +74,8 @@ class _HomePageState extends State<HomePage>
           cacheExtent: 10000,
           controller: _scrollController,
           slivers: [
-            const SliverAppBar(
-              title: Text(
+            SliverAppBar(
+              title: const Text(
                 'Goodie',
                 style: TextStyle(
                   color: Colors.white,
@@ -87,7 +87,23 @@ class _HomePageState extends State<HomePage>
               centerTitle: true,
               floating: true,
               snap: true,
-              backgroundColor: primaryColor,
+              backgroundColor: Colors.transparent, // Make it transparent
+              flexibleSpace: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      // primaryColor,
+                      // accent1Color,
+                      accent2Color,
+                      primaryColor.withOpacity(0.7),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+                child:
+                    Container(), // This can be empty, it's just to hold the gradient
+              ),
             ),
             SliverPadding(
               padding: const EdgeInsets.all(8.0),

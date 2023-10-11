@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../../../model/restaurant.dart';
 import '../../bloc/restaurant_provider.dart';
+import '../../widgets/gradient_circular_progress.dart';
 
 class ResturantReviewSelectPage extends StatefulWidget {
   final Function(Restaurant) onSelectRestaurant;
@@ -157,12 +158,9 @@ class _ResturantReviewSelectPageState extends State<ResturantReviewSelectPage>
         child: CachedNetworkImage(
           imageUrl: restaurant.coverImg ?? '',
           placeholder: (context, url) => const SizedBox(
-            width: 50,
-            height: 50,
-            child: CircularProgressIndicator(
-              strokeWidth: 2.0,
-            ),
-          ),
+              width: 50,
+              height: 50,
+              child: GradientCircularProgressIndicator()),
           errorWidget: (context, url, error) => const Icon(Icons.error),
           width: 50,
           height: 50,
