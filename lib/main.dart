@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:goodie/bloc/bottom_nav_provider.dart';
+import 'package:goodie/bloc/create_review_provider.dart';
 import 'package:goodie/bloc/restaurant_provider.dart';
 import 'package:goodie/bloc/user_review_provider.dart';
 import 'package:goodie/pages/feed/feed_page.dart';
@@ -26,6 +27,8 @@ void main() async {
   final reviewProvider = UserReviewProvider();
   final BottomNavigationProvider bottomNavigationProvider =
       BottomNavigationProvider();
+  final CreateRestaurantReviewProvider createRestaurantReviewProvider =
+      CreateRestaurantReviewProvider();
 
   // Move restaurant fetching to a method that can be called on auth changes.
   void fetchRestaurants() async {
@@ -56,6 +59,9 @@ void main() async {
         ),
         ChangeNotifierProvider.value(
           value: bottomNavigationProvider,
+        ),
+        ChangeNotifierProvider.value(
+          value: createRestaurantReviewProvider,
         ),
       ],
       child: MainApp(authProvider: authProvider),
@@ -169,6 +175,9 @@ class _MainAppState extends State<MainApp> {
 
   _handleOnLogin() async {
     if (user != null) {
+      Provider.of<CreateRestaurantReviewProvider>(context, listen: false).user =
+          user;
+
       setState(() {
         loggedIn = true;
       });

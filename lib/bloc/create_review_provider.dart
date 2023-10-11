@@ -8,6 +8,7 @@ import 'package:photo_manager/photo_manager.dart';
 import 'package:video_player/video_player.dart';
 // ignore: depend_on_referenced_packages
 import '../model/restaurant.dart';
+import '../model/user.dart';
 import '../utils/location.dart';
 import '../utils/image.dart';
 
@@ -32,6 +33,7 @@ import '../utils/image.dart';
 // );
 
 class CreateRestaurantReviewProvider with ChangeNotifier {
+  User? user;
   Restaurant? _selectedRestaurant;
   List<Restaurant> restaurants = [];
   RestaurantReview review = RestaurantReview(
@@ -54,11 +56,13 @@ class CreateRestaurantReviewProvider with ChangeNotifier {
   }
 
   set selectedRestaurant(Restaurant? restaurant) {
+    assert(user != null);
+
     _selectedRestaurant = restaurant;
 
     review = RestaurantReview(
       restaurantId: selectedRestaurant!.id,
-      userId: "test",
+      userId: user?.firebaseUser?.uid ?? "test",
       dineIn: true,
       timestamp: review.timestamp,
       rating: RestaurantReviewRating(),

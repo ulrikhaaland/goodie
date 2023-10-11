@@ -62,10 +62,14 @@ class _ReviewListItemState extends State<ReviewListItem>
 
   User get user => widget.user;
 
+  String? reviewUsername;
+
   @override
   void initState() {
     isLiked = user.favoriteReviews.contains(widget.review.id);
     isBookmarked = user.bookmarkedReviews.contains(widget.review.id);
+
+    _fetchReviewUsername();
 
     _initAnimation();
     _pageController.addListener(() {
@@ -74,6 +78,24 @@ class _ReviewListItemState extends State<ReviewListItem>
       });
     });
     super.initState();
+  }
+
+  Future<void> _fetchReviewUsername() async {
+    try {
+      FirebaseFirestore firestore = FirebaseFirestore.instance;
+      DocumentSnapshot userDoc =
+          await firestore.collection('users').doc(widget.review.userId).get();
+
+      if (userDoc.exists) {
+        setState(() {
+          reviewUsername = userDoc['username'];
+        });
+      } else {
+        print("User not found");
+      }
+    } catch (e) {
+      print("Error fetching username: $e");
+    }
   }
 
   @override
@@ -112,7 +134,7 @@ class _ReviewListItemState extends State<ReviewListItem>
                   ),
                   const SizedBox(width: 10),
                   Text(
-                    widget.review.userId,
+                    reviewUsername ?? "brukernavn",
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                     ),
@@ -353,7 +375,7 @@ class _ReviewListItemState extends State<ReviewListItem>
                       Flexible(
                         child: Text.rich(
                           TextSpan(
-                            text: "brukernavn ",
+                            text: "${reviewUsername ?? "brukernavn"} ",
                             style: const TextStyle(fontWeight: FontWeight.bold),
                             children: [
                               TextSpan(

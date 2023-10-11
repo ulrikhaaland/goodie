@@ -23,8 +23,7 @@ class RestaurantReviewPage extends StatefulWidget {
 class _RestaurantReviewPageState extends State<RestaurantReviewPage>
     with AutomaticKeepAliveClientMixin {
   final PageController _pageController = PageController();
-  final CreateRestaurantReviewProvider _reviewProvider =
-      CreateRestaurantReviewProvider();
+  late final CreateRestaurantReviewProvider _reviewProvider;
 
   late final RestaurantProvider restaurantProvider;
 
@@ -51,14 +50,14 @@ class _RestaurantReviewPageState extends State<RestaurantReviewPage>
 
   @override
   void initState() {
+    _reviewProvider =
+        Provider.of<CreateRestaurantReviewProvider>(context, listen: false);
     restaurantProvider =
         Provider.of<RestaurantProvider>(context, listen: false);
 
     _reviewProvider.restaurants = restaurantProvider.restaurants;
 
-    _reviewProvider.selectedAssetsNotifier.addListener(() {
-      setState(() {});
-    });
+    _reviewProvider.selectedAssetsNotifier.addListener(_rebuild);
     super.initState();
   }
 
@@ -187,6 +186,7 @@ class _RestaurantReviewPageState extends State<RestaurantReviewPage>
   @override
   void dispose() {
     _pageController.dispose();
+    _reviewProvider.selectedAssetsNotifier.removeListener(_rebuild);
 
     super.dispose();
   }
@@ -232,6 +232,10 @@ class _RestaurantReviewPageState extends State<RestaurantReviewPage>
     }
 
     return true;
+  }
+
+  void _rebuild() {
+    setState(() {});
   }
 }
 
