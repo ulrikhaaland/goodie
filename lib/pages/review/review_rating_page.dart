@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:goodie/main.dart';
+import 'package:goodie/pages/review/review_rating_total.dart';
 import 'package:provider/provider.dart';
 
 import '../../bloc/auth_provider.dart';
 import '../../model/restaurant.dart';
 import '../../utils/rating.dart';
 import '../../widgets/gradient_button.dart';
-import 'review_rate.dart';
+import 'review_rating_widget.dart';
 
 class RestaurantReviewRatingPage extends StatefulWidget {
   final Restaurant? restaurant;
@@ -96,11 +97,9 @@ class _RestaurantReviewReviewState extends State<RestaurantReviewRatingPage> {
                       }),
                     ],
                     const SizedBox(height: 20),
-                    _buildRating(
-                        "Total${_computeOverallRating() != null ? ': ${_computeOverallRating()!.toStringAsFixed(1)}' : ''}",
-                        currentRating: _computeOverallRating(),
-                        (p0) => null,
-                        isTotal: true)
+                    ReviewRatingTotal(
+                      currentRating: _computeOverallRating(),
+                    ),
                   ],
                 ),
               ),
@@ -124,105 +123,53 @@ class _RestaurantReviewReviewState extends State<RestaurantReviewRatingPage> {
     String label,
     Function(num) onRatingChanged, {
     num? currentRating,
-    bool isTotal = false,
   }) {
-    if (!isTotal) {
-      return Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Align(
-                        alignment: Alignment.topLeft,
-                        child: Text(
-                          label +
-                              (isTotal && currentRating != null ? '—' : ":"),
-                          style: TextStyle(
-                            fontSize: isTotal ? 20 : 16,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        )),
-                    Text(
-                      // ignore: prefer_interpolation_to_compose_strings
-                      ' ' +
-                          (getRatingData(currentRating?.toDouble())
-                                  ?.description ??
-                              ''),
-                      style: const TextStyle(
-                        fontWeight: FontWeight.normal,
-                        color: Colors.grey, // Use our textColor
-                      ),
-                    ),
-                  ],
-                ),
-                RatingWidget(
-                  key: Key(label),
-                  rating: currentRating,
-                  onRatingSelected: (selectedRating) {
-                    onRatingChanged(selectedRating.toDouble());
-                  },
-                  isTotalRating: isTotal,
-                ),
-              ],
-            ),
-            const Divider(),
-          ],
-        ),
-      );
-    } else {
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8.0),
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Text(
-                      label,
-                      style: const TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    if (currentRating != null) ...[
-                      const Text(
-                        " — ",
-                        style: TextStyle(
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Align(
+                      alignment: Alignment.topLeft,
+                      child: Text(
+                        "$label:",
+                        style: const TextStyle(
                           fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w500,
                         ),
-                      ),
-                      Text(
-                        (getRatingData(currentRating.toDouble(),
-                                    isTotalRating: true)
+                      )),
+                  Text(
+                    // ignore: prefer_interpolation_to_compose_strings
+                    ' ' +
+                        (getRatingData(currentRating?.toDouble())
                                 ?.description ??
-                            ""),
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.normal,
-                          color: Colors.grey[600], // Use our textColor
-                        ),
-                      ),
-                    ]
-                  ],
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-          ],
-        ),
-      );
-    }
+                            ''),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.normal,
+                      color: Colors.grey, // Use our textColor
+                    ),
+                  ),
+                ],
+              ),
+              RatingWidget(
+                key: Key(label),
+                rating: currentRating,
+                onRatingSelected: (selectedRating) {
+                  onRatingChanged(selectedRating.toDouble());
+                },
+              ),
+            ],
+          ),
+          const Divider(),
+        ],
+      ),
+    );
   }
 
   Widget _buildDineInOrTakeout() {

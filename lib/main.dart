@@ -225,8 +225,6 @@ class HomeWithBottomNavigation extends StatelessWidget {
     final BottomNavigationProvider bottomNavigationProvider =
         Provider.of<BottomNavigationProvider>(context);
 
-    bottomNavigationProvider.index = 0;
-
     return Scaffold(
         body: ValueListenableBuilder(
           valueListenable: bottomNavigationProvider.currentIndexListener,

@@ -196,7 +196,8 @@ class _ResturantReviewSelectPageState extends State<ResturantReviewSelectPage>
                             (restaurant.categories.first == category
                                 ? ", "
                                 : ""),
-                        style: const TextStyle(fontSize: 12, color: textColor),
+                        style: TextStyle(
+                            fontSize: 12, color: Colors.grey.shade500),
                       ))
                   .toList(),
             ],
