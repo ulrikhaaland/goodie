@@ -190,6 +190,7 @@ class _AssetThumbnailState extends State<AssetThumbnail> {
   }
 
   Widget buildVideoView(File file, double screenWidth) {
+    widget.asset.imageFile = file;
     return FutureBuilder<Uint8List?>(
       future: VideoThumbnail.thumbnailData(
         video: file.path,

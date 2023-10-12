@@ -64,10 +64,17 @@ class _ReviewListItemState extends State<ReviewListItem>
 
   String? reviewUsername;
 
+  RestaurantReview get review => widget.review;
+
+  bool get isLocalReview => review.isLocalReview;
+
+  int get mediaCount =>
+      isLocalReview ? review.assets!.length : _mediaItems.length;
+
   @override
   void initState() {
-    isLiked = user.favoriteReviews.contains(widget.review.id);
-    isBookmarked = user.bookmarkedReviews.contains(widget.review.id);
+    isLiked = user.favoriteReviews.contains(review.id);
+    isBookmarked = user.bookmarkedReviews.contains(review.id);
 
     _fetchReviewUsername();
 
@@ -84,7 +91,7 @@ class _ReviewListItemState extends State<ReviewListItem>
     try {
       FirebaseFirestore firestore = FirebaseFirestore.instance;
       DocumentSnapshot userDoc =
-          await firestore.collection('users').doc(widget.review.userId).get();
+          await firestore.collection('users').doc(review.userId).get();
 
       if (userDoc.exists) {
         setState(() {
@@ -101,7 +108,7 @@ class _ReviewListItemState extends State<ReviewListItem>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (!_isImagesHandled) {
+    if (!_isImagesHandled && !isLocalReview) {
       _handleImages();
       _isImagesHandled = true;
     }
@@ -171,17 +178,22 @@ class _ReviewListItemState extends State<ReviewListItem>
             children: [
               PreloadPageView.builder(
                   controller: _pageController,
-                  itemCount: _mediaItems.length,
+                  itemCount: mediaCount,
                   preloadPagesCount:
                       3, // Adjust this value to control the number of pages to preload
                   itemBuilder: (context, index) {
-                    final media = _mediaItems[index];
+                    final media = isLocalReview
+                        ? review.assets![index]
+                        : _mediaItems[index];
+
                     return FeedMediaItem(
-                        mediaItem: media,
-                        reviewProvider: widget.reviewProvider,
-                        onDoubleTap: () => _handleOnLike(isDoubleTap: true));
+                      mediaItem: media,
+                      reviewProvider: widget.reviewProvider,
+                      onDoubleTap: () => _handleOnLike(isDoubleTap: true),
+                      isLocalReview: isLocalReview,
+                    );
                   }),
-              if (_mediaItems.length > 1)
+              if (mediaCount > 1)
                 Positioned(
                   top: 10,
                   right: 10,
@@ -193,8 +205,7 @@ class _ReviewListItemState extends State<ReviewListItem>
                       borderRadius: BorderRadius.circular(
                           8.0), // Optional: to round the corners
                     ),
-                    child: Text(
-                        "${(_currentPage + 1).toString()}/${_mediaItems.length}",
+                    child: Text("${(_currentPage + 1).toString()}/$mediaCount",
                         style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
@@ -257,7 +268,7 @@ class _ReviewListItemState extends State<ReviewListItem>
                           GestureDetector(
                             onTap: _handleOnLike,
                             child: StreamBuilder<int>(
-                              stream: getLikeCount(widget.review.id!),
+                              stream: getLikeCount(review.id!),
                               builder: (context, snapshot) {
                                 int likeCount = 0;
                                 if (snapshot.hasData) {
@@ -307,7 +318,7 @@ class _ReviewListItemState extends State<ReviewListItem>
                             children: [
                               Icon(Icons.chat_bubble_outline,
                                   color: Colors.grey[600]),
-                              Text(' ${widget.review.comments?.length ?? 0}',
+                              Text(' ${review.comments?.length ?? 0}',
                                   style: TextStyle(color: Colors.grey[600])),
                             ],
                           ),
@@ -320,7 +331,7 @@ class _ReviewListItemState extends State<ReviewListItem>
                       GestureDetector(
                         onTap: _handleOnBookmark,
                         child: StreamBuilder<int>(
-                            stream: getBookmarkCount(widget.review.id!),
+                            stream: getBookmarkCount(review.id!),
                             builder: (context, snapshot) {
                               int bookmarkCount = 0;
                               if (snapshot.hasData) {
@@ -365,8 +376,8 @@ class _ReviewListItemState extends State<ReviewListItem>
               const SizedBox(height: 10),
 
               // Review Text (Caption)
-              if (widget.review.description != null &&
-                  widget.review.description!.isNotEmpty) ...[
+              if (review.description != null &&
+                  review.description!.isNotEmpty) ...[
                 Padding(
                   padding: const EdgeInsets.only(left: 4.0),
                   child: Row(
@@ -379,7 +390,7 @@ class _ReviewListItemState extends State<ReviewListItem>
                             style: const TextStyle(fontWeight: FontWeight.bold),
                             children: [
                               TextSpan(
-                                text: widget.review.description,
+                                text: review.description,
                                 style: const TextStyle(
                                   fontWeight: FontWeight.normal,
                                 ),
@@ -397,7 +408,7 @@ class _ReviewListItemState extends State<ReviewListItem>
               ],
               FeedRestaurantInfo(
                 restaurant: restaurant,
-                review: widget.review,
+                review: review,
               ),
               const Divider(),
             ],
@@ -426,9 +437,9 @@ class _ReviewListItemState extends State<ReviewListItem>
   }
 
   Future<void> _handleImages() async {
-    if (widget.review.media != null && widget.review.media!.isNotEmpty) {
-      // Assuming widget.review.media is a list of MediaItem
-      _mediaItems = widget.review.media!
+    if (review.media != null && review.media!.isNotEmpty) {
+      // Assuming review.media is a list of MediaItem
+      _mediaItems = review.media!
           .where((element) => element.url.isNotEmpty && isValidUrl(element.url))
           .toList();
       setState(() {});
@@ -465,13 +476,13 @@ class _ReviewListItemState extends State<ReviewListItem>
   }
 
   Widget _buildPageCountIndicator() {
-    if (_mediaItems.length > 1) {
+    if (mediaCount > 1) {
       return Padding(
         padding: const EdgeInsets.only(top: 8.0),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: List.generate(
-            _mediaItems.length,
+            mediaCount,
             (index) => AnimatedContainer(
               duration: const Duration(milliseconds: 300),
               margin: const EdgeInsets.symmetric(horizontal: 2),
@@ -502,9 +513,9 @@ class _ReviewListItemState extends State<ReviewListItem>
         _controller.reverse();
       });
 
-      if (previous == false) likeReview(widget.review.id!, user);
+      if (previous == false) likeReview(review.id!, user);
     } else {
-      unlikeReview(widget.review.id!, user);
+      unlikeReview(review.id!, user);
     }
   }
 
@@ -517,9 +528,9 @@ class _ReviewListItemState extends State<ReviewListItem>
     });
 
     if (bookmarked) {
-      if (previous == false) bookmarkReview(widget.review.id!, user);
+      if (previous == false) bookmarkReview(review.id!, user);
     } else {
-      unbookmarkReview(widget.review.id!, user);
+      unbookmarkReview(review.id!, user);
     }
   }
 }

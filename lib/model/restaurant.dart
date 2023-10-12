@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:goodie/bloc/create_review_provider.dart';
 import 'package:goodie/utils/image.dart';
 import 'package:latlong2/latlong.dart';
 
@@ -77,14 +78,19 @@ class RestaurantReview {
   String? id;
   String restaurantId;
   String userId;
+  String? userName;
   String? description; //
   final RestaurantReviewRating rating;
   DateTime? timestamp;
   bool dineIn; // If not dine-in, then takeout
-  List<MediaItem>? media; // media of the review
-  // Below are not for making a review, but for other users to interact with the review
+  List<MediaItem>? media; // network media of the review (images and videos)
+  // used for local images, i.e showing the review that has just been made
+  List<GoodieAsset>?
+      assets; // media of the review  // Below are not for making a review, but for other users to interact with the review
   List<Comment>? comments; // Comments on the review
   List<String>? likes; // Likes on the review
+  // used for local images, i.e showing the review that has just been made
+  bool isLocalReview = false;
 
   RestaurantReview(
       {required this.restaurantId,

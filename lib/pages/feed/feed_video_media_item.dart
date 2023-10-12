@@ -11,10 +11,14 @@ import '../../bloc/create_review_provider.dart';
 import '../../widgets/gradient_circular_progress.dart';
 
 class ReviewListItemVideo extends StatefulWidget {
-  final MediaItem item;
+  final dynamic item;
+  final bool isLocalReview;
   final ValueListenable soundOnListener;
   const ReviewListItemVideo(
-      {super.key, required this.item, required this.soundOnListener});
+      {super.key,
+      required this.item,
+      required this.soundOnListener,
+      required this.isLocalReview});
 
   @override
   State<ReviewListItemVideo> createState() => _ReviewListItemVideoState();
@@ -22,7 +26,7 @@ class ReviewListItemVideo extends StatefulWidget {
 
 class _ReviewListItemVideoState extends State<ReviewListItemVideo>
     with TickerProviderStateMixin {
-  MediaItem get item => widget.item;
+  dynamic get item => widget.item;
 
   late final VideoPlayerController controller;
 
@@ -38,9 +42,13 @@ class _ReviewListItemVideoState extends State<ReviewListItemVideo>
 
   final ValueNotifier<bool> durationUpdater = ValueNotifier<bool>(false);
 
+  String get key => widget.isLocalReview ? item.imageFile.path : item.url;
+
   @override
   void initState() {
-    controller = VideoPlayerController.network(item.url);
+    controller = widget.isLocalReview
+        ? VideoPlayerController.file((item as GoodieAsset).imageFile!)
+        : VideoPlayerController.network(item.url);
 
     _animationControllerDuration = AnimationController(
         duration: const Duration(milliseconds: 500), // Set duration to 1 second
@@ -60,7 +68,9 @@ class _ReviewListItemVideoState extends State<ReviewListItemVideo>
   void dispose() {
     widget.soundOnListener.removeListener(_handleOnSoundChange);
     controller.removeListener(_handleOnInitVid);
-    controller.dispose();
+    if (!widget.isLocalReview) {
+      controller.dispose();
+    }
     durationUpdater.dispose();
     super.dispose();
   }
@@ -76,7 +86,7 @@ class _ReviewListItemVideoState extends State<ReviewListItemVideo>
       fit: StackFit.passthrough,
       children: [
         VisibilityDetector(
-          key: Key(item.url),
+          key: Key(key),
           onVisibilityChanged: (visibilityInfo) {
             if (!mounted) return;
             if (visibilityInfo.visibleFraction < 0.5) {
@@ -104,7 +114,7 @@ class _ReviewListItemVideoState extends State<ReviewListItemVideo>
                     height: controller.value.size.height,
                     child: VideoPlayer(
                       controller,
-                      key: Key(item.url),
+                      key: Key(key),
                     ),
                   ),
                 ),
@@ -175,7 +185,7 @@ class _ReviewListItemVideoState extends State<ReviewListItemVideo>
   Future<void> _handleLoadVideo() async {
     await controller.initialize();
     controller.seekTo(Duration.zero);
-    item.videoController = controller;
+    item.videoPlayerController = controller;
     _handleOnSoundChange();
     controller.addListener(_handleOnInitVid);
 

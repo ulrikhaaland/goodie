@@ -1,16 +1,21 @@
 import 'dart:io';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:goodie/bloc/create_review_provider.dart';
 import 'package:video_player/video_player.dart';
 
 class MediaItem {
   final int index;
   final String url;
   final MediaType type;
-  VideoPlayerController? videoController;
+  VideoPlayerController? videoPlayerController;
   final Reference? ref;
 
-  MediaItem(
-      {required this.index, required this.url, required this.type, this.ref});
+  MediaItem({
+    required this.index,
+    required this.url,
+    required this.type,
+    this.ref,
+  });
 }
 
 enum MediaType { Image, Video }

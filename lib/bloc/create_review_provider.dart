@@ -37,6 +37,7 @@ class CreateRestaurantReviewProvider with ChangeNotifier {
   Restaurant? _selectedRestaurant;
   List<Restaurant> restaurants = [];
   RestaurantReview review = RestaurantReview(
+    id: 'test',
     restaurantId: "",
     userId: "test",
     dineIn: true,
@@ -61,6 +62,7 @@ class CreateRestaurantReviewProvider with ChangeNotifier {
     _selectedRestaurant = restaurant;
 
     review = RestaurantReview(
+      id: 'test',
       restaurantId: selectedRestaurant!.id,
       userId: user?.firebaseUser?.uid ?? "test",
       dineIn: true,
@@ -228,8 +230,9 @@ class CreateRestaurantReviewProvider with ChangeNotifier {
         recentImages.isNotEmpty ? recentImages.first : null;
     _selectedRestaurant = null;
     review = RestaurantReview(
+      id: 'test',
       restaurantId: "",
-      userId: "test",
+      userId: user?.firebaseUser?.uid ?? "test",
       dineIn: true,
       rating: RestaurantReviewRating(),
     );
@@ -237,9 +240,22 @@ class CreateRestaurantReviewProvider with ChangeNotifier {
 
   void onShareReview(UserReviewProvider userReviewProvider) async {
     RestaurantReview shareReview = review;
+    shareReview.isLocalReview = true;
     List<GoodieAsset> assets = [...selectedAssetsNotifier.value];
+    shareReview.assets = assets;
     // reset assets
     _resetReview();
+
+    shareReview.assets?.forEach((element) {
+      if (element.imageFile == null) {
+        element.asset.file.then((value) => element.imageFile = value!);
+      }
+    });
+
+    userReviewProvider.reviews.value = [
+      shareReview,
+      ...userReviewProvider.reviews.value
+    ];
 
     List<String> assetUrls = [];
 
@@ -280,16 +296,13 @@ class CreateRestaurantReviewProvider with ChangeNotifier {
     // Upload to Firestore
     CollectionReference reviews =
         FirebaseFirestore.instance.collection('reviews');
-    if (shareReview.id == null) {
-      // If the review doesn't have an ID, add a new document
-      await reviews.add(reviewMap);
-    } else {
-      // If the review has an ID, update the existing document
-      await reviews.doc(shareReview.id).set(reviewMap);
-    }
+
+    // If the review doesn't have an ID, add a new document
+    final docId = await reviews.add(reviewMap);
+
+    shareReview.id = docId.id;
 
     // Update the userReviewProvider
-    userReviewProvider.fetchReviews();
     print("Review and images uploaded to Firestore and Firebase Storage.");
   }
 }
