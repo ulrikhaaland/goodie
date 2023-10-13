@@ -5,7 +5,7 @@ import 'package:photo_manager/photo_manager.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:video_player/video_player.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
-import '../../../bloc/create_review_provider.dart';
+import '../../../utils/image.dart';
 import '../../../widgets/gradient_circular_progress.dart';
 
 class AssetThumbnail extends StatefulWidget {
@@ -218,49 +218,5 @@ class _AssetThumbnailState extends State<AssetThumbnail> {
       _videoController!.play();
     }
     setState(() {});
-  }
-}
-
-class VideoWithPanAndZoom extends StatefulWidget {
-  final Widget videoView; // Replace this with your VideoView widget
-
-  VideoWithPanAndZoom({required this.videoView});
-
-  @override
-  _VideoWithPanAndZoomState createState() => _VideoWithPanAndZoomState();
-}
-
-class _VideoWithPanAndZoomState extends State<VideoWithPanAndZoom> {
-  Offset offset = Offset.zero;
-  double scale = 1.0;
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        Transform(
-          transform: Matrix4.identity()
-            ..translate(offset.dx, offset.dy)
-            ..scale(scale),
-          child: widget.videoView,
-        ),
-        Positioned.fill(
-          child: GestureDetector(
-            onScaleUpdate: (details) {
-              setState(() {
-                scale = scale * details.scale;
-                scale = scale.clamp(
-                    1.0, 2.0); // Replace with your min and max scale
-
-                // Update the offset for panning
-                offset = offset +
-                    details.focalPoint -
-                    Offset(context.size!.width / 2, context.size!.height / 2);
-              });
-            },
-          ),
-        ),
-      ],
-    );
   }
 }

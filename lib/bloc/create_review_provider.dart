@@ -12,26 +12,6 @@ import '../model/user.dart';
 import '../utils/location.dart';
 import '../utils/image.dart';
 
-// final videoConfig = VideoConfig(
-//   autoInitialize: true,
-//   canChangeVolumeOrBrightness: false,
-//   useRootNavigator: false,
-//   panEnabled: true,
-//   scaleEnabled: true,
-//   volume: 0.3,
-//   minScale: 1,
-//   maxScale: 3,
-//   // canBack: false,
-//   canChangeProgress: false,
-//   // // autoPlay: true,
-//   // showControls: (context, isFullScreen) => false,
-//   // aspectRatio:
-//   //     widget.asset.videoPlayerController!.value.aspectRatio,
-//   // topActionsBuilder: (context, isFullScreen) => [
-//   //   const SizedBox(),
-//   // ],
-// );
-
 class CreateRestaurantReviewProvider with ChangeNotifier {
   User? user;
   Restaurant? _selectedRestaurant;
@@ -43,17 +23,36 @@ class CreateRestaurantReviewProvider with ChangeNotifier {
     dineIn: true,
     rating: RestaurantReviewRating(),
   );
-  List<GoodieAsset> recentImages = [];
+
+  final ValueNotifier<List<GoodieAsset>> recentImagesNotifier =
+      ValueNotifier<List<GoodieAsset>>([]); // ValueNotifier for recentImages
+
   final ValueNotifier<List<GoodieAsset>> selectedAssetsNotifier =
       ValueNotifier<List<GoodieAsset>>([]);
   final ValueNotifier<GoodieAsset?> selectedAssetNotifier = ValueNotifier(null);
   final Map<GoodieAsset, Uint8List> thumbnailCache = {};
 
   CreateRestaurantReviewProvider() {
-    loadRecentImages();
+    _initImages();
     selectedAssetsNotifier.addListener(() {
       _handleSelectedRestaurant();
     });
+  }
+
+  Future<void> _initImages() async {
+    recentImagesNotifier.value =
+        await loadRecentImages(); // Update ValueNotifier
+    selectedAssetNotifier.value = recentImagesNotifier.value.isNotEmpty
+        ? recentImagesNotifier.value.first
+        : null; // Use ValueNotifier value
+  }
+
+  Future<void> refreshImages() async {
+    recentImagesNotifier.value = await refreshRecentImages(
+        recentImagesNotifier.value); // Update ValueNotifier
+    selectedAssetNotifier.value = recentImagesNotifier.value.isNotEmpty
+        ? recentImagesNotifier.value.first
+        : null; // Use ValueNotifier value
   }
 
   set selectedRestaurant(Restaurant? restaurant) {
@@ -72,33 +71,6 @@ class CreateRestaurantReviewProvider with ChangeNotifier {
   }
 
   Restaurant? get selectedRestaurant => _selectedRestaurant;
-
-  Future<void> loadRecentImages() async {
-    try {
-      final List<AssetPathEntity> paths =
-          await PhotoManager.getAssetPathList(onlyAll: true);
-      final AssetPathEntity recentPath = paths.first;
-      recentPath.getAssetListRange(start: 0, end: 100).then((value) {
-        recentImages = value
-            .map((e) => GoodieAsset(
-                  asset: e,
-                ))
-            .toList();
-        selectedAssetNotifier.value = recentImages.first;
-
-        recentImages
-            .where((media) => media.asset.type == AssetType.video)
-            .forEach((video) async {
-          video.originFile.then((value) {
-            video.videoPlayerController = VideoPlayerController.file(value!)
-              ..initialize();
-          });
-        });
-      });
-    } catch (e) {
-      print("Error loading recent images: $e");
-    }
-  }
 
   Future<void> _handleSelectedRestaurant() async {
     final assets = selectedAssetsNotifier.value;
@@ -226,8 +198,9 @@ class CreateRestaurantReviewProvider with ChangeNotifier {
 
   void _resetReview() {
     selectedAssetsNotifier.value = [];
-    selectedAssetNotifier.value =
-        recentImages.isNotEmpty ? recentImages.first : null;
+    selectedAssetNotifier.value = recentImagesNotifier.value.isNotEmpty
+        ? recentImagesNotifier.value.first
+        : null;
     _selectedRestaurant = null;
     review = RestaurantReview(
       id: 'test',
@@ -305,26 +278,4 @@ class CreateRestaurantReviewProvider with ChangeNotifier {
     // Update the userReviewProvider
     print("Review and images uploaded to Firestore and Firebase Storage.");
   }
-}
-
-// ignore: must_be_immutable
-class GoodieAsset extends AssetEntity {
-  AssetEntity asset;
-  double? scale;
-  Offset? offset;
-  File? imageFile;
-  Restaurant? restaurant;
-  VideoPlayerController? videoPlayerController;
-
-  GoodieAsset({
-    required this.asset,
-    this.imageFile,
-    this.videoPlayerController,
-  }) : super(
-          id: asset.id,
-          typeInt: asset.typeInt,
-          width: asset.width,
-          height: asset.height,
-          duration: asset.duration,
-        );
 }

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:goodie/bloc/bottom_nav_provider.dart';
 import 'package:goodie/pages/review/photo/review_photo_asset_thumbnail.dart';
 import 'package:goodie/pages/review/photo/review_photo_selection_indicator.dart';
 import 'package:goodie/pages/review/photo/review_photo_sliver_head_delegate.dart';
@@ -9,8 +10,10 @@ import 'package:image_picker/image_picker.dart';
 import 'package:photo_manager/photo_manager.dart';
 // ignore: depend_on_referenced_packages
 import 'package:collection/collection.dart';
+import 'package:provider/provider.dart';
 import 'package:video_player/video_player.dart';
 import '../../../bloc/create_review_provider.dart';
+import '../../../utils/image.dart';
 
 // ignore: must_be_immutable
 
@@ -34,7 +37,9 @@ class RestaurantReviewPhotoPage extends StatefulWidget {
 
 class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
     with AutomaticKeepAliveClientMixin {
-  bool showListItem = false;
+  bool _scrollable = true;
+
+  late final BottomNavigationProvider _bottomNavigationProvider;
 
   ValueNotifier<GoodieAsset?> get _selectedAssetNotifier =>
       widget.reviewProvider.selectedAssetNotifier;
@@ -45,30 +50,30 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
   Map<GoodieAsset, Uint8List> get _thumbnailCache =>
       widget.reviewProvider.thumbnailCache;
 
-  List<GoodieAsset> get _recentImages => widget.reviewProvider.recentImages;
-
-  bool _scrollable = true;
+  List<GoodieAsset> get _recentImages =>
+      widget.reviewProvider.recentImagesNotifier.value;
 
   @override
   bool get wantKeepAlive => true;
 
   @override
   void initState() {
-    Timer(const Duration(milliseconds: 500), () {
-      if (mounted) {
-        setState(() {
-          showListItem = true;
-        });
-      }
-    });
+    _bottomNavigationProvider =
+        Provider.of<BottomNavigationProvider>(context, listen: false);
+
+    _bottomNavigationProvider.currentIndexListener
+        .addListener(_handleOnBottomNavIndexChange);
+
     _selectedAssetNotifier.addListener(_onSelectedAssetChange);
+
     super.initState();
   }
 
   @override
   void dispose() {
     _selectedAssetNotifier.removeListener(_onSelectedAssetChange);
-
+    _bottomNavigationProvider.currentIndexListener
+        .removeListener(_handleOnBottomNavIndexChange);
     super.dispose();
   }
 
@@ -161,31 +166,37 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
                 height: 20,
               ),
             ),
-            SliverGrid(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 4,
-                childAspectRatio: 0.775,
-                mainAxisSpacing: 0,
-                crossAxisSpacing: 0,
-                mainAxisExtent: 101,
-              ),
-              delegate: SliverChildBuilderDelegate(
-                (BuildContext context, int index) {
-                  // If the index is 0, return the "Open Camera Roll" item
-                  if (index == 0) {
-                    return _buildPickImage();
-                  }
+            ValueListenableBuilder<List<GoodieAsset>>(
+              valueListenable: widget.reviewProvider
+                  .recentImagesNotifier, // Reference to the ValueNotifier in your provider
+              builder: (context, List<GoodieAsset> value, child) {
+                return SliverGrid(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 4,
+                    childAspectRatio: 0.775,
+                    mainAxisSpacing: 0,
+                    crossAxisSpacing: 0,
+                    mainAxisExtent: 101,
+                  ),
+                  delegate: SliverChildBuilderDelegate(
+                    childCount: value.length +
+                        1, // Add 1 for the "Open Camera Roll" item
+                    (BuildContext context, int index) {
+                      // If the index is 0, return the "Open Camera Roll" item
+                      if (index == 0) {
+                        return _buildPickImage();
+                      }
 
-                  // Adjust the index to account for the additional item
-                  index = index - 1;
+                      // Adjust the index to account for the additional item
+                      index = index - 1;
 
-                  return buildAssetThumbnailWithSelectionIndicator(
-                      _recentImages[index], thumbnailSize, thumbnailSize);
-                },
-                childCount: _recentImages.length +
-                    1, // Add 1 for the "Open Camera Roll" item
-              ),
-            ),
+                      return buildAssetThumbnailWithSelectionIndicator(
+                          value[index], thumbnailSize, thumbnailSize);
+                    },
+                  ),
+                );
+              },
+            )
           ],
         ),
       ),
@@ -395,5 +406,16 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
     _recentImages
         .where((element) => element.type == AssetType.video)
         .forEach((element) => element.videoPlayerController?.pause());
+  }
+
+  Future<void> _handleOnBottomNavIndexChange() async {
+    final index = _bottomNavigationProvider.currentIndexListener.value;
+
+    if (index == 2) {
+      await widget.reviewProvider.refreshImages();
+      setState(() {});
+    } else if (_selectedAssetsNotifier.value.isNotEmpty) {
+      _selectedAssetsNotifier.value = [];
+    }
   }
 }

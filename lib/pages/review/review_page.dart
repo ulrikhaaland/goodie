@@ -11,6 +11,7 @@ import 'package:provider/provider.dart';
 
 import '../../bloc/create_review_provider.dart';
 import '../../model/restaurant.dart';
+import '../../utils/image.dart';
 
 class RestaurantReviewPage extends StatefulWidget {
   const RestaurantReviewPage({super.key});
