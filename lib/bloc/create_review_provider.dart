@@ -48,11 +48,19 @@ class CreateRestaurantReviewProvider with ChangeNotifier {
   }
 
   Future<void> refreshImages() async {
-    recentImagesNotifier.value = await refreshRecentImages(
+    final List<GoodieAsset> previousRecentImages = [
+      ...recentImagesNotifier.value
+    ];
+
+    final refreshedImages = await refreshRecentImages(
         recentImagesNotifier.value); // Update ValueNotifier
-    selectedAssetNotifier.value = recentImagesNotifier.value.isNotEmpty
-        ? recentImagesNotifier.value.first
-        : null; // Use ValueNotifier value
+
+    if (refreshedImages.isNotEmpty) {
+      recentImagesNotifier.value = refreshedImages;
+      selectedAssetNotifier.value = recentImagesNotifier.value.first;
+    } else {
+      recentImagesNotifier.value = previousRecentImages;
+    }
   }
 
   set selectedRestaurant(Restaurant? restaurant) {

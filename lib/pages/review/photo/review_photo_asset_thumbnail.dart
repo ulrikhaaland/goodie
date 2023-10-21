@@ -73,12 +73,14 @@ class _AssetThumbnailState extends State<AssetThumbnail> {
         widget.fullResolution) {
       final double videoAspectRatio = _videoController!.value.aspectRatio;
 
+      final ThemeData themeData = Theme.of(context);
+
       return GestureDetector(
         onTap: _handleOnTapVideo,
         child: Container(
           width: widget.width?.toDouble(),
           height: widget.height?.toDouble(),
-          color: Colors.white,
+          color: themeData.scaffoldBackgroundColor,
           child: Stack(
             children: [
               Align(

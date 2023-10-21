@@ -1,7 +1,8 @@
 import 'dart:io';
 import 'dart:ui';
+import 'package:ffmpeg_kit_flutter/ffmpeg_kit.dart';
+import 'package:ffmpeg_kit_flutter/return_code.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:goodie/bloc/create_review_provider.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:video_player/video_player.dart';
 
@@ -122,4 +123,25 @@ Future<List<GoodieAsset>> refreshRecentImages(
     print("Error refreshing recent images: $e");
   }
   return updatedImages;
+}
+
+Future<String> trimVideo(
+    String inputPath, String outputPath, int startMs, int endMs) async {
+  // Build the ffmpeg command for video trimming
+  final String command =
+      '-ss ${startMs / 1000.0} -to ${endMs / 1000.0} -accurate_seek -i $inputPath -c copy $outputPath';
+
+  // Execute the ffmpeg command
+  await FFmpegKit.execute(command).then((session) async {
+    final returnCode = await session.getReturnCode();
+
+    // Check the return code to determine success or failure
+    if (ReturnCode.isSuccess(returnCode)) {
+      print("Trim video was successful");
+    } else {
+      print("Trim video failed");
+    }
+  });
+
+  return outputPath;
 }

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:goodie/bloc/bottom_nav_provider.dart';
+import 'package:goodie/main.dart';
 import 'package:goodie/pages/review/photo/review_photo_asset_thumbnail.dart';
 import 'package:goodie/pages/review/photo/review_photo_selection_indicator.dart';
 import 'package:goodie/pages/review/photo/review_photo_sliver_head_delegate.dart';
@@ -224,7 +225,12 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
               bottom: 5,
               child: Builder(
                 builder: (context) {
-                  final duration = Duration(seconds: asset.duration);
+                  final duration = Duration(
+                      seconds: asset.duration != 0
+                          ? asset.duration
+                          : (asset.videoPlayerController?.value.duration
+                                  .inSeconds ??
+                              0));
                   final minutes = duration.inMinutes;
                   final seconds = (duration.inSeconds % 60)
                       .toString()
@@ -299,7 +305,7 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
             bool isRecent = asset != null;
 
             if (asset == null) {
-              asset = xFileToAssetEntity(file);
+              asset = await xFileToAssetEntity(file);
             } else {
               final isSelected = _selectedAssetsNotifier.value.firstWhereOrNull(
                     (element) => element.asset.title == file.name,
@@ -338,14 +344,17 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
       child: const Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.camera_roll), // Use any appropriate icon
+          Icon(
+            Icons.add_a_photo,
+            color: accent2Color,
+          ), // Use any appropriate icon
           Text("Åpne kamera-rull", textAlign: TextAlign.center),
         ],
       ),
     );
   }
 
-  GoodieAsset xFileToAssetEntity(XFile file) {
+  Future<GoodieAsset> xFileToAssetEntity(XFile file) async {
     String filePath = file.path;
     String fileExtension = filePath.split('.').last;
 
@@ -375,12 +384,26 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
         height: 1,
         relativePath: file.path);
 
+    // final videoDuration = videoController?.value.duration.inMilliseconds;
+
+    // trim video if needed
+    if (assetType == AssetType.video && 60 > 60000) {
+      // Assuming asset.duration is in milliseconds
+      String inputPath =
+          asset.relativePath!; // Replace this with actual input file path
+      String outputPath =
+          "$inputPath-trimmed.mp4"; // Replace this with actual output file path
+
+      await trimVideo(inputPath, outputPath, 0, 60000); // Trim to 60 seconds
+    }
+
     final originFile = File(file.path);
 
     VideoPlayerController? videoController;
 
     if (assetType == AssetType.video) {
-      videoController = VideoPlayerController.file(originFile)..initialize();
+      videoController = VideoPlayerController.file(originFile);
+      await videoController.initialize();
     }
 
     return GoodieAsset(
@@ -392,8 +415,9 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
 
   void _onSelectedAssetChange() {
     final selectedAsset = _selectedAssetNotifier.value;
+    if (selectedAsset == null) return;
 
-    if (selectedAsset!.type == AssetType.video) {
+    if (selectedAsset.asset.type == AssetType.video) {
       selectedAsset.videoPlayerController!
         ..play()
         ..setLooping(true);

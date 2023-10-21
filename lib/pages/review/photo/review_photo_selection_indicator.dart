@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:goodie/main.dart';
 
 import '../../../utils/image.dart';
 
@@ -44,7 +45,7 @@ class SelectionIndicator extends StatelessWidget {
                   ),
                   child: assetIndex != -1
                       ? CircleAvatar(
-                          backgroundColor: Colors.blue,
+                          backgroundColor: primaryColor,
                           radius: 8,
                           child: Text(
                             '${assetIndex + 1}',
