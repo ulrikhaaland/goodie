@@ -226,11 +226,8 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
               child: Builder(
                 builder: (context) {
                   final duration = Duration(
-                      seconds: asset.duration != 0
-                          ? asset.duration
-                          : (asset.videoPlayerController?.value.duration
-                                  .inSeconds ??
-                              0));
+                      seconds: asset
+                          .videoPlayerController!.value.duration.inSeconds);
                   final minutes = duration.inMinutes;
                   final seconds = (duration.inSeconds % 60)
                       .toString()
@@ -384,26 +381,32 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
         height: 1,
         relativePath: file.path);
 
-    // final videoDuration = videoController?.value.duration.inMilliseconds;
+    final originFile = File(file.path);
+
+    VideoPlayerController? videoController;
+
+    // init videoController to get video length
+    if (assetType == AssetType.video) {
+      videoController = VideoPlayerController.file(originFile);
+      await videoController.initialize();
+    }
+
+    final videoDuration = videoController?.value.duration.inMilliseconds;
 
     // trim video if needed
-    if (assetType == AssetType.video && 60 > 60000) {
+    if (assetType == AssetType.video && videoDuration! > 60000) {
       // Assuming asset.duration is in milliseconds
       String inputPath =
           asset.relativePath!; // Replace this with actual input file path
       String outputPath =
           "$inputPath-trimmed.mp4"; // Replace this with actual output file path
-
-      await trimVideo(inputPath, outputPath, 0, 60000); // Trim to 60 seconds
-    }
-
-    final originFile = File(file.path);
-
-    VideoPlayerController? videoController;
-
-    if (assetType == AssetType.video) {
-      videoController = VideoPlayerController.file(originFile);
-      await videoController.initialize();
+      await videoController!.dispose();
+      videoController = await trimVideo(
+        inputPath,
+        outputPath,
+        0,
+        60000,
+      ); // Trim to 60 seconds
     }
 
     return GoodieAsset(
@@ -417,7 +420,8 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
     final selectedAsset = _selectedAssetNotifier.value;
     if (selectedAsset == null) return;
 
-    if (selectedAsset.asset.type == AssetType.video) {
+    if (selectedAsset.asset.type == AssetType.video &&
+        selectedAsset.videoPlayerController != null) {
       selectedAsset.videoPlayerController!
         ..play()
         ..setLooping(true);
@@ -440,6 +444,8 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
       setState(() {});
     } else if (_selectedAssetsNotifier.value.isNotEmpty) {
       _selectedAssetsNotifier.value = [];
+      // pause video when switching to other pages
+      _pauseAllVideos();
     }
   }
 }

@@ -77,10 +77,22 @@ Future<List<GoodieAsset>> loadRecentImages() async {
     final videos =
         recentImages.where((media) => media.asset.type == AssetType.video);
 
-    for (final vid in videos) {
-      final videoFile = await vid.originFile;
-      vid.videoPlayerController = VideoPlayerController.file(videoFile!);
-      await vid.videoPlayerController!.initialize();
+    for (int i = 0; i < videos.length; i++) {
+      try {
+        final vid = videos.elementAt(i);
+        if (vid.id == "8") {
+          print("stop");
+        }
+        final controller = await _handleInitVideoController(vid);
+        vid.videoPlayerController = controller;
+      } catch (e) {
+        // retry
+        final vid = videos.elementAt(i);
+        final controller = await _handleInitVideoController(vid);
+        vid.videoPlayerController = controller;
+
+        print("Error initializing controller for video at index $i: $e");
+      }
     }
   } catch (e) {
     print("Error loading recent images: $e");
@@ -109,9 +121,7 @@ Future<List<GoodieAsset>> refreshRecentImages(
         trulyNewImages.where((media) => media.asset.type == AssetType.video);
 
     for (final vid in trulyNewVideos) {
-      final videoFile = await vid.originFile;
-      vid.videoPlayerController = VideoPlayerController.file(videoFile!);
-      await vid.videoPlayerController!.initialize();
+      vid.videoPlayerController = await _handleInitVideoController(vid);
     }
 
     if (trulyNewImages.isNotEmpty) {
@@ -125,23 +135,53 @@ Future<List<GoodieAsset>> refreshRecentImages(
   return updatedImages;
 }
 
-Future<String> trimVideo(
+Future<VideoPlayerController?> _handleInitVideoController(
+    GoodieAsset asset) async {
+  if (asset.duration > 60) {
+    String inputPath =
+        asset.relativePath!; // Replace this with actual input file path
+    String outputPath =
+        "$inputPath-trimmed.mp4"; // Replace this with actual output file path
+    final controller = await trimVideo(
+      inputPath,
+      outputPath,
+      0,
+      60000,
+    ); // Trim to 60 seconds
+    return controller;
+  } else {
+    final videoFile = await asset.originFile;
+    final videoPlayerController = VideoPlayerController.file(videoFile!);
+
+    await videoPlayerController.initialize();
+    return videoPlayerController;
+  }
+}
+
+Future<VideoPlayerController?> trimVideo(
     String inputPath, String outputPath, int startMs, int endMs) async {
   // Build the ffmpeg command for video trimming
   final String command =
       '-ss ${startMs / 1000.0} -to ${endMs / 1000.0} -accurate_seek -i $inputPath -c copy $outputPath';
 
   // Execute the ffmpeg command
-  await FFmpegKit.execute(command).then((session) async {
+  VideoPlayerController? videoPlayerController =
+      await FFmpegKit.execute(command).then((session) async {
     final returnCode = await session.getReturnCode();
 
     // Check the return code to determine success or failure
     if (ReturnCode.isSuccess(returnCode)) {
       print("Trim video was successful");
+
+      final videoPlayerController =
+          VideoPlayerController.file(File(outputPath));
+      await videoPlayerController.initialize();
+      return videoPlayerController;
     } else {
       print("Trim video failed");
+      return null;
     }
   });
 
-  return outputPath;
+  return videoPlayerController;
 }
