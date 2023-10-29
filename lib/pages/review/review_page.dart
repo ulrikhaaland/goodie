@@ -65,76 +65,74 @@ class _RestaurantReviewPageState extends State<RestaurantReviewPage>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return SafeArea(
-      child: Stack(children: [
-        PageView(
-          key: const Key("pageview"),
-          controller: _pageController,
-          physics: const NeverScrollableScrollPhysics(),
-          children: [
-            RestaurantReviewPhotoPage(
-              key: const Key("picker"),
-              restaurantListItem: RestaurantReviewListItem(
-                  key: Key(_selectedRestaurant?.id ?? "listitem"),
-                  selectedRestaurant: _selectedRestaurant),
-              reviewProvider: _reviewProvider,
-              isCurrentPage: _pageIndex == 0,
-            ),
-            ResturantReviewSelectPage(
-              key: Key(_selectRestaurantId.toString()),
-              restaurants: _reviewProvider.restaurants,
-              selectedRestaurant: _selectedRestaurant,
-              onSelectRestaurant: (restaurant) {
-                _onSelectRestaurant(restaurant);
-              },
-            ),
-            RestaurantReviewRatingPage(
-              key: Key(_selectedRestaurant?.id ?? "review"),
-              restaurant: _selectedRestaurant,
-              onBackPressed: () => _pageController.previousPage(
-                  duration: const Duration(milliseconds: 400),
-                  curve: Curves.easeInOut),
-              onCanSubmit: (canSubmit) {
-                _handleOnCanSubmit(canSubmit);
-              },
-              review: _reviewProvider.review,
-              listItem: RestaurantReviewListItem(
-                  key: Key(_selectedRestaurant?.id ?? "listitem"),
-                  selectedRestaurant: _selectedRestaurant),
-            ),
-            RestaurantReviewSummaryPage(
-              key: Key(_selectedRestaurant?.id ?? "summary"),
-              reviewProvider: _reviewProvider,
-              onDatePick: () {
-                setState(() {});
-              },
-              listItem: RestaurantReviewListItem(
-                  key: Key(_selectedRestaurant?.id ?? "listitem"),
-                  selectedRestaurant: _selectedRestaurant),
-            ),
-          ],
-        ),
-        Positioned(
-          bottom: 0,
-          left: 0,
-          right: 0,
-          child: ReviewPageButtons(
-            isSubmit: _pageIndex == 2,
-            canSubmit: _getCanSubmit(),
-            rightButtonText: _getRightButtonText(),
-            hideLeftButton: _pageIndex == 0,
-            hideRightButton: _pageIndex == 1 &&
-                (_selectedRestaurant == null || hasSelectedRestaurant == false),
-            onLeftPressed: () {
-              _handleOnLeftPressed();
-            },
-            onRightPressed: () {
-              _handleOnRightPressed();
+    return Stack(children: [
+      PageView(
+        key: const Key("pageview"),
+        controller: _pageController,
+        physics: const NeverScrollableScrollPhysics(),
+        children: [
+          RestaurantReviewPhotoPage(
+            key: const Key("picker"),
+            restaurantListItem: RestaurantReviewListItem(
+                key: Key(_selectedRestaurant?.id ?? "listitem"),
+                selectedRestaurant: _selectedRestaurant),
+            reviewProvider: _reviewProvider,
+            isCurrentPage: _pageIndex == 0,
+          ),
+          ResturantReviewSelectPage(
+            key: Key(_selectRestaurantId.toString()),
+            restaurants: _reviewProvider.restaurants,
+            selectedRestaurant: _selectedRestaurant,
+            onSelectRestaurant: (restaurant) {
+              _onSelectRestaurant(restaurant);
             },
           ),
+          RestaurantReviewRatingPage(
+            key: Key(_selectedRestaurant?.id ?? "review"),
+            restaurant: _selectedRestaurant,
+            onBackPressed: () => _pageController.previousPage(
+                duration: const Duration(milliseconds: 400),
+                curve: Curves.easeInOut),
+            onCanSubmit: (canSubmit) {
+              _handleOnCanSubmit(canSubmit);
+            },
+            review: _reviewProvider.review,
+            listItem: RestaurantReviewListItem(
+                key: Key(_selectedRestaurant?.id ?? "listitem"),
+                selectedRestaurant: _selectedRestaurant),
+          ),
+          RestaurantReviewSummaryPage(
+            key: Key(_selectedRestaurant?.id ?? "summary"),
+            reviewProvider: _reviewProvider,
+            onDatePick: () {
+              setState(() {});
+            },
+            listItem: RestaurantReviewListItem(
+                key: Key(_selectedRestaurant?.id ?? "listitem"),
+                selectedRestaurant: _selectedRestaurant),
+          ),
+        ],
+      ),
+      Positioned(
+        bottom: 0,
+        left: 0,
+        right: 0,
+        child: ReviewPageButtons(
+          isSubmit: _pageIndex == 2,
+          canSubmit: _getCanSubmit(),
+          rightButtonText: _getRightButtonText(),
+          hideLeftButton: _pageIndex == 0,
+          hideRightButton: _pageIndex == 1 &&
+              (_selectedRestaurant == null || hasSelectedRestaurant == false),
+          onLeftPressed: () {
+            _handleOnLeftPressed();
+          },
+          onRightPressed: () {
+            _handleOnRightPressed();
+          },
         ),
-      ]),
-    );
+      ),
+    ]);
   }
 
   void _handleOnLeftPressed() {

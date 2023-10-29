@@ -92,8 +92,6 @@ class _HomePageState extends State<HomePage>
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      // primaryColor,
-                      // accent1Color,
                       accent2Color,
                       primaryColor.withOpacity(0.7),
                     ],

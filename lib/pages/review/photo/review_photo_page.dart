@@ -97,38 +97,45 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
     final selectedAssetHeight = screenWidth.floor();
     final selectedAssetWidth = (selectedAssetHeight * 0.8).floor();
 
-    final ThemeData themeData = Theme.of(context);
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12.0),
-      child: SizedBox(
-        height: screenHeight,
-        child: CustomScrollView(
-          physics: _scrollable
-              ? const AlwaysScrollableScrollPhysics()
-              : const NeverScrollableScrollPhysics(),
-          slivers: [
-            SliverAppBar(
-              backgroundColor: themeData.scaffoldBackgroundColor,
-              elevation: 0,
-              floating: true, // Add this line
-              expandedHeight: 54,
-              flexibleSpace: const FlexibleSpaceBar(
-                background: Column(
-                  children: [
-                    SizedBox(height: 12.0),
-                    Text(
-                      'Ny anmeldelse',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
+    return SizedBox(
+      height: screenHeight,
+      child: CustomScrollView(
+        physics: _scrollable
+            ? const AlwaysScrollableScrollPhysics()
+            : const NeverScrollableScrollPhysics(),
+        slivers: [
+          SliverAppBar(
+            title: const Text(
+              'Goodie',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 24,
               ),
             ),
-            SliverPersistentHeader(
+            elevation: 8,
+            centerTitle: true,
+            floating: true,
+            snap: true,
+            backgroundColor: Colors.transparent, // Make it transparent
+            flexibleSpace: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    accent2Color,
+                    primaryColor.withOpacity(0.7),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+              child:
+                  Container(), // This can be empty, it's just to hold the gradient
+            ),
+          ),
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            sliver: SliverPersistentHeader(
               pinned: true,
               delegate: SliverHeaderDelegate(
                 minHeight: selectedAssetHeight.toDouble(),
@@ -162,12 +169,15 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
                 ),
               ),
             ),
-            const SliverToBoxAdapter(
-              child: SizedBox(
-                height: 20,
-              ),
+          ),
+          const SliverToBoxAdapter(
+            child: SizedBox(
+              height: 20,
             ),
-            ValueListenableBuilder<List<GoodieAsset>>(
+          ),
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            sliver: ValueListenableBuilder<List<GoodieAsset>>(
               valueListenable: widget.reviewProvider
                   .recentImagesNotifier, // Reference to the ValueNotifier in your provider
               builder: (context, List<GoodieAsset> value, child) {
@@ -197,9 +207,9 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
                   ),
                 );
               },
-            )
-          ],
-        ),
+            ),
+          )
+        ],
       ),
     );
   }
@@ -225,9 +235,7 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
               bottom: 5,
               child: Builder(
                 builder: (context) {
-                  final duration = Duration(
-                      seconds: asset
-                          .videoPlayerController!.value.duration.inSeconds);
+                  final duration = asset.videoDuration;
                   final minutes = duration.inMinutes;
                   final seconds = (duration.inSeconds % 60)
                       .toString()
@@ -401,12 +409,14 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
       String outputPath =
           "$inputPath-trimmed.mp4"; // Replace this with actual output file path
       await videoController!.dispose();
-      videoController = await trimVideo(
+      final videoFile = await trimVideo(
         inputPath,
         outputPath,
         0,
         60000,
       ); // Trim to 60 seconds
+      videoController = VideoPlayerController.file(videoFile!);
+      await videoController.initialize();
     }
 
     return GoodieAsset(
@@ -416,24 +426,35 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
     );
   }
 
-  void _onSelectedAssetChange() {
+  Future<void> _onSelectedAssetChange() async {
     final selectedAsset = _selectedAssetNotifier.value;
     if (selectedAsset == null) return;
 
-    if (selectedAsset.asset.type == AssetType.video &&
-        selectedAsset.videoPlayerController != null) {
-      selectedAsset.videoPlayerController!
-        ..play()
-        ..setLooping(true);
+    if (selectedAsset.asset.type == AssetType.video) {
+      _pauseAllVideos(selectedAssetId: selectedAsset.id);
+
+      selectedAsset.videoPlayerController =
+          VideoPlayerController.file(selectedAsset.imageFile!);
+
+      await selectedAsset.videoPlayerController!.initialize();
+
+      setState(() {
+        selectedAsset.videoPlayerController!
+          ..play()
+          ..setLooping(true);
+      });
     } else {
       _pauseAllVideos();
     }
   }
 
-  void _pauseAllVideos() {
+  void _pauseAllVideos({String? selectedAssetId}) {
     _recentImages
-        .where((element) => element.type == AssetType.video)
-        .forEach((element) => element.videoPlayerController?.pause());
+        .where((element) =>
+            element.type == AssetType.video && element.id != selectedAssetId)
+        .forEach((element) => element.videoPlayerController
+          ?..pause()
+          ..dispose());
   }
 
   Future<void> _handleOnBottomNavIndexChange() async {
