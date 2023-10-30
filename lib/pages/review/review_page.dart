@@ -191,7 +191,6 @@ class _RestaurantReviewPageState extends State<RestaurantReviewPage>
   }
 
   void _handleOnReview() {
-    // TODO: Add review to feed list
     UserReviewProvider userReviewProvider =
         Provider.of<UserReviewProvider>(context, listen: false);
 

@@ -56,7 +56,7 @@ class RatingWidget extends StatelessWidget {
             HapticFeedback.heavyImpact();
             break;
           case 4:
-            HapticFeedback.vibrate();
+            HapticFeedback.selectionClick();
             break;
           case 5:
             HapticFeedback.selectionClick();

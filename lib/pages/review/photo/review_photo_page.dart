@@ -7,6 +7,7 @@ import 'package:goodie/main.dart';
 import 'package:goodie/pages/review/photo/review_photo_asset_thumbnail.dart';
 import 'package:goodie/pages/review/photo/review_photo_selection_indicator.dart';
 import 'package:goodie/pages/review/photo/review_photo_sliver_head_delegate.dart';
+import 'package:goodie/widgets/gradient_circular_progress.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:photo_manager/photo_manager.dart';
 // ignore: depend_on_referenced_packages
@@ -39,6 +40,8 @@ class RestaurantReviewPhotoPage extends StatefulWidget {
 class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
     with AutomaticKeepAliveClientMixin {
   bool _scrollable = true;
+
+  ValueNotifier<bool> isLoadingPickAsset = ValueNotifier(false);
 
   late final BottomNavigationProvider _bottomNavigationProvider;
 
@@ -82,7 +85,7 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
   void didUpdateWidget(covariant RestaurantReviewPhotoPage oldWidget) {
     // pause all videos if widget.iscurrentpage == false
     if (!widget.isCurrentPage) {
-      _pauseAllVideos();
+      _pauseAllVideos(selectedAssetId: _selectedAssetNotifier.value?.id);
     }
 
     super.didUpdateWidget(oldWidget);
@@ -106,7 +109,7 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
         slivers: [
           SliverAppBar(
             title: const Text(
-              'Goodie',
+              'Ny anmeldelse',
               style: TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
@@ -134,7 +137,7 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
             ),
           ),
           SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
+            padding: const EdgeInsets.only(left: 12, right: 12, top: 12),
             sliver: SliverPersistentHeader(
               pinned: true,
               delegate: SliverHeaderDelegate(
@@ -143,7 +146,9 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
                 child: ValueListenableBuilder(
                   valueListenable: _selectedAssetNotifier,
                   builder: (context, selectedAsset, child) {
-                    if (selectedAsset == null) return const SizedBox.shrink();
+                    if (selectedAsset == null) {
+                      return _buildSelectedAssetPlaceholder();
+                    }
 
                     return Listener(
                       onPointerDown: (_) {
@@ -172,7 +177,7 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
           ),
           const SliverToBoxAdapter(
             child: SizedBox(
-              height: 20,
+              height: 12,
             ),
           ),
           SliverPadding(
@@ -289,63 +294,7 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
 
   Widget _buildPickImage() {
     return GestureDetector(
-      onTap: () async {
-        List<XFile> pickedFiles = [];
-        try {
-          pickedFiles = await ImagePicker().pickMultipleMedia();
-        } catch (e) {
-          print(e);
-        }
-
-        final List<GoodieAsset> pickedAssets = [];
-
-        if (pickedFiles.isNotEmpty) {
-          for (var file in pickedFiles) {
-            GoodieAsset? asset;
-
-            asset = _recentImages.firstWhereOrNull((element) =>
-                element.asset.title != null &&
-                element.asset.title == file.name);
-
-            bool isRecent = asset != null;
-
-            if (asset == null) {
-              asset = await xFileToAssetEntity(file);
-            } else {
-              final isSelected = _selectedAssetsNotifier.value.firstWhereOrNull(
-                    (element) => element.asset.title == file.name,
-                  ) !=
-                  null;
-
-              if (isSelected) {
-                continue;
-              }
-            }
-            if (!isRecent) {
-              _recentImages.insert(0, asset);
-            }
-
-            pickedAssets.add(asset);
-          }
-          if (pickedAssets.isNotEmpty) {
-            _selectedAssetNotifier.value = pickedAssets.first;
-            final oldList = _selectedAssetsNotifier.value;
-            final newList = List<GoodieAsset>.from(oldList);
-
-            for (final asset in pickedAssets) {
-              if (newList.contains(asset)) {
-                continue;
-              }
-              newList.add(asset);
-              if (newList.length > 10) {
-                newList.removeAt(0);
-              }
-            }
-
-            _selectedAssetsNotifier.value = newList;
-          }
-        }
-      },
+      onTap: _onPickImageTap,
       child: const Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -376,7 +325,6 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
       assetType = AssetType.image;
     } else {
       throw Exception('Invalid file extension');
-      assetType = AssetType.other; // Hand other types as you see fit
     }
 
     AssetEntity asset = AssetEntity(
@@ -389,13 +337,13 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
         height: 1,
         relativePath: file.path);
 
-    final originFile = File(file.path);
+    File? videoFile = File(file.path);
 
     VideoPlayerController? videoController;
 
     // init videoController to get video length
     if (assetType == AssetType.video) {
-      videoController = VideoPlayerController.file(originFile);
+      videoController = VideoPlayerController.file(videoFile);
       await videoController.initialize();
     }
 
@@ -409,7 +357,7 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
       String outputPath =
           "$inputPath-trimmed.mp4"; // Replace this with actual output file path
       await videoController!.dispose();
-      final videoFile = await trimVideo(
+      videoFile = await trimVideo(
         inputPath,
         outputPath,
         0,
@@ -421,7 +369,7 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
 
     return GoodieAsset(
       asset: asset,
-      imageFile: originFile,
+      imageFile: videoFile,
       videoPlayerController: videoController,
     );
   }
@@ -467,6 +415,97 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
       _selectedAssetsNotifier.value = [];
       // pause video when switching to other pages
       _pauseAllVideos();
+    }
+  }
+
+  Widget _buildSelectedAssetPlaceholder() {
+    return ValueListenableBuilder(
+      valueListenable: isLoadingPickAsset,
+      builder: (context, bool value, child) {
+        if (value) {
+          return const Center(child: GradientCircularProgressIndicator());
+        } else {
+          return GestureDetector(
+            onTap: _onPickImageTap,
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: amberColor,
+                ),
+              ),
+              child: Center(
+                child: TextButton(
+                  onPressed: _onPickImageTap,
+                  child: const Text('Legg til bilde'),
+                ),
+              ),
+            ),
+          );
+        }
+      },
+    );
+  }
+
+  Future<void> _onPickImageTap() async {
+    List<XFile> pickedFiles = [];
+    try {
+      pickedFiles = await ImagePicker().pickMultipleMedia();
+    } catch (e) {
+      print(e);
+    }
+
+    final List<GoodieAsset> pickedAssets = [];
+
+    if (pickedFiles.isNotEmpty) {
+      isLoadingPickAsset.value = true;
+
+      _selectedAssetNotifier.value = null;
+
+      for (var file in pickedFiles) {
+        GoodieAsset? asset;
+
+        asset = _recentImages.firstWhereOrNull((element) =>
+            element.asset.title != null && element.asset.title == file.name);
+
+        bool isRecent = asset != null;
+
+        if (asset == null) {
+          asset = await xFileToAssetEntity(file);
+        } else {
+          final isSelected = _selectedAssetsNotifier.value.firstWhereOrNull(
+                (element) => element.asset.title == file.name,
+              ) !=
+              null;
+
+          if (isSelected) {
+            continue;
+          }
+        }
+        if (!isRecent) {
+          _recentImages.insert(0, asset);
+        }
+
+        pickedAssets.add(asset);
+      }
+      if (pickedAssets.isNotEmpty) {
+        _selectedAssetNotifier.value = pickedAssets.first;
+        final oldList = _selectedAssetsNotifier.value;
+        final newList = List<GoodieAsset>.from(oldList);
+
+        for (final asset in pickedAssets) {
+          if (newList.contains(asset)) {
+            continue;
+          }
+          newList.add(asset);
+          if (newList.length > 10) {
+            newList.removeAt(0);
+          }
+        }
+
+        _selectedAssetsNotifier.value = newList;
+        isLoadingPickAsset.value = false;
+      }
     }
   }
 }

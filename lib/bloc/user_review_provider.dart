@@ -47,8 +47,20 @@ class UserReviewProvider with ChangeNotifier {
           // Add other fields like comments and likes here
         );
       }).toList();
-      reviews.value = await Future.wait(futureReviews)
-        ..sort(((a, b) => b.timestamp!.compareTo(a.timestamp!)));
+      final localReviews =
+          reviews.value.where((element) => element.isLocalReview).toList();
+
+      final fetchedReviews = await Future.wait(futureReviews);
+
+      // remove from local  reviews all reviews that has the same id as fetched reviews
+      localReviews.removeWhere((localReview) => fetchedReviews
+          .any((fetchedReview) => fetchedReview.id == localReview.id));
+
+      // insert local reviews at the beginning of the list
+      reviews.value = fetchedReviews
+        ..sort(((a, b) => b.timestamp!.compareTo(a.timestamp!)))
+        ..insertAll(0, localReviews);
+
       addImaginaryInteractions();
     } catch (e) {
       print("Failed to fetch reviews: $e");

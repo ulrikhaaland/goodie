@@ -35,8 +35,6 @@ class _RestaurantReviewReviewState extends State<RestaurantReviewRatingPage> {
 
   RestaurantReviewRating get rating => review.rating;
 
-  bool _canSubmit = false;
-
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -46,7 +44,7 @@ class _RestaurantReviewReviewState extends State<RestaurantReviewRatingPage> {
         child: Column(
           children: [
             widget.listItem,
-            const SizedBox(height: 6),
+            const SizedBox(height: 16),
             _buildDineInOrTakeout(),
             const SizedBox(height: 20),
             Flexible(
@@ -175,11 +173,6 @@ class _RestaurantReviewReviewState extends State<RestaurantReviewRatingPage> {
   Widget _buildDineInOrTakeout() {
     return Column(
       children: [
-        const Text(
-          "Dine-In or Takeout?",
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 10),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
@@ -237,8 +230,6 @@ class _RestaurantReviewReviewState extends State<RestaurantReviewRatingPage> {
     if (canSubmit) {
       rating.overall = _computeOverallRating();
     }
-
-    _canSubmit = canSubmit;
   }
 
   num? _computeOverallRating() {

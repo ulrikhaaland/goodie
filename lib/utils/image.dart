@@ -198,8 +198,7 @@ Future<File?> trimVideo(
       '-ss ${startMs / 1000.0} -to ${endMs / 1000.0} -accurate_seek -i $inputPath -c copy $outputPath';
 
   // Execute the ffmpeg command
-  File? videoPlayerController =
-      await FFmpegKit.execute(command).then((session) async {
+  File? videoFile = await FFmpegKit.execute(command).then((session) async {
     final returnCode = await session.getReturnCode();
 
     // Check the return code to determine success or failure
@@ -213,5 +212,5 @@ Future<File?> trimVideo(
     }
   });
 
-  return videoPlayerController;
+  return videoFile;
 }
