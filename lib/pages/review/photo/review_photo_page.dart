@@ -400,9 +400,13 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
     _recentImages
         .where((element) =>
             element.type == AssetType.video && element.id != selectedAssetId)
-        .forEach((element) => element.videoPlayerController
-          ?..pause()
-          ..dispose());
+        .forEach((element) {
+      if (element.videoPlayerController != null &&
+          element.videoPlayerController!.value.isPlaying) {
+        element.videoPlayerController!.pause();
+      }
+      element.videoPlayerController?.dispose();
+    });
   }
 
   Future<void> _handleOnBottomNavIndexChange() async {
@@ -451,9 +455,8 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
     List<XFile> pickedFiles = [];
     try {
       pickedFiles = await ImagePicker().pickMultipleMedia();
-    } catch (e) {
-      print(e);
-    }
+      // ignore: empty_catches
+    } catch (e) {}
 
     final List<GoodieAsset> pickedAssets = [];
 
@@ -489,7 +492,7 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
         pickedAssets.add(asset);
       }
       if (pickedAssets.isNotEmpty) {
-        _selectedAssetNotifier.value = pickedAssets.first;
+        _selectedAssetNotifier.value = _recentImages.first;
         final oldList = _selectedAssetsNotifier.value;
         final newList = List<GoodieAsset>.from(oldList);
 
@@ -499,7 +502,7 @@ class _RestaurantReviewPhotoPageState extends State<RestaurantReviewPhotoPage>
           }
           newList.add(asset);
           if (newList.length > 10) {
-            newList.removeAt(0);
+            newList.removeLast();
           }
         }
 

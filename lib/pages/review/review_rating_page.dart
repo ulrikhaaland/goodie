@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:goodie/main.dart';
 import 'package:goodie/pages/review/review_rating_total.dart';
-import 'package:provider/provider.dart';
 
-import '../../bloc/auth_provider.dart';
 import '../../model/restaurant.dart';
 import '../../utils/rating.dart';
 import '../../widgets/gradient_button.dart';
@@ -96,7 +93,13 @@ class _RestaurantReviewReviewState extends State<RestaurantReviewRatingPage> {
                     ],
                     const SizedBox(height: 20),
                     ReviewRatingTotal(
-                      currentRating: _computeOverallRating(),
+                      currentRating: rating.overall ?? _computeOverallRating(),
+                      onTotalRatingChanged: (value) {
+                        _handleOnTotalRatingChanged(value);
+                        setState(() {
+                          rating.overall = value;
+                        });
+                      },
                     ),
                   ],
                 ),
@@ -233,7 +236,7 @@ class _RestaurantReviewReviewState extends State<RestaurantReviewRatingPage> {
   }
 
   num? _computeOverallRating() {
-    num? overallRating;
+    num? localRating;
 
     if (review.dineIn) {
       if (rating.food != null &&
@@ -241,7 +244,7 @@ class _RestaurantReviewReviewState extends State<RestaurantReviewRatingPage> {
           rating.price != null &&
           rating.cleanliness != null &&
           rating.atmosphere != null) {
-        overallRating = (rating.food! +
+        localRating = (rating.food! +
                 rating.service! +
                 rating.price! +
                 rating.cleanliness! +
@@ -252,11 +255,25 @@ class _RestaurantReviewReviewState extends State<RestaurantReviewRatingPage> {
       if (rating.food != null &&
           rating.price != null &&
           rating.packaging != null) {
-        overallRating = (rating.food! + rating.price! + rating.packaging!) / 3;
+        localRating = (rating.food! + rating.price! + rating.packaging!) / 3;
       }
     }
-    return (overallRating != null
-        ? overallRating * 2
+    return (localRating != null
+        ? localRating * 2
         : null); // Return null if not all required ratings are provided
+  }
+
+  void _handleOnTotalRatingChanged(double value) {
+    final val = value / 2;
+    final trunc = val.truncate();
+    final leftover = val - trunc;
+    print("valvalval:" + val.toString());
+    rating.food = val;
+    rating.price = val;
+    rating.service = val;
+    rating.cleanliness = val;
+    rating.atmosphere = val;
+    rating.packaging = val;
+    setState(() {});
   }
 }

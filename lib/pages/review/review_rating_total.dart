@@ -5,7 +5,9 @@ import '../../utils/rating.dart';
 
 class ReviewRatingTotal extends StatefulWidget {
   final num? currentRating;
-  const ReviewRatingTotal({super.key, this.currentRating});
+  final Function(double) onTotalRatingChanged;
+  const ReviewRatingTotal(
+      {super.key, this.currentRating, required this.onTotalRatingChanged});
 
   @override
   State<ReviewRatingTotal> createState() => _ReviewRatingTotalState();
@@ -26,27 +28,20 @@ class _ReviewRatingTotalState extends State<ReviewRatingTotal> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   const Text(
-                    "Total",
+                    "Total: ",
                     style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   if (widget.currentRating != null) ...[
-                    const Text(
-                      " — ",
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
                     Text(
                       (getRatingData(widget.currentRating!.toDouble(),
                                   isTotalRating: true)
                               ?.description ??
                           ""),
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: 20,
                         fontWeight: FontWeight.normal,
                         color: Colors.grey[600], // Use our textColor
                       ),
@@ -57,6 +52,12 @@ class _ReviewRatingTotalState extends State<ReviewRatingTotal> {
             ],
           ),
           const SizedBox(height: 10),
+          Slider(
+              min: 0,
+              max: 10,
+              divisions: 10,
+              value: widget.currentRating?.toDouble() ?? 0.0,
+              onChanged: widget.onTotalRatingChanged)
         ],
       ),
     );
