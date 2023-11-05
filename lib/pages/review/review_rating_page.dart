@@ -264,16 +264,30 @@ class _RestaurantReviewReviewState extends State<RestaurantReviewRatingPage> {
   }
 
   void _handleOnTotalRatingChanged(double value) {
+    // Start by converting to the 0-5 scale and truncating
     final val = value / 2;
     final trunc = val.truncate();
-    final leftover = val - trunc;
-    print("valvalval:" + val.toString());
-    rating.food = val;
-    rating.price = val;
-    rating.service = val;
-    rating.cleanliness = val;
-    rating.atmosphere = val;
-    rating.packaging = val;
+
+    // Calculate how many should be rounded up based on the leftover
+    final int roundUps = ((val - trunc) * 6).round();
+
+    // Create a list of ratings, all initialized to the truncated value
+    List<int> ratings = List.filled(6, trunc);
+
+    // Distribute the round-ups across the ratings
+    for (int i = 0; i < roundUps; i++) {
+      ratings[i]++;
+    }
+
+    // Assign the values to the actual rating variables
+    rating.food = ratings[0];
+    rating.price = ratings[1];
+    rating.service = ratings[2];
+    rating.cleanliness = ratings[3];
+    rating.atmosphere = ratings[4];
+    rating.packaging = ratings[5];
+
+    // Update the state to reflect the changes in the UI
     setState(() {});
   }
 }
