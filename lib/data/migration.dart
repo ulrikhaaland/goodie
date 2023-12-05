@@ -146,7 +146,7 @@ class DataMigration {
   Future<LatLng?> _getCoordinatesFromAddress(String address) async {
     final geocoding = GoogleMapsGeocoding(
         apiKey:
-            "AIzaSyB_b0_Tse5dUJ3l-cs1YkAmAv40mXMGWZU"); // Replace <YOUR_API_KEY> with your actual API key
+            ""); // Replace <YOUR_API_KEY> with your actual API key
     final GeocodingResponse response = await geocoding.searchByAddress(address);
 
     if (response.status == "OK" && response.results.isNotEmpty) {
